@@ -45,9 +45,9 @@ const (
 	ComponentClaudeTheme        ComponentID = "claude-theme"
 	ComponentOpenCodeGentleLogo ComponentID = "opencode-gentle-logo"
 	// SelOps operational layer components.
-	ComponentSDDOps            ComponentID = "sddops"
-	ComponentOperationalMCP    ComponentID = "operationalmcp"
-	ComponentPersonaOperator   ComponentID = "operator"
+	ComponentSDDOps          ComponentID = "sddops"
+	ComponentOperationalMCP  ComponentID = "operationalmcp"
+	ComponentPersonaOperator ComponentID = "operator"
 )
 
 type UninstallMode string
@@ -147,10 +147,10 @@ const (
 type PresetID string
 
 const (
-	PresetFullGentleman    PresetID = "full-gentleman"
-	PresetEcosystemOnly    PresetID = "ecosystem-only"
-	PresetMinimal          PresetID = "minimal"
-	PresetCustom           PresetID = "custom"
+	PresetFullGentleman     PresetID = "full-gentleman"
+	PresetEcosystemOnly     PresetID = "ecosystem-only"
+	PresetMinimal           PresetID = "minimal"
+	PresetCustom            PresetID = "custom"
 	PresetSelOpsOperational PresetID = "selops-operational"
 )
 
