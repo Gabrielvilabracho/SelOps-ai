@@ -1,14 +1,55 @@
 package sddops
 
 import (
+	"flag"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/gentleman-programming/gentle-ai/internal/agents"
+	"github.com/gentleman-programming/gentle-ai/internal/agents/claude"
 	"github.com/gentleman-programming/gentle-ai/internal/agents/opencode"
 	"github.com/gentleman-programming/gentle-ai/internal/model"
 )
+
+var updateGoldens = flag.Bool("update", false, "update sddops golden files")
+
+// goldenAdapter returns a named adapter for golden test parameterisation.
+type goldenAdapter struct {
+	name    string
+	adapter agents.Adapter
+}
+
+func goldenAdapters() []goldenAdapter {
+	return []goldenAdapter{
+		{name: "opencode", adapter: opencode.NewAdapter()},
+		{name: "claude", adapter: claude.NewAdapter()},
+	}
+}
+
+// assertGolden reads (or writes, when -update is set) the golden fixture at
+// testdata/<name>.golden and compares it to actual.
+func assertGolden(t *testing.T, name string, actual string) {
+	t.Helper()
+	goldenPath := filepath.Join("testdata", name+".golden")
+	if *updateGoldens {
+		if err := os.MkdirAll(filepath.Dir(goldenPath), 0o755); err != nil {
+			t.Fatalf("MkdirAll(%q) error = %v", filepath.Dir(goldenPath), err)
+		}
+		if err := os.WriteFile(goldenPath, []byte(actual), 0o644); err != nil {
+			t.Fatalf("WriteFile(%q) error = %v", goldenPath, err)
+		}
+		return
+	}
+	expected, err := os.ReadFile(goldenPath)
+	if err != nil {
+		t.Fatalf("ReadFile(%q) error = %v — run with -args -update to generate", goldenPath, err)
+	}
+	if string(expected) != actual {
+		t.Fatalf("golden mismatch for %s\n\nwant:\n%s\n\ngot:\n%s", name, string(expected), actual)
+	}
+}
 
 // TestSddOpsSkillIDsMembership verifies the exact set of sddOpsSkillIDs.
 func TestSddOpsSkillIDsMembership(t *testing.T) {
@@ -107,5 +148,99 @@ func TestInjectWritesExpectedOpsHeadings(t *testing.T) {
 		if !strings.Contains(text, "#") {
 			t.Errorf("skill %q SKILL.md missing any heading", id)
 		}
+	}
+}
+
+// TestInjectGoldenPerAdapter covers the injected SKILL.md content per adapter
+// strategy. One golden file is produced per (adapter, skill) pair, capturing
+// the exact bytes written to disk. This serves as a byte-for-byte regression
+// guard: any unintended change to an ops skill stub will cause a golden mismatch.
+func TestInjectGoldenPerAdapter(t *testing.T) {
+	for _, ga := range goldenAdapters() {
+		ga := ga
+		t.Run(ga.name, func(t *testing.T) {
+			if !ga.adapter.SupportsSkills() {
+				t.Skipf("%s does not support skills", ga.name)
+			}
+
+			home := t.TempDir()
+			result, err := Inject(home, ga.adapter, InjectOptions{})
+			if err != nil {
+				t.Fatalf("Inject(%s) error = %v", ga.name, err)
+			}
+			if !result.Changed {
+				t.Fatalf("Inject(%s) changed = false; want true", ga.name)
+			}
+
+			skillDir := ga.adapter.SkillsDir(home)
+			for _, id := range sddOpsSkillIDs {
+				id := id
+				t.Run(string(id), func(t *testing.T) {
+					path := filepath.Join(skillDir, string(id), "SKILL.md")
+					content, readErr := os.ReadFile(path)
+					if readErr != nil {
+						t.Fatalf("ReadFile(%q) error = %v", path, readErr)
+					}
+					goldenName := ga.name + "-" + string(id)
+					assertGolden(t, goldenName, string(content))
+				})
+			}
+		})
+	}
+}
+
+// TestInjectGoldenResultFiles verifies that result.Files lists every SKILL.md
+// written for a fresh inject (no pre-existing files).
+func TestInjectGoldenResultFiles(t *testing.T) {
+	for _, ga := range goldenAdapters() {
+		ga := ga
+		t.Run(ga.name, func(t *testing.T) {
+			if !ga.adapter.SupportsSkills() {
+				t.Skipf("%s does not support skills", ga.name)
+			}
+
+			home := t.TempDir()
+			result, err := Inject(home, ga.adapter, InjectOptions{})
+			if err != nil {
+				t.Fatalf("Inject(%s) error = %v", ga.name, err)
+			}
+
+			// Every sddOpsSkillID must appear in result.Files.
+			skillDir := ga.adapter.SkillsDir(home)
+			for _, id := range sddOpsSkillIDs {
+				expectedPath := filepath.Join(skillDir, string(id), "SKILL.md")
+				found := false
+				for _, f := range result.Files {
+					if f == expectedPath {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("Inject(%s) result.Files missing %q; got %v", ga.name, expectedPath, result.Files)
+				}
+			}
+		})
+	}
+}
+
+// TestInjectNonSkillsAdapterIsNoop verifies that adapters without skills support
+// return an empty result without error.
+func TestInjectNonSkillsAdapterIsNoop(t *testing.T) {
+	// Pi adapter explicitly returns false for SupportsSkills.
+	piAdapter, err := agents.NewAdapter(model.AgentPi)
+	if err != nil {
+		t.Fatalf("NewAdapter(pi) error = %v", err)
+	}
+	home := t.TempDir()
+	result, injectErr := Inject(home, piAdapter, InjectOptions{})
+	if injectErr != nil {
+		t.Fatalf("Inject(pi) error = %v; want nil", injectErr)
+	}
+	if result.Changed {
+		t.Fatal("Inject(pi) changed = true; want false for non-skills adapter")
+	}
+	if len(result.Files) != 0 {
+		t.Fatalf("Inject(pi) files = %v; want empty", result.Files)
 	}
 }

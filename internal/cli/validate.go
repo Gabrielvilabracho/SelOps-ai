@@ -166,15 +166,24 @@ func componentsForPreset(preset model.PresetID, persona model.PersonaID) []model
 	case model.PresetCustom:
 		return nil
 	case model.PresetSelOpsOperational:
-		// SelOps operational bundle: Engram (transitive) + ops SDD workflow + skills
-		// + operational MCP connections + operator persona.
-		// Deliberately excludes all DEV-only components (ComponentSDD, ComponentContext7,
-		// ComponentPermission, ComponentGGA, ComponentClaudeTheme, ComponentOpenCodeGentleLogo,
-		// ComponentPersona/gentleman) to keep OPS and DEV namespaces disjoint.
+		// SelOps operational bundle: Engram + ops SDD workflow + operational MCP
+		// connections + operator persona.
+		//
+		// ComponentSkills is intentionally excluded: it carries a hard graph dep on
+		// ComponentSDD (DEV) via MVPGraph (ComponentSkills → ComponentSDD). Including
+		// it would transitively pull the DEV SDD workflow into every OPS install,
+		// contaminating the OPS namespace with DEV components.
+		//
+		// The ops-* skills are delivered exclusively through ComponentSDDOps, which
+		// calls sddops.Inject directly and depends only on ComponentEngram.
+		//
+		// Deliberately excludes all DEV-only components (ComponentSDD, ComponentSkills,
+		// ComponentContext7, ComponentPermission, ComponentGGA, ComponentClaudeTheme,
+		// ComponentOpenCodeGentleLogo, ComponentPersona/gentleman) to keep OPS and DEV
+		// namespaces disjoint.
 		return []model.ComponentID{
 			model.ComponentEngram,
 			model.ComponentSDDOps,
-			model.ComponentSkills,
 			model.ComponentOperationalMCP,
 			model.ComponentPersonaOperator,
 		}
