@@ -44,6 +44,10 @@ const (
 	ComponentTheme              ComponentID = "theme"
 	ComponentClaudeTheme        ComponentID = "claude-theme"
 	ComponentOpenCodeGentleLogo ComponentID = "opencode-gentle-logo"
+	// SelOps operational layer components.
+	ComponentSDDOps            ComponentID = "sddops"
+	ComponentOperationalMCP    ComponentID = "operationalmcp"
+	ComponentPersonaOperator   ComponentID = "operator"
 )
 
 type UninstallMode string
@@ -86,6 +90,13 @@ const (
 	SkillCognitiveDoc    SkillID = "cognitive-doc-design"
 	SkillCommentWriter   SkillID = "comment-writer"
 	SkillWorkUnitCommits SkillID = "work-unit-commits"
+	// SelOps operational skill IDs.
+	SkillOpsStandardDocumentation SkillID = "ops-standard-documentation"
+	SkillOpsModularArchitecture   SkillID = "ops-modular-architecture"
+	SkillOpsDataContracts         SkillID = "ops-data-contracts"
+	SkillOpsGovernance            SkillID = "ops-governance"
+	SkillOpsObservability         SkillID = "ops-observability"
+	SkillOpsGraduatedAutonomy     SkillID = "ops-graduated-autonomy"
 )
 
 type PersonaID string
@@ -94,6 +105,7 @@ const (
 	PersonaGentleman PersonaID = "gentleman"
 	PersonaNeutral   PersonaID = "neutral"
 	PersonaCustom    PersonaID = "custom"
+	PersonaOperator  PersonaID = "operator"
 )
 
 // SystemPromptStrategy defines how an agent's system prompt file is managed.
@@ -135,10 +147,11 @@ const (
 type PresetID string
 
 const (
-	PresetFullGentleman PresetID = "full-gentleman"
-	PresetEcosystemOnly PresetID = "ecosystem-only"
-	PresetMinimal       PresetID = "minimal"
-	PresetCustom        PresetID = "custom"
+	PresetFullGentleman    PresetID = "full-gentleman"
+	PresetEcosystemOnly    PresetID = "ecosystem-only"
+	PresetMinimal          PresetID = "minimal"
+	PresetCustom           PresetID = "custom"
+	PresetSelOpsOperational PresetID = "selops-operational"
 )
 
 type SDDModeID string
