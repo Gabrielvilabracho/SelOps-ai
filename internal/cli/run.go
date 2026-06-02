@@ -20,9 +20,11 @@ import (
 	"github.com/gentleman-programming/gentle-ai/internal/components/gga"
 	"github.com/gentleman-programming/gentle-ai/internal/components/mcp"
 	"github.com/gentleman-programming/gentle-ai/internal/components/opencodeplugin"
+	"github.com/gentleman-programming/gentle-ai/internal/components/operationalmcp"
 	"github.com/gentleman-programming/gentle-ai/internal/components/permissions"
 	"github.com/gentleman-programming/gentle-ai/internal/components/persona"
 	"github.com/gentleman-programming/gentle-ai/internal/components/sdd"
+	"github.com/gentleman-programming/gentle-ai/internal/components/sddops"
 	"github.com/gentleman-programming/gentle-ai/internal/components/skills"
 	"github.com/gentleman-programming/gentle-ai/internal/components/theme"
 	"github.com/gentleman-programming/gentle-ai/internal/installcmd"
@@ -711,6 +713,26 @@ func (s componentApplyStep) Run() error {
 	case model.ComponentOpenCodeGentleLogo:
 		if _, err := opencodeplugin.Install(s.homeDir, model.OpenCodePluginGentleLogo); err != nil {
 			return fmt.Errorf("install OpenCode Gentle Logo plugin: %w", err)
+		}
+		return nil
+	case model.ComponentSDDOps:
+		// Install the SelOps operational SDD skill set for each adapter.
+		for _, adapter := range adapters {
+			targetDir := componentInjectionDirScoped(s.homeDir, s.workspaceDir, s.scope, adapter)
+			opts := sddops.InjectOptions{
+				WorkspaceDir: s.workspaceDir,
+			}
+			if _, err := sddops.Inject(targetDir, adapter, opts); err != nil {
+				return fmt.Errorf("inject sddops for %q: %w", adapter.Agent(), err)
+			}
+		}
+		return nil
+	case model.ComponentOperationalMCP:
+		// Install operational MCP connection entries for each adapter.
+		for _, adapter := range adapters {
+			if _, err := operationalmcp.Inject(s.homeDir, adapter, s.selection.OperationalMCPServers); err != nil {
+				return fmt.Errorf("inject operationalmcp for %q: %w", adapter.Agent(), err)
+			}
 		}
 		return nil
 	default:
