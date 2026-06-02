@@ -19,15 +19,21 @@ import (
 
 // TestPresetSelOpsOperationalResolvesOperationalBundle verifies that
 // --preset selops-operational produces EXACTLY the operational component set:
-// ComponentEngram, ComponentSDDOps, ComponentSkills, ComponentOperationalMCP,
-// and ComponentPersonaOperator (the operator persona component).
+// ComponentEngram, ComponentSDDOps, ComponentOperationalMCP, and
+// ComponentPersonaOperator.
 //
-// This is the test that would have caught CRITICAL #1 during PR1 apply.
+// ComponentSkills MUST NOT be present: it carries a hard dep on ComponentSDD
+// (DEV) via MVPGraph, which would transitively pull the DEV SDD workflow into
+// every OPS install. ComponentSDDOps is the carrier for ops-* skills — it does
+// not depend on ComponentSDD and calls sddops.Inject directly.
+//
+// This is the test that would have caught CRITICAL #1 during PR1 apply, and
+// now additionally catches the DEV/OPS separation regression (OPS bundle must
+// not pull DEV SDD via ComponentSkills).
 func TestPresetSelOpsOperationalResolvesOperationalBundle(t *testing.T) {
 	want := []model.ComponentID{
 		model.ComponentEngram,
 		model.ComponentSDDOps,
-		model.ComponentSkills,
 		model.ComponentOperationalMCP,
 		model.ComponentPersonaOperator,
 	}
@@ -45,13 +51,33 @@ func TestPresetSelOpsOperationalResolvesOperationalBundle(t *testing.T) {
 	}
 }
 
+// TestPresetSelOpsOperationalExcludesGenericSkillsComponent verifies that
+// ComponentSkills is NOT in the OPS bundle.
+//
+// Root cause context: ComponentSkills has a hard graph dep on ComponentSDD
+// (DEV). Including it in the OPS bundle causes "Auto-added dependencies: sdd"
+// in the dry-run output, leaking the DEV SDD workflow into OPS installs.
+// The ops-* skills are delivered exclusively through ComponentSDDOps/sddops.Inject.
+func TestPresetSelOpsOperationalExcludesGenericSkillsComponent(t *testing.T) {
+	got := componentsForPreset(model.PresetSelOpsOperational, model.PersonaOperator)
+
+	if slices.Contains(got, model.ComponentSkills) {
+		t.Errorf("ComponentSkills MUST NOT be in the OPS bundle (it transitively pulls DEV ComponentSDD); got %v", got)
+	}
+}
+
 // TestPresetSelOpsOperationalDoesNotContainDEVComponents verifies that the
 // operational bundle NEVER includes DEV-only components: ComponentSDD,
 // ComponentContext7, ComponentPermission, ComponentGGA, ComponentClaudeTheme,
-// ComponentOpenCodeGentleLogo, ComponentPersona.
+// ComponentOpenCodeGentleLogo, ComponentPersona, and ComponentSkills.
+//
+// ComponentSkills is included here because it is NOT ops-specific and carries
+// a hard dep on ComponentSDD via MVPGraph. Its presence in the OPS bundle
+// would pull the DEV SDD workflow transitively into every OPS install.
 func TestPresetSelOpsOperationalDoesNotContainDEVComponents(t *testing.T) {
 	devOnly := []model.ComponentID{
 		model.ComponentSDD,
+		model.ComponentSkills, // transitively pulls ComponentSDD — must NOT be in OPS
 		model.ComponentContext7,
 		model.ComponentPermission,
 		model.ComponentGGA,
@@ -104,7 +130,6 @@ func TestNormalizeInstallFlagsSelOpsOperationalPreset(t *testing.T) {
 	wantComponents := []model.ComponentID{
 		model.ComponentEngram,
 		model.ComponentSDDOps,
-		model.ComponentSkills,
 		model.ComponentOperationalMCP,
 		model.ComponentPersonaOperator,
 	}
@@ -114,9 +139,11 @@ func TestNormalizeInstallFlagsSelOpsOperationalPreset(t *testing.T) {
 		}
 	}
 
-	// Must NOT contain DEV-only components
+	// Must NOT contain DEV-only components (including ComponentSkills which
+	// transitively pulls ComponentSDD via MVPGraph — not appropriate for OPS).
 	devOnly := []model.ComponentID{
 		model.ComponentSDD,
+		model.ComponentSkills, // has hard dep on ComponentSDD — excluded from OPS
 		model.ComponentContext7,
 		model.ComponentPermission,
 		model.ComponentGGA,
