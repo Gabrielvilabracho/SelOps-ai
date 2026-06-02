@@ -22,6 +22,7 @@ var mvpComponents = []Component{
 	// SelOps operational layer components.
 	{ID: model.ComponentSDDOps, Name: "SDD Ops", Description: "SelOps operational SDD workflow layer"},
 	{ID: model.ComponentOperationalMCP, Name: "Operational MCP", Description: "SelOps operational MCP server configuration"},
+	{ID: model.ComponentPersonaOperator, Name: "Operator Persona", Description: "SelOps operator persona (replaces Gentleman persona for OPS agents)"},
 }
 
 func MVPComponents() []Component {
