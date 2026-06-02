@@ -135,8 +135,8 @@ func TestDetectInstalledVersionFallbackPaths(t *testing.T) {
 	}
 
 	tool := ToolInfo{
-		Name:          "mytool",
-		DetectCmd:     []string{binaryName, "--version"},
+		Name:      "mytool",
+		DetectCmd: []string{binaryName, "--version"},
 		FallbackPaths: func(homeDir, localAppData string) []string {
 			return []string{filepath.Join(tmpDir, binaryName)}
 		},

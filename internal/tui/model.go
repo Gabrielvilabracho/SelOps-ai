@@ -149,10 +149,10 @@ type SyncDoneMsg struct {
 
 // UninstallDoneMsg is sent when the uninstall operation completes.
 type UninstallDoneMsg struct {
-	Result      componentuninstall.Result
-	Err         error
-	SyncFiles   []string // only set for CleanInstall mode
-	SyncErr     error    // only set for CleanInstall mode
+	Result    componentuninstall.Result
+	Err       error
+	SyncFiles []string // only set for CleanInstall mode
+	SyncErr   error    // only set for CleanInstall mode
 }
 
 // UpgradePhaseCompletedMsg is sent by startUpgradeSync when the upgrade phase
