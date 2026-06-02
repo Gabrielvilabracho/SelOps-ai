@@ -697,9 +697,9 @@ func renderPhaseList(
 		case idx == separatorIdx:
 			// Separator row — render as a visual divider with subtle indicator when focused.
 			if focused {
-				b.WriteString(styles.SubtextStyle.Render("▸ " + row) + "\n")
+				b.WriteString(styles.SubtextStyle.Render("▸ "+row) + "\n")
 			} else {
-				b.WriteString(styles.SubtextStyle.Render("  " + row) + "\n")
+				b.WriteString(styles.SubtextStyle.Render("  "+row) + "\n")
 			}
 			continue
 		case idx > separatorIdx:
