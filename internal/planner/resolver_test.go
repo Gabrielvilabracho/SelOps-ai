@@ -115,6 +115,63 @@ func TestResolverPersonaAndEngramWithoutSDD(t *testing.T) {
 	}
 }
 
+func TestResolverPresetSelOpsOperationalResolvesToFourComponents(t *testing.T) {
+	resolver := NewResolver(MVPGraph())
+
+	// PresetSelOpsOperational includes ComponentPersonaOperator, ComponentSDDOps,
+	// ComponentOperationalMCP, and their transitive dependency ComponentEngram.
+	selection := model.Selection{
+		Components: []model.ComponentID{
+			model.ComponentPersonaOperator,
+			model.ComponentSDDOps,
+			model.ComponentOperationalMCP,
+		},
+	}
+
+	plan, err := resolver.Resolve(selection)
+	if err != nil {
+		t.Fatalf("Resolve() returned error: %v", err)
+	}
+
+	// ComponentEngram must be auto-added as a dependency of ComponentSDDOps.
+	if len(plan.OrderedComponents) != 4 {
+		t.Fatalf("expected 4 ordered components, got %d: %v", len(plan.OrderedComponents), plan.OrderedComponents)
+	}
+
+	// Verify all four are present.
+	componentSet := make(map[model.ComponentID]struct{}, len(plan.OrderedComponents))
+	for _, c := range plan.OrderedComponents {
+		componentSet[c] = struct{}{}
+	}
+	for _, expected := range []model.ComponentID{
+		model.ComponentPersonaOperator,
+		model.ComponentSDDOps,
+		model.ComponentOperationalMCP,
+		model.ComponentEngram,
+	} {
+		if _, ok := componentSet[expected]; !ok {
+			t.Fatalf("expected component %q in plan, got %v", expected, plan.OrderedComponents)
+		}
+	}
+
+	// ComponentPersonaOperator must be ordered before ComponentSDDOps (soft constraint).
+	personaIdx, sddOpsIdx := -1, -1
+	for i, c := range plan.OrderedComponents {
+		switch c {
+		case model.ComponentPersonaOperator:
+			personaIdx = i
+		case model.ComponentSDDOps:
+			sddOpsIdx = i
+		}
+	}
+	if personaIdx < 0 || sddOpsIdx < 0 {
+		t.Fatalf("ComponentPersonaOperator or ComponentSDDOps not found in plan: %v", plan.OrderedComponents)
+	}
+	if personaIdx > sddOpsIdx {
+		t.Fatalf("ComponentPersonaOperator (%d) must be before ComponentSDDOps (%d), got %v", personaIdx, sddOpsIdx, plan.OrderedComponents)
+	}
+}
+
 func TestResolverExcludesUnsupportedAgents(t *testing.T) {
 	resolver := NewResolver(MVPGraph())
 
