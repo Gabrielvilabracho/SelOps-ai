@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "selops-rag-placeholder": {
+      "disabled": true,
+      "note": "Configure external RAG MCP server URL or command before enabling."
+    }
+  }
+}
