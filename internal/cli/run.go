@@ -620,6 +620,16 @@ func (s componentApplyStep) Run() error {
 			}
 		}
 		return nil
+	case model.ComponentPersonaOperator:
+		// SelOps operational persona — routes persona.Inject with PersonaOperator so
+		// personaContent() returns generic/persona-operator.md for all agents.
+		for _, adapter := range adapters {
+			targetDir := componentInjectionDirScoped(s.homeDir, s.workspaceDir, s.scope, adapter)
+			if _, err := persona.Inject(targetDir, adapter, model.PersonaOperator); err != nil {
+				return fmt.Errorf("inject operator persona for %q: %w", adapter.Agent(), err)
+			}
+		}
+		return nil
 	case model.ComponentPermission:
 		for _, adapter := range adapters {
 			if _, err := permissions.Inject(s.homeDir, adapter); err != nil {
