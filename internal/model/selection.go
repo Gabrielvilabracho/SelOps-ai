@@ -1,5 +1,16 @@
 package model
 
+// OperationalMCPServerSpec describes a single operational MCP server connection.
+// Defined here (in model) to avoid an import cycle between selection.go and
+// the operationalmcp component package.
+type OperationalMCPServerSpec struct {
+	Name     string
+	Command  string
+	URL      string
+	EnvRefs  []string
+	Disabled bool
+}
+
 type Selection struct {
 	Agents                 []AgentID
 	Components             []ComponentID
@@ -14,6 +25,7 @@ type Selection struct {
 	KiroModelAssignments   map[string]ClaudeModelAlias // key = phase name; value = opus|sonnet|haiku (Kiro-only)
 	Profiles               []Profile                   // named SDD profiles to generate/update during sync
 	OpenCodePlugins        []OpenCodeCommunityPluginID // optional community OpenCode TUI plugins
+	OperationalMCPServers  []OperationalMCPServerSpec  // optional SelOps operational MCP servers (default empty)
 }
 
 func (s Selection) HasAgent(agent AgentID) bool {

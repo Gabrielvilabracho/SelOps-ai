@@ -697,9 +697,11 @@ func TestEmbeddedAssetCount(t *testing.T) {
 		}
 	}
 
-	// We expect 22 skill directories (10 SDD + judgment-day + 6 foundation + 4 sustainable-review + _shared).
-	if skillDirs != 22 {
-		t.Fatalf("expected 22 skill directories, got %d", skillDirs)
+	// We expect 28 skill directories:
+	// 10 SDD + judgment-day + 6 foundation + 4 sustainable-review + _shared (was 22)
+	// + 6 SelOps operational ops-* skills added in the selops-operational-layer change.
+	if skillDirs != 28 {
+		t.Fatalf("expected 28 skill directories, got %d", skillDirs)
 	}
 
 	// Verify each skill directory has a SKILL.md.
