@@ -28,13 +28,19 @@ func NormalizeInstallFlags(flags InstallFlags, detection system.DetectionResult)
 	if err != nil {
 		return InstallInput{}, err
 	}
-	selection.Persona = persona
 
 	preset, err := normalizePreset(flags.Preset)
 	if err != nil {
 		return InstallInput{}, err
 	}
 	selection.Preset = preset
+
+	// For the SelOps operational preset, the default persona is PersonaOperator.
+	// If the user did not pass --persona explicitly, override the default gentleman.
+	if preset == model.PresetSelOpsOperational && strings.TrimSpace(flags.Persona) == "" {
+		persona = model.PersonaOperator
+	}
+	selection.Persona = persona
 
 	components, err := normalizeComponents(flags.Components, selection.Preset, selection.Persona)
 	if err != nil {
@@ -72,7 +78,7 @@ func normalizePersona(value string) (model.PersonaID, error) {
 	}
 
 	switch model.PersonaID(value) {
-	case model.PersonaGentleman, model.PersonaNeutral, model.PersonaCustom:
+	case model.PersonaGentleman, model.PersonaNeutral, model.PersonaCustom, model.PersonaOperator:
 		return model.PersonaID(value), nil
 	default:
 		return "", fmt.Errorf("unsupported persona %q", value)
@@ -85,7 +91,8 @@ func normalizePreset(value string) (model.PresetID, error) {
 	}
 
 	switch model.PresetID(value) {
-	case model.PresetFullGentleman, model.PresetEcosystemOnly, model.PresetMinimal, model.PresetCustom:
+	case model.PresetFullGentleman, model.PresetEcosystemOnly, model.PresetMinimal, model.PresetCustom,
+		model.PresetSelOpsOperational:
 		return model.PresetID(value), nil
 	default:
 		return "", fmt.Errorf("unsupported preset %q", value)
@@ -158,6 +165,19 @@ func componentsForPreset(preset model.PresetID, persona model.PersonaID) []model
 		components = []model.ComponentID{model.ComponentEngram, model.ComponentSDD, model.ComponentSkills, model.ComponentContext7, model.ComponentGGA}
 	case model.PresetCustom:
 		return nil
+	case model.PresetSelOpsOperational:
+		// SelOps operational bundle: Engram (transitive) + ops SDD workflow + skills
+		// + operational MCP connections + operator persona.
+		// Deliberately excludes all DEV-only components (ComponentSDD, ComponentContext7,
+		// ComponentPermission, ComponentGGA, ComponentClaudeTheme, ComponentOpenCodeGentleLogo,
+		// ComponentPersona/gentleman) to keep OPS and DEV namespaces disjoint.
+		return []model.ComponentID{
+			model.ComponentEngram,
+			model.ComponentSDDOps,
+			model.ComponentSkills,
+			model.ComponentOperationalMCP,
+			model.ComponentPersonaOperator,
+		}
 	default: // full-gentleman
 		components = []model.ComponentID{
 			model.ComponentEngram,

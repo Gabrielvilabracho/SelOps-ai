@@ -134,6 +134,22 @@ func TestApplySoftOrderingBothMVPPairsWithFullSelection(t *testing.T) {
 	}
 }
 
+func TestSoftOrderingContainsPersonaOperatorBeforeSDDOps(t *testing.T) {
+	pairs := SoftOrderingConstraints()
+
+	found := false
+	for _, pair := range pairs {
+		if pair[0] == model.ComponentPersonaOperator && pair[1] == model.ComponentSDDOps {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Fatalf("SoftOrderingConstraints() does not contain {ComponentPersonaOperator, ComponentSDDOps} pair, got: %v", pairs)
+	}
+}
+
 func TestTopologicalSortDetectsCycles(t *testing.T) {
 	deps := map[model.ComponentID][]model.ComponentID{
 		model.ComponentEngram: {model.ComponentSDD},
