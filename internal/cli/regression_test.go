@@ -16,6 +16,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gentleman-programming/gentle-ai/internal/model"
 	"github.com/gentleman-programming/gentle-ai/internal/system"
 )
 
@@ -59,18 +60,14 @@ func devInstallArgs() []string {
 	}
 }
 
-// opsInstallArgs returns the CLI args for a minimal OPS preset install.
-// We use --preset custom + explicit --component flags to install only the
-// OPS-specific components (sddops and operationalmcp). ComponentPersonaOperator
-// ("operator") is not in the catalog's MVPComponents and is not exercised here;
-// its persona-operator.md path is verified separately via direct sddops injection
-// tests.
+// opsInstallArgs returns the CLI args for the shipped selops-operational preset.
+// This uses --preset selops-operational (the exact path a real user runs) so the
+// regression test proves the actual shipped preset preserves the DEV invariant,
+// not just a manually curated component subset.
 func opsInstallArgs() []string {
 	return []string{
 		"--agent", "opencode",
-		"--preset", "custom",
-		"--component", "sddops",
-		"--component", "operationalmcp",
+		"--preset", string(model.PresetSelOpsOperational),
 	}
 }
 
