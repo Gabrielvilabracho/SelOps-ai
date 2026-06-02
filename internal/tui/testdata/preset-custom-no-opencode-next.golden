@@ -22,10 +22,12 @@ Toggle components with enter or space.
     Claude Code Gentleman custom theme
   [ ] opencode-gentle-logo
     OpenCode home logo TUI plugin with Braille rose
-  [ ] sddops
+  [ ] selops-sddops
     SelOps operational SDD workflow layer
-  [ ] operationalmcp
+  [ ] selops-operationalmcp
     SelOps operational MCP server configuration
+  [ ] selops-operator
+    SelOps operator persona (replaces Gentleman persona for OPS agents)
 
   Continue
   Back

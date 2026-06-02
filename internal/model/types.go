@@ -45,9 +45,9 @@ const (
 	ComponentClaudeTheme        ComponentID = "claude-theme"
 	ComponentOpenCodeGentleLogo ComponentID = "opencode-gentle-logo"
 	// SelOps operational layer components.
-	ComponentSDDOps          ComponentID = "sddops"
-	ComponentOperationalMCP  ComponentID = "operationalmcp"
-	ComponentPersonaOperator ComponentID = "operator"
+	ComponentSDDOps          ComponentID = "selops-sddops"
+	ComponentOperationalMCP  ComponentID = "selops-operationalmcp"
+	ComponentPersonaOperator ComponentID = "selops-operator"
 )
 
 type UninstallMode string
@@ -105,7 +105,7 @@ const (
 	PersonaGentleman PersonaID = "gentleman"
 	PersonaNeutral   PersonaID = "neutral"
 	PersonaCustom    PersonaID = "custom"
-	PersonaOperator  PersonaID = "operator"
+	PersonaOperator  PersonaID = "selops-operator"
 )
 
 // SystemPromptStrategy defines how an agent's system prompt file is managed.
