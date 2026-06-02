@@ -458,6 +458,9 @@ func personaContent(agent model.AgentID, persona model.PersonaID) string {
 		return assets.MustRead("generic/persona-neutral.md")
 	case model.PersonaCustom:
 		return ""
+	case model.PersonaOperator:
+		// SelOps operational persona — shared across all agents (no agent-specific variant yet).
+		return assets.MustRead("generic/persona-operator.md")
 	default:
 		// Gentleman persona — try agent-specific asset, then generic fallback.
 		switch agent {
