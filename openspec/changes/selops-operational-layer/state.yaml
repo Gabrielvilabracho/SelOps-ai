@@ -1,0 +1,18 @@
+change: selops-operational-layer
+status: archived
+archived_at: "2026-06-02"
+verify_verdict: PASS-WITH-WARNINGS
+prs_merged:
+  - number: 1
+    branch: selops/pr0-gofmt
+    merged_at: "2026-06-02"
+  - number: 2
+    branch: selops/pr1-registration
+    merged_at: "2026-06-02"
+  - number: 3
+    branch: selops/pr2-packages
+    merged_at: "2026-06-02"
+  - number: 4
+    branch: selops/pr3-tests-separation
+    merged_at: "2026-06-02"
+artifact_store: hybrid

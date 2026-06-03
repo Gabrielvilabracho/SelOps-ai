@@ -1,0 +1,18 @@
+change: selops-divergent-fork
+status: planned
+created_at: "2026-06-03"
+artifact_store: hybrid
+phase_ready: "Phase 0 — Fork mechanics"
+depends_on:
+  - selops-operational-layer  # archived; provides the OPS components this fork keeps
+notes: |
+  Planning complete. Next session starts at Phase 0a (rename module + binary).
+  Strict TDD is active. Keep go build + go test green at every phase boundary.
+  Engine ~90-92% reusable. OPS has ZERO dependency on DEV — stripping is low-risk.
+artifacts:
+  proposal: openspec/changes/selops-divergent-fork/proposal.md
+  tasks: openspec/changes/selops-divergent-fork/tasks.md
+engram_topic_keys:
+  - architecture/selops-ai-architecture-clean-divergent-fork
+  - decision/selops-ai-component-decisions-context7-always-on-gga-kept
+  - sdd/selops-divergent-fork/plan
