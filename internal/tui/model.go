@@ -3315,13 +3315,16 @@ func componentsForPreset(preset model.PresetID, persona model.PersonaID) []model
 		return nil
 	case model.PresetSelOpsOperational:
 		// SelOps operational bundle: Engram + ops SDD workflow + operational MCP
-		// connections + operator persona. DEV-only components are intentionally
-		// excluded to keep OPS and DEV namespaces disjoint.
+		// connections + operator persona + Context7 (always-on, Phase 0c).
+		// DEV-only components are intentionally excluded to keep OPS and DEV
+		// namespaces disjoint. Context7 is safe here: it has nil deps in MVPGraph
+		// (no DEV transitive pull) and provides up-to-date library/docs always.
 		return []model.ComponentID{
 			model.ComponentEngram,
 			model.ComponentSDDOps,
 			model.ComponentOperationalMCP,
 			model.ComponentPersonaOperator,
+			model.ComponentContext7,
 		}
 	default: // full-gentleman
 		components = []model.ComponentID{

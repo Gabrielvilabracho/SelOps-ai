@@ -61,11 +61,13 @@ func TestNormalizeInstallFlagsDefaults(t *testing.T) {
 		Agents:  []model.AgentID{model.AgentClaudeCode, model.AgentOpenCode, model.AgentKilocode, model.AgentGeminiCLI, model.AgentCodex, model.AgentCursor, model.AgentVSCodeCopilot, model.AgentAntigravity, model.AgentWindsurf, model.AgentKimi, model.AgentQwenCode, model.AgentKiroIDE, model.AgentOpenClaw, model.AgentPi, model.AgentTrae},
 		Persona: model.PersonaOperator,
 		Preset:  model.PresetSelOpsOperational,
+		// Context7 is always-on for OPS (Phase 0c) — no DEV transitive pull (nil deps in MVPGraph).
 		Components: []model.ComponentID{
 			model.ComponentEngram,
 			model.ComponentSDDOps,
 			model.ComponentOperationalMCP,
 			model.ComponentPersonaOperator,
+			model.ComponentContext7,
 		},
 	}
 
