@@ -302,3 +302,190 @@ func TestInjectNonSkillsAdapterIsNoop(t *testing.T) {
 		t.Fatalf("Inject(pi) files = %v; want empty", result.Files)
 	}
 }
+
+// TestInjectWritesOpsOrchestratorSection verifies that Inject writes the
+// <!-- gentle-ai:ops-orchestrator --> section into the adapter's system prompt.
+// This proves the orchestrator is injected for the selops-operational preset.
+func TestInjectWritesOpsOrchestratorSection(t *testing.T) {
+	for _, ga := range goldenAdapters() {
+		ga := ga
+		t.Run(ga.name, func(t *testing.T) {
+			if !ga.adapter.SupportsSystemPrompt() {
+				t.Skipf("%s does not support system prompt", ga.name)
+			}
+
+			home := t.TempDir()
+			if _, err := Inject(home, ga.adapter, InjectOptions{}); err != nil {
+				t.Fatalf("Inject(%s) error = %v", ga.name, err)
+			}
+
+			promptPath := ga.adapter.SystemPromptFile(home)
+			content, err := os.ReadFile(promptPath)
+			if err != nil {
+				t.Fatalf("ReadFile(%q) error = %v", promptPath, err)
+			}
+			text := string(content)
+
+			// Must contain the ops-orchestrator section markers.
+			if !strings.Contains(text, "<!-- gentle-ai:ops-orchestrator -->") {
+				t.Errorf("%s: system prompt missing ops-orchestrator open marker", ga.name)
+			}
+			if !strings.Contains(text, "<!-- /gentle-ai:ops-orchestrator -->") {
+				t.Errorf("%s: system prompt missing ops-orchestrator close marker", ga.name)
+			}
+		})
+	}
+}
+
+// TestOpsOrchestratorContainsThresholdContent verifies that the injected
+// ops-orchestrator section contains the required threshold model content:
+// veto gates, weighted score table, and route-by-score mapping.
+func TestOpsOrchestratorContainsThresholdContent(t *testing.T) {
+	for _, ga := range goldenAdapters() {
+		ga := ga
+		t.Run(ga.name, func(t *testing.T) {
+			if !ga.adapter.SupportsSystemPrompt() {
+				t.Skipf("%s does not support system prompt", ga.name)
+			}
+
+			home := t.TempDir()
+			if _, err := Inject(home, ga.adapter, InjectOptions{}); err != nil {
+				t.Fatalf("Inject(%s) error = %v", ga.name, err)
+			}
+
+			promptPath := ga.adapter.SystemPromptFile(home)
+			content, err := os.ReadFile(promptPath)
+			if err != nil {
+				t.Fatalf("ReadFile(%q) error = %v", promptPath, err)
+			}
+			text := string(content)
+
+			// Required threshold model content — must be present in EVERY adapter's injected orchestrator.
+			for _, required := range []string{
+				// Veto gates section
+				"Veto Gates",
+				"destructive",
+				// Weighted score table
+				"Weighted Score",
+				"Reversibility",
+				"Data mutation",
+				"Systems affected",
+				// Route-by-score mapping
+				"Route by Score",
+				"Inline",
+				"Pipeline in Supervised mode",
+				"Pipeline in Suggest mode",
+				// OPS Pipeline phases
+				"ops-brief",
+				"ops-structure",
+				"ops-produce",
+				"ops-review",
+				"ops-deliver",
+				// Preflight gate
+				"OPS Session Preflight",
+				// Init guard
+				"OPS Init Guard",
+				// Result contract
+				"Result Contract",
+			} {
+				if !strings.Contains(text, required) {
+					t.Errorf("%s: ops-orchestrator missing required threshold content %q", ga.name, required)
+				}
+			}
+		})
+	}
+}
+
+// TestOpsOrchestratorContentSelectionByAdapter verifies that:
+// - OpenCode gets the opencode-specific variant (has OpenCode model assignments section).
+// - Claude gets the generic variant (has the section:model-capable markup).
+func TestOpsOrchestratorContentSelectionByAdapter(t *testing.T) {
+	tests := []struct {
+		name     string
+		adapter  agents.Adapter
+		required string
+		absent   string
+	}{
+		{
+			name:     "opencode",
+			adapter:  opencode.NewAdapter(),
+			// OpenCode variant has model assignments section and coded preflight options.
+			required: "Model Assignments",
+			// Generic variant has section:model-capable markup; opencode does not.
+			absent: "<!-- section:model-capable -->",
+		},
+		{
+			name:     "claude",
+			adapter:  claude.NewAdapter(),
+			// Generic variant has section:model-capable markup.
+			required: "<!-- section:model-capable -->",
+			// OpenCode model assignments are in the opencode variant only.
+			absent: "Model Assignments",
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			home := t.TempDir()
+			if _, err := Inject(home, tc.adapter, InjectOptions{}); err != nil {
+				t.Fatalf("Inject(%s) error = %v", tc.name, err)
+			}
+
+			promptPath := tc.adapter.SystemPromptFile(home)
+			content, err := os.ReadFile(promptPath)
+			if err != nil {
+				t.Fatalf("ReadFile(%q) error = %v", promptPath, err)
+			}
+			text := string(content)
+
+			if !strings.Contains(text, tc.required) {
+				t.Errorf("%s: expected %q in injected orchestrator content", tc.name, tc.required)
+			}
+			if tc.absent != "" && strings.Contains(text, tc.absent) {
+				t.Errorf("%s: did not expect %q in injected orchestrator content", tc.name, tc.absent)
+			}
+		})
+	}
+}
+
+// TestOpsOrchestratorSectionIsIdempotent verifies that a second Inject call
+// does not change the system prompt when the ops-orchestrator section is already present.
+func TestOpsOrchestratorSectionIsIdempotent(t *testing.T) {
+	home := t.TempDir()
+	adapter := opencode.NewAdapter()
+
+	// First inject.
+	result1, err := Inject(home, adapter, InjectOptions{})
+	if err != nil {
+		t.Fatalf("Inject() first error = %v", err)
+	}
+	if !result1.Changed {
+		t.Fatal("Inject() first changed = false; want true (new install)")
+	}
+
+	// Read the system prompt after first inject.
+	promptPath := adapter.SystemPromptFile(home)
+	content1, err := os.ReadFile(promptPath)
+	if err != nil {
+		t.Fatalf("ReadFile after first inject error = %v", err)
+	}
+
+	// Second inject.
+	result2, err := Inject(home, adapter, InjectOptions{})
+	if err != nil {
+		t.Fatalf("Inject() second error = %v", err)
+	}
+
+	// Read the system prompt after second inject.
+	content2, err := os.ReadFile(promptPath)
+	if err != nil {
+		t.Fatalf("ReadFile after second inject error = %v", err)
+	}
+
+	// Content must be identical across both injects.
+	if string(content1) != string(content2) {
+		t.Error("Inject() second call changed the system prompt; want idempotent result")
+	}
+	_ = result2 // Changed may be false or true for individual files; content idempotency is the invariant.
+}
