@@ -19,13 +19,17 @@ import (
 
 // TestPresetSelOpsOperationalResolvesOperationalBundle verifies that
 // --preset selops-operational produces EXACTLY the operational component set:
-// ComponentEngram, ComponentSDDOps, ComponentOperationalMCP, and
-// ComponentPersonaOperator.
+// ComponentEngram, ComponentSDDOps, ComponentOperationalMCP,
+// ComponentPersonaOperator, and ComponentContext7 (always-on, Phase 0c).
 //
 // ComponentSkills MUST NOT be present: it carries a hard dep on ComponentSDD
 // (DEV) via MVPGraph, which would transitively pull the DEV SDD workflow into
 // every OPS install. ComponentSDDOps is the carrier for ops-* skills — it does
 // not depend on ComponentSDD and calls sddops.Inject directly.
+//
+// ComponentContext7 has nil deps in MVPGraph (no DEV transitive pull) and is
+// always-on for OPS (Phase 0c) — it provides up-to-date library docs to the
+// AI agent unconditionally.
 //
 // This is the test that would have caught CRITICAL #1 during PR1 apply, and
 // now additionally catches the DEV/OPS separation regression (OPS bundle must
@@ -36,6 +40,7 @@ func TestPresetSelOpsOperationalResolvesOperationalBundle(t *testing.T) {
 		model.ComponentSDDOps,
 		model.ComponentOperationalMCP,
 		model.ComponentPersonaOperator,
+		model.ComponentContext7,
 	}
 
 	got := componentsForPreset(model.PresetSelOpsOperational, model.PersonaOperator)
@@ -48,6 +53,19 @@ func TestPresetSelOpsOperationalResolvesOperationalBundle(t *testing.T) {
 		if !slices.Contains(got, id) {
 			t.Errorf("missing component %q in operational preset result %v", id, got)
 		}
+	}
+}
+
+// TestPresetSelOpsOperationalContext7AlwaysOn verifies that Context7 is
+// unconditionally included in the OPS preset bundle (Phase 0c).
+// Context7 has nil deps in MVPGraph — it is a standalone component that does
+// not transitively pull DEV components. It provides up-to-date library/docs to
+// the AI agent and must ALWAYS be present, not optional.
+func TestPresetSelOpsOperationalContext7AlwaysOn(t *testing.T) {
+	got := componentsForPreset(model.PresetSelOpsOperational, model.PersonaOperator)
+
+	if !slices.Contains(got, model.ComponentContext7) {
+		t.Errorf("ComponentContext7 MUST be always-on in OPS preset (Phase 0c); got %v", got)
 	}
 }
 
@@ -68,17 +86,20 @@ func TestPresetSelOpsOperationalExcludesGenericSkillsComponent(t *testing.T) {
 
 // TestPresetSelOpsOperationalDoesNotContainDEVComponents verifies that the
 // operational bundle NEVER includes DEV-only components: ComponentSDD,
-// ComponentContext7, ComponentPermission, ComponentGGA, ComponentClaudeTheme,
+// ComponentPermission, ComponentGGA, ComponentClaudeTheme,
 // ComponentOpenCodeGentleLogo, ComponentPersona, and ComponentSkills.
 //
 // ComponentSkills is included here because it is NOT ops-specific and carries
 // a hard dep on ComponentSDD via MVPGraph. Its presence in the OPS bundle
 // would pull the DEV SDD workflow transitively into every OPS install.
+//
+// NOTE: ComponentContext7 is intentionally REMOVED from the DEV-only list
+// (Phase 0c). Context7 has nil deps (no DEV transitive pull) and is
+// always-on for OPS — it provides up-to-date library/docs to the AI agent.
 func TestPresetSelOpsOperationalDoesNotContainDEVComponents(t *testing.T) {
 	devOnly := []model.ComponentID{
 		model.ComponentSDD,
 		model.ComponentSkills, // transitively pulls ComponentSDD — must NOT be in OPS
-		model.ComponentContext7,
 		model.ComponentPermission,
 		model.ComponentGGA,
 		model.ComponentClaudeTheme,
@@ -126,12 +147,13 @@ func TestNormalizeInstallFlagsSelOpsOperationalPreset(t *testing.T) {
 		t.Errorf("Persona = %q, want %q", input.Selection.Persona, model.PersonaOperator)
 	}
 
-	// Must contain all operational components
+	// Must contain all operational components (including Context7, always-on Phase 0c).
 	wantComponents := []model.ComponentID{
 		model.ComponentEngram,
 		model.ComponentSDDOps,
 		model.ComponentOperationalMCP,
 		model.ComponentPersonaOperator,
+		model.ComponentContext7,
 	}
 	for _, id := range wantComponents {
 		if !slices.Contains(input.Selection.Components, id) {
@@ -141,10 +163,10 @@ func TestNormalizeInstallFlagsSelOpsOperationalPreset(t *testing.T) {
 
 	// Must NOT contain DEV-only components (including ComponentSkills which
 	// transitively pulls ComponentSDD via MVPGraph — not appropriate for OPS).
+	// NOTE: ComponentContext7 is NOT in this list — it is always-on for OPS (Phase 0c).
 	devOnly := []model.ComponentID{
 		model.ComponentSDD,
 		model.ComponentSkills, // has hard dep on ComponentSDD — excluded from OPS
-		model.ComponentContext7,
 		model.ComponentPermission,
 		model.ComponentGGA,
 		model.ComponentPersona,

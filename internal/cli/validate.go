@@ -167,7 +167,7 @@ func componentsForPreset(preset model.PresetID, persona model.PersonaID) []model
 		return nil
 	case model.PresetSelOpsOperational:
 		// SelOps operational bundle: Engram + ops SDD workflow + operational MCP
-		// connections + operator persona.
+		// connections + operator persona + Context7 (always-on, Phase 0c).
 		//
 		// ComponentSkills is intentionally excluded: it carries a hard graph dep on
 		// ComponentSDD (DEV) via MVPGraph (ComponentSkills → ComponentSDD). Including
@@ -177,15 +177,20 @@ func componentsForPreset(preset model.PresetID, persona model.PersonaID) []model
 		// The ops-* skills are delivered exclusively through ComponentSDDOps, which
 		// calls sddops.Inject directly and depends only on ComponentEngram.
 		//
-		// Deliberately excludes all DEV-only components (ComponentSDD, ComponentSkills,
-		// ComponentContext7, ComponentPermission, ComponentGGA, ComponentClaudeTheme,
-		// ComponentOpenCodeGentleLogo, ComponentPersona/gentleman) to keep OPS and DEV
-		// namespaces disjoint.
+		// ComponentContext7 is ALWAYS-ON (Phase 0c): it has nil deps in MVPGraph —
+		// no DEV transitive pull — and provides up-to-date library/docs to the AI
+		// agent unconditionally. It is not optional and cannot be deselected in OPS.
+		//
+		// Deliberately excludes all other DEV-only components (ComponentSDD,
+		// ComponentSkills, ComponentPermission, ComponentGGA, ComponentClaudeTheme,
+		// ComponentOpenCodeGentleLogo, ComponentPersona/gentleman) to keep OPS and
+		// DEV namespaces disjoint.
 		return []model.ComponentID{
 			model.ComponentEngram,
 			model.ComponentSDDOps,
 			model.ComponentOperationalMCP,
 			model.ComponentPersonaOperator,
+			model.ComponentContext7,
 		}
 	default: // full-gentleman
 		components = []model.ComponentID{

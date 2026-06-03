@@ -2837,16 +2837,18 @@ func TestNewModelDefaultPresetIsSelOpsOperational(t *testing.T) {
 
 // TestNewModelDefaultComponentsMatchSelOpsPreset verifies that the default
 // component list returned by NewModel equals the exact operational bundle:
-// Engram + SDDOps + OperationalMCP + PersonaOperator (no DEV components).
+// Engram + SDDOps + OperationalMCP + PersonaOperator + Context7 (always-on, Phase 0c).
 func TestNewModelDefaultComponentsMatchSelOpsPreset(t *testing.T) {
 	m := NewModel(system.DetectionResult{}, "dev")
 
 	// These are the canonical OPS components (no SDD, Skills, GGA, Theme, etc.)
+	// Context7 is always-on (Phase 0c) — standalone component, nil deps, no DEV pull.
 	want := []model.ComponentID{
 		model.ComponentEngram,
 		model.ComponentSDDOps,
 		model.ComponentOperationalMCP,
 		model.ComponentPersonaOperator,
+		model.ComponentContext7,
 	}
 	if !reflect.DeepEqual(m.Selection.Components, want) {
 		t.Errorf("Selection.Components =\n  %v\nwant\n  %v", m.Selection.Components, want)
@@ -2856,13 +2858,16 @@ func TestNewModelDefaultComponentsMatchSelOpsPreset(t *testing.T) {
 // TestNewModelDefaultDoesNotContainDevComponents verifies that DEV-only
 // components (SDD dev workflow, Skills, GGA, Theme, etc.) are absent from
 // the default selops-operational selection.
+//
+// NOTE: ComponentContext7 is intentionally REMOVED from this list (Phase 0c).
+// Context7 has nil deps in MVPGraph (no DEV transitive pull) and is always-on
+// in OPS — it provides up-to-date library/docs to the AI agent unconditionally.
 func TestNewModelDefaultDoesNotContainDevComponents(t *testing.T) {
 	m := NewModel(system.DetectionResult{}, "dev")
 
 	devOnly := []model.ComponentID{
 		model.ComponentSDD,
 		model.ComponentSkills,
-		model.ComponentContext7,
 		model.ComponentPermission,
 		model.ComponentGGA,
 		model.ComponentClaudeTheme,
@@ -2874,6 +2879,46 @@ func TestNewModelDefaultDoesNotContainDevComponents(t *testing.T) {
 				t.Errorf("DEV-only component %q must NOT appear in default selops-operational selection", devComp)
 			}
 		}
+	}
+}
+
+// TestNewModelDefaultContext7AlwaysOnForOPS verifies that Context7 is
+// unconditionally included when NewModel() builds the default selops-operational
+// selection (Phase 0c).
+//
+// Context7 has nil deps in MVPGraph — it does not transitively pull any DEV
+// component. It provides up-to-date library/docs to the AI agent and must
+// ALWAYS be present in the OPS bundle, not optional.
+func TestNewModelDefaultContext7AlwaysOnForOPS(t *testing.T) {
+	m := NewModel(system.DetectionResult{}, "dev")
+
+	found := false
+	for _, c := range m.Selection.Components {
+		if c == model.ComponentContext7 {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("ComponentContext7 MUST be always-on in OPS default selection (Phase 0c); got %v", m.Selection.Components)
+	}
+}
+
+// TestComponentsForPresetOPSContext7AlwaysOn verifies that componentsForPreset
+// unconditionally includes Context7 for the selops-operational preset (Phase 0c).
+// This is a second triangulation case exercising the function directly (vs NewModel).
+func TestComponentsForPresetOPSContext7AlwaysOn(t *testing.T) {
+	got := componentsForPreset(model.PresetSelOpsOperational, model.PersonaOperator)
+
+	found := false
+	for _, c := range got {
+		if c == model.ComponentContext7 {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("componentsForPreset(PresetSelOpsOperational) MUST include ComponentContext7 (Phase 0c); got %v", got)
 	}
 }
 
