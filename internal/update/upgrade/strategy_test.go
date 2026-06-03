@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gentleman-programming/gentle-ai/internal/system"
-	"github.com/gentleman-programming/gentle-ai/internal/update"
+	"github.com/Gabrielvilabracho/selops-ai/internal/system"
+	"github.com/Gabrielvilabracho/selops-ai/internal/update"
 )
 
 // --- TestRunStrategy_BrewUpgrade ---
@@ -196,7 +196,7 @@ func TestRunStrategy_BinaryWindowsSelfUpdateSkipped(t *testing.T) {
 
 	r := update.UpdateResult{
 		Tool: update.ToolInfo{
-			Name:          "gentle-ai",
+			Name:          "selops",
 			InstallMethod: update.InstallBinary,
 		},
 		LatestVersion: "1.5.0",
@@ -586,7 +586,7 @@ func TestOpenCodePluginUpgradeHelperProcess(t *testing.T) {
 func TestManualFallbackHint(t *testing.T) {
 	r := update.UpdateResult{
 		Tool: update.ToolInfo{
-			Name:          "gentle-ai",
+			Name:          "selops",
 			InstallMethod: update.InstallBinary,
 		},
 		LatestVersion: "1.5.0",
@@ -639,7 +639,7 @@ func TestBrewUpgrade_RunsUpdateBeforeUpgrade(t *testing.T) {
 		return mockCmd("echo", "ok")
 	}
 
-	err := brewUpgrade(context.Background(), "gentle-ai")
+	err := brewUpgrade(context.Background(), "selops")
 	if err != nil {
 		t.Fatalf("brewUpgrade: unexpected error: %v", err)
 	}
@@ -677,7 +677,7 @@ func TestBrewUpgrade_UpdateFailureIsNonFatal(t *testing.T) {
 		return mockCmd("echo", "Upgraded gentle-ai")
 	}
 
-	err := brewUpgrade(context.Background(), "gentle-ai")
+	err := brewUpgrade(context.Background(), "selops")
 	// brew update failed but brew upgrade succeeded → overall success.
 	if err != nil {
 		t.Errorf("expected success when brew update fails but brew upgrade succeeds, got: %v", err)
@@ -1105,21 +1105,21 @@ func TestInstallScriptURL(t *testing.T) {
 		{
 			name:    "empty version returns error",
 			owner:   "Gentleman-Programming",
-			repo:    "gentle-ai",
+			repo:    "selops",
 			version: "",
 			wantErr: true,
 		},
 		{
 			name:    "whitespace-only version returns error",
 			owner:   "Gentleman-Programming",
-			repo:    "gentle-ai",
+			repo:    "selops",
 			version: "   ",
 			wantErr: true,
 		},
 		{
 			name:        "does not reference main",
 			owner:       "Gentleman-Programming",
-			repo:        "gentle-ai",
+			repo:        "selops",
 			version:     "2.0.0",
 			wantContain: "v2.0.0",
 		},

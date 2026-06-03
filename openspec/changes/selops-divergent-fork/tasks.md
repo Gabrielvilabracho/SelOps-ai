@@ -8,9 +8,9 @@ Strict TDD active (openspec/config.yaml). Work on a feature branch.
 ## Phase 0 — Fork mechanics (start here in the new session)
 
 ### 0a. Rename module + binary
-- [ ] 0a.1 Rename Go module `github.com/gentleman-programming/gentle-ai` → `github.com/Gabrielvilabracho/selops-ai` (go.mod + all imports)
-- [ ] 0a.2 Rename binary dir `cmd/gentle-ai` → `cmd/selops`
-- [ ] 0a.3 `go build ./...` green; smoke-test the binary runs
+- [x] 0a.1 Rename Go module `github.com/gentleman-programming/gentle-ai` → `github.com/Gabrielvilabracho/selops-ai` (go.mod + all imports)
+- [x] 0a.2 Rename binary dir `cmd/gentle-ai` → `cmd/selops`
+- [x] 0a.3 `go build ./...` green; smoke-test the binary runs
 
 ### 0b. Repoint defaults (no deletion yet)
 - [ ] 0b.1 `normalizePreset` default → `selops-operational` (cli/validate.go ~line 90)

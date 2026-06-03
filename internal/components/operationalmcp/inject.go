@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gentleman-programming/gentle-ai/internal/agents"
-	"github.com/gentleman-programming/gentle-ai/internal/components/filemerge"
-	"github.com/gentleman-programming/gentle-ai/internal/model"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/filemerge"
+	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 )
 
 // InjectionResult mirrors the shape used by other component packages.

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gentleman-programming/gentle-ai/internal/state"
-	"github.com/gentleman-programming/gentle-ai/internal/storage"
+	"github.com/Gabrielvilabracho/selops-ai/internal/state"
+	"github.com/Gabrielvilabracho/selops-ai/internal/storage"
 )
 
 // CheckStatus is the outcome of a doctor check: pass, warn, or fail.
@@ -37,7 +37,7 @@ type DoctorReport struct {
 	Checks []CheckResult
 }
 
-var knownTools = []string{"gentle-ai", "engram", "gga", "claude", "opencode"}
+var knownTools = []string{"selops", "engram", "gga", "claude", "opencode"}
 
 const (
 	engramHealthEnvVar = "ENGRAM_BASE_URL"

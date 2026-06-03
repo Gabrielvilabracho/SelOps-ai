@@ -7,15 +7,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gentleman-programming/gentle-ai/internal/agents"
-	"github.com/gentleman-programming/gentle-ai/internal/agents/antigravity"
-	"github.com/gentleman-programming/gentle-ai/internal/agents/claude"
-	"github.com/gentleman-programming/gentle-ai/internal/agents/codex"
-	"github.com/gentleman-programming/gentle-ai/internal/agents/kilocode"
-	"github.com/gentleman-programming/gentle-ai/internal/agents/kimi"
-	"github.com/gentleman-programming/gentle-ai/internal/agents/openclaw"
-	"github.com/gentleman-programming/gentle-ai/internal/agents/opencode"
-	"github.com/gentleman-programming/gentle-ai/internal/agents/vscode"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents/antigravity"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents/claude"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents/codex"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents/kilocode"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents/kimi"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents/openclaw"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents/opencode"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents/vscode"
 )
 
 func cursorAdapter(t *testing.T) agents.Adapter {

@@ -1,4 +1,4 @@
-module github.com/gentleman-programming/gentle-ai
+module github.com/Gabrielvilabracho/selops-ai
 
 go 1.25.10
 

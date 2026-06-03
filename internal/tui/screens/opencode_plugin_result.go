@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gentleman-programming/gentle-ai/internal/components/opencodeplugin"
-	"github.com/gentleman-programming/gentle-ai/internal/tui/styles"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/opencodeplugin"
+	"github.com/Gabrielvilabracho/selops-ai/internal/tui/styles"
 )
 
 func RenderOpenCodePluginResult(results []opencodeplugin.Result, err error) string {

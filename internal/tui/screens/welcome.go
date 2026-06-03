@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gentleman-programming/gentle-ai/internal/tui/styles"
-	"github.com/gentleman-programming/gentle-ai/internal/update"
+	"github.com/Gabrielvilabracho/selops-ai/internal/tui/styles"
+	"github.com/Gabrielvilabracho/selops-ai/internal/update"
 )
 
 // WelcomeOptions returns the welcome menu options.

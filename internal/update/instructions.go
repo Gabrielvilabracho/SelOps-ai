@@ -4,20 +4,20 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gentleman-programming/gentle-ai/internal/system"
+	"github.com/Gabrielvilabracho/selops-ai/internal/system"
 )
 
 // updateHint returns a platform-specific instruction string for updating the given tool.
 func updateHint(tool ToolInfo, profile system.PlatformProfile) string {
 	switch tool.Name {
-	case "gentle-ai":
-		return gentleAIHint(profile)
+	case "selops":
+		return selopsHint(profile)
 	case "engram":
 		return engramHint(profile)
 	case "gga":
 		return ggaHint(profile)
 	case "opencode-subagent-statusline", "opencode-sdd-engram-manage":
-		return "gentle-ai upgrade updates ~/.config/opencode npm deps, clears this plugin's @latest cache, then requires OpenCode restart/reload"
+		return "selops upgrade updates ~/.config/opencode npm deps, clears this plugin's @latest cache, then requires OpenCode restart/reload"
 	default:
 		return ""
 	}
@@ -28,17 +28,17 @@ func openCodeRegisteredNotMaterializedHint(tool ToolInfo) string {
 	if pkg == "" {
 		pkg = tool.Name
 	}
-	return fmt.Sprintf("registered in ~/.config/opencode/tui.json; pending npm dependency materialization for %s. Run gentle-ai upgrade to install/update ~/.config/opencode dependencies, then restart or reload OpenCode; if it stays pending, check OpenCode logs for package or peer dependency errors.", pkg)
+	return fmt.Sprintf("registered in ~/.config/opencode/tui.json; pending npm dependency materialization for %s. Run selops upgrade to install/update ~/.config/opencode dependencies, then restart or reload OpenCode; if it stays pending, check OpenCode logs for package or peer dependency errors.", pkg)
 }
 
-func gentleAIHint(profile system.PlatformProfile) string {
+func selopsHint(profile system.PlatformProfile) string {
 	switch profile.OS {
 	case "darwin":
-		return "brew upgrade gentle-ai"
+		return "brew upgrade selops"
 	case "linux":
-		return "curl -fsSL https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/scripts/install.sh | bash"
+		return "curl -fsSL https://raw.githubusercontent.com/Gabrielvilabracho/selops-ai/main/scripts/install.sh | bash"
 	case "windows":
-		return "irm https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/scripts/install.ps1 | iex"
+		return "irm https://raw.githubusercontent.com/Gabrielvilabracho/selops-ai/main/scripts/install.ps1 | iex"
 	default:
 		return ""
 	}
@@ -49,7 +49,7 @@ func engramHint(profile system.PlatformProfile) string {
 	case "brew":
 		return "brew upgrade engram"
 	default:
-		return "gentle-ai upgrade (downloads pre-built binary)"
+		return "selops upgrade (downloads pre-built binary)"
 	}
 }
 

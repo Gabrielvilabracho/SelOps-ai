@@ -1,14 +1,14 @@
 version: 2
 
-project_name: gentle-ai
+project_name: selops
 
 before:
   hooks:
     - go mod tidy
 
 builds:
-  - main: ./cmd/gentle-ai
-    binary: gentle-ai
+  - main: ./cmd/selops
+    binary: selops
     env:
       - CGO_ENABLED=0
     goos:
@@ -43,23 +43,23 @@ changelog:
 
 brews:
   - repository:
-      owner: Gentleman-Programming
+      owner: Gabrielvilabracho
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
     directory: Formula
-    name: gentle-ai
-    homepage: "https://github.com/Gentleman-Programming/gentle-ai"
-    description: "Gentle-AI — Ecosystem, Frameworks, Workflows for AI coding agents."
+    name: selops
+    homepage: "https://github.com/Gabrielvilabracho/selops-ai"
+    description: "SelOps — Business operations AI assistant."
     license: "MIT"
-    commit_msg_template: "chore: update gentle-ai formula to {{ .Tag }}"
+    commit_msg_template: "chore: update selops formula to {{ .Tag }}"
 
 scoops:
   - repository:
-      owner: Gentleman-Programming
+      owner: Gabrielvilabracho
       name: scoop-bucket
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
-    name: gentle-ai
-    homepage: "https://github.com/Gentleman-Programming/gentle-ai"
-    description: "Gentle-AI — Ecosystem, Frameworks, Workflows for AI coding agents."
+    name: selops
+    homepage: "https://github.com/Gabrielvilabracho/selops-ai"
+    description: "SelOps — Business operations AI assistant."
     license: MIT
-    commit_msg_template: "chore: update gentle-ai to {{ .Tag }}"
+    commit_msg_template: "chore: update selops to {{ .Tag }}"
