@@ -3,16 +3,12 @@ status: in-progress
 created_at: "2026-06-03"
 last_updated: "2026-06-03"
 artifact_store: hybrid
-phase_ready: "Phase 3 — Visual rebrand"
+phase_ready: "Phase 4 — Hermes integration"
 depends_on:
   - selops-operational-layer  # archived; provides the OPS components this fork keeps
 notes: |
-  Phase 0, 1, and 2 COMPLETE. All PRs merged. main is green.
-  Next session starts at Phase 3 (visual rebrand: theme + logo).
-  Phase 3 requires a design decision from the user:
-    - What visual identity does SelOps have? (colors, logo concept)
-    - Current TUI uses Kanagawa theme + Braille-rose logo — both need replacement.
-  Phase 4 (Hermes via MCP) follows after Phase 3.
+  Phase 0, 1, 2, and 3 COMPLETE. All PRs merged for 0-2; Phase 3 ready for verify+PR.
+  Next session starts at Phase 4 (Hermes via MCP).
 
   Strict TDD active. go build + go test green at every phase boundary.
   IMPORTANT: Always run `go test ./...` fully (including golden tests) before
@@ -50,6 +46,17 @@ phases_completed:
       Threshold: 7 veto gates (incl. 2 AI-native), 5-dim score, route 0-3 inline
       / 4-6 pipeline Supervised / 7+ pipeline Suggest. Grounded in ITIL4, SRE,
       NIST AI RMF. Internal/assets/generic/ops-orchestrator.md (keystone).
+  - phase: "Phase 3 — Visual rebrand (The Operator)"
+    prs: []
+    status: ready-for-verify
+    summary: |
+      Operator palette: 13 color vars with new hex values (midnight blue base #0D1B2A,
+      cyan blueprint accent #48CAE4, orange safety #FF6B35, deep blue #2BA8C9).
+      SELOPS industrial badge wordmark replaces Braille-rose ASCII art.
+      Tagline updated to "SelOps <version> — Your AI operations engineer".
+      Personality line added: "On shift. Risk gates armed. Let's keep prod boring."
+      Catalog description + plugin roseArt/compactArt updated to match.
+      6 new TDD tests. 3 golden files regenerated. 49/49 packages green.
 
 artifacts:
   proposal: openspec/changes/selops-divergent-fork/proposal.md

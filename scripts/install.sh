@@ -2,21 +2,21 @@
 set -euo pipefail
 
 # ============================================================================
-# Gentle-AI — Install Script
-# Ecosystem, Frameworks, Workflows for AI coding agents.
+# SelOps — Install Script
+# AI operations CLI for coding agents.
 #
 # Usage:
-#   curl -sL https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/scripts/install.sh | bash
+#   curl -sL https://raw.githubusercontent.com/Gabrielvilabracho/selops-ai/main/scripts/install.sh | bash
 #
 # Or download and run:
-#   curl -sLO https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/scripts/install.sh
+#   curl -sLO https://raw.githubusercontent.com/Gabrielvilabracho/selops-ai/main/scripts/install.sh
 #   chmod +x install.sh
 #   ./install.sh
 # ============================================================================
 
-GITHUB_OWNER="Gentleman-Programming"
-GITHUB_REPO="gentle-ai"
-BINARY_NAME="gentle-ai"
+GITHUB_OWNER="Gabrielvilabracho"
+GITHUB_REPO="selops-ai"
+BINARY_NAME="selops"
 BREW_TAP="Gentleman-Programming/homebrew-tap"
 
 # ============================================================================
@@ -55,7 +55,7 @@ step()    { echo -e "\n${CYAN}${BOLD}==>${NC} ${BOLD}$*${NC}"; }
 
 show_help() {
     cat <<EOF
-${BOLD}Gentle-AI installer${NC}
+${BOLD}SelOps installer${NC}
 
 Usage: install.sh [OPTIONS]
 
@@ -442,7 +442,7 @@ print_banner() {
     echo " | |_| |  __/ | | | |_| |  __/_____/ ___ \ | | "
     echo "  \____|\___|_| |_|\__|_|\___|    /_/   \_\___|"
     echo -e "${NC}"
-    echo -e "  ${DIM}Gentle-AI — Ecosystem, Frameworks, Workflows${NC}"
+    echo -e "  ${DIM}SelOps — AI operations CLI${NC}"
     echo ""
 }
 

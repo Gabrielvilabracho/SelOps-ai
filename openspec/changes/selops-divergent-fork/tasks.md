@@ -80,15 +80,17 @@ before merging any PR touching `internal/assets/` — partial test runs miss gol
 
 ---
 
-## Phase 3 — Visual rebrand (START HERE next session)
-- [ ] 3.1 **Design decision (user)**: define SelOps visual identity
-  - What colors? (current TUI uses Kanagawa theme — dark, warm browns/greens)
-  - What logo concept? (current uses Braille-rose ASCII art)
-  - Tone: operational/enterprise or playful/bold?
-- [ ] 3.2 Replace Kanagawa theme constants in internal/tui/styles/ with SelOps palette
-- [ ] 3.3 Replace Braille-rose logo asset with SelOps logo
-- [ ] 3.4 Update TUI welcome screen copy to reflect SelOps identity
-- [ ] 3.5 `go build ./... && go test ./...` green (golden tests will need regeneration)
+## Phase 3 — Visual rebrand ✅ COMPLETE
+- [x] 3.1 **Design decision (user)**: define SelOps visual identity
+  - Colors: Operator palette (midnight blue base, cyan blueprint accent, orange safety, green success)
+  - Logo: industrial SELOPS wordmark framed in box-drawing panel badge
+  - Tone: industrial/blueprint — dry engineer humor, operational identity
+- [x] 3.2 Replace Rose Pine palette in internal/tui/styles/styles.go with Operator palette (13 color vars, same names)
+- [x] 3.3 Replace Braille-rose logo in internal/tui/styles/logo.go with SELOPS industrial badge; update gradient to cyan→blue
+- [x] 3.4 Update TUI welcome screen: Tagline → SelOps identity; add personality line "On shift. Risk gates armed. Let's keep prod boring."
+- [x] 3.4b Update catalog description for ComponentOpenCodeGentleLogo: "Braille rose" → "SelOps Operator badge"
+- [x] 3.4c Update plugin.go roseArt/compactArt to SELOPS badge art
+- [x] 3.5 `go build ./... && go test ./...` green — 49/49 packages pass, golden tests regenerated
 
 ---
 

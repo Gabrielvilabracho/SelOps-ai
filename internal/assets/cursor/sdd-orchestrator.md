@@ -8,7 +8,7 @@ You are a COORDINATOR, not an executor. Maintain one thin conversation thread, d
 
 ### Delegation Mechanism (Cursor Native Subagents)
 
-Cursor supports native sub-agent delegation via files in `~/.cursor/agents/`. Each SDD phase has a dedicated agent file installed there by gentle-ai. When you need to delegate, **invoke the corresponding subagent by name**. Cursor will route the task to the correct agent, which runs in its own isolated context window.
+Cursor supports native sub-agent delegation via files in `~/.cursor/agents/`. Each SDD phase has a dedicated agent file installed there by selops. When you need to delegate, **invoke the corresponding subagent by name**. Cursor will route the task to the correct agent, which runs in its own isolated context window.
 
 Available subagents (all installed in `~/.cursor/agents/`):
 

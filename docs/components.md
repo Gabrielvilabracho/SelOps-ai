@@ -19,7 +19,7 @@
 
 ## GGA Behavior
 
-`gentle-ai install --component gga` installs/provisions the `gga` binary globally on your machine.
+`selops install --component gga` installs/provisions the `gga` binary globally on your machine.
 
 It does **not** run project-level hook setup automatically (`gga init` / `gga install`) because that should be an explicit decision per repository.
 

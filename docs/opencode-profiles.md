@@ -6,12 +6,12 @@
 
 You configured your SDD models once, and now every task -- cheap or expensive, experimental or battle-tested -- runs through the same orchestrator. Profiles fix that: **create named model configurations and switch between them with Tab inside OpenCode.**
 
-Gentle AI supports **two ways** of working with OpenCode profiles. Profiles cover SDD phase agents; Judgment Day agents (`jd-judge-a`, `jd-judge-b`, `jd-fix-agent`) are workflow-level slots with independent model assignments.
+SelOps supports **two ways** of working with OpenCode profiles. Profiles cover SDD phase agents; Judgment Day agents (`jd-judge-a`, `jd-judge-b`, `jd-fix-agent`) are workflow-level slots with independent model assignments.
 
-1. **Generated multi-profile mode** -- the classic Gentle AI flow. The base SDD conductor is `gentle-orchestrator`. Each named profile generates its own `sdd-orchestrator-{name}` plus 10 suffixed SDD phase sub-agents in `opencode.json`, and you switch between them with **Tab**.
+1. **Generated multi-profile mode** -- the classic SelOps flow. The base SDD conductor is `gentle-orchestrator`. Each named profile generates its own `sdd-orchestrator-{name}` plus 10 suffixed SDD phase sub-agents in `opencode.json`, and you switch between them with **Tab**.
 2. **External single-active mode** -- for community tools that keep profile files outside `opencode.json` and activate one runtime profile at a time.
 
-That means you can stay with the built-in multi-profile overlay, or plug Gentle AI into an external profile manager without the two systems fighting each other.
+That means you can stay with the built-in multi-profile overlay, or plug SelOps into an external profile manager without the two systems fighting each other.
 
 ---
 
@@ -81,7 +81,7 @@ This creates a "cheap" profile where everything runs on Haiku except `sdd-apply`
 
 ## External Profile Managers
 
-If you're using a community tool that stores profiles under `~/.config/opencode/profiles/*.json` and activates them at runtime, Gentle AI can now sync OpenCode in a compatibility mode.
+If you're using a community tool that stores profiles under `~/.config/opencode/profiles/*.json` and activates them at runtime, SelOps can now sync OpenCode in a compatibility mode.
 
 ### Auto-detection
 
@@ -91,7 +91,7 @@ On `gentle-ai sync`, if OpenCode profile files exist under:
 ~/.config/opencode/profiles/*.json
 ```
 
-Gentle AI automatically switches to **`external-single-active`** strategy for OpenCode sync.
+SelOps automatically switches to **`external-single-active`** strategy for OpenCode sync.
 
 ### Manual override
 
@@ -109,13 +109,13 @@ gentle-ai sync --agent opencode --sdd-profile-strategy generated-multi
 
 ### What compatibility mode does
 
-In `external-single-active` mode, Gentle AI:
+In `external-single-active` mode, SelOps:
 
 - keeps writing the base OpenCode SDD assets and shared prompt files
 - **does not** auto-regenerate suffixed named profiles from `opencode.json`
 - **preserves the current `gentle-orchestrator` prompt** during sync so external tools can keep their runtime policy / fallback blocks intact
 
-This is the important bit: Gentle AI still maintains the SDD foundation, but it stops acting like `opencode.json` is the source of truth for every profile.
+This is the important bit: SelOps still maintains the SDD foundation, but it stops acting like `opencode.json` is the source of truth for every profile.
 
 ## Using Profiles in OpenCode
 
@@ -162,7 +162,7 @@ In generated multi-profile mode, each named profile generates 11 agent entries i
 
 Sub-agent prompts are shared across all profiles as files under `~/.config/opencode/prompts/sdd/` (e.g., `sdd-apply.md`). Each agent entry references the shared file via `{file:~/.config/opencode/prompts/sdd/sdd-apply.md}` -- only the `model` field differs between profiles. Orchestrator prompts are inlined per-profile because they contain profile-specific model assignment tables and sub-agent references.
 
-During sync or update, Gentle AI now uses one of two strategies:
+During sync or update, SelOps now uses one of two strategies:
 
 - **`generated-multi`** -- scan `opencode.json` for `sdd-orchestrator-*`, update shared prompts, regenerate profile orchestrators, preserve model assignments, and keep `gentle-orchestrator` as the canonical base conductor
 - **`external-single-active`** -- detect external profile files, keep the shared SDD assets current, and preserve the existing `gentle-orchestrator` prompt instead of overwriting external runtime extensions

@@ -7,7 +7,7 @@ Pi support installs the Gentleman harness as Pi packages, then lets Pi own its o
 ## Quick Start
 
 1. Install Pi and make sure `pi` is available on `PATH`.
-2. Install the Pi support stack from Gentle AI:
+2. Install the Pi support stack from SelOps:
 
 ```bash
 gentle-ai install --agent pi
@@ -19,11 +19,11 @@ gentle-ai install --agent pi
 pi
 ```
 
-Gentle AI detects the `pi` binary first. If Pi is the only selected agent, the installer still provisions the real Engram component, but skips persona, ecosystem component selection, and Strict TDD prompts because `gentle-pi` owns those choices inside Pi.
+SelOps detects the `pi` binary first. If Pi is the only selected agent, the installer still provisions the real Engram component, but skips persona, ecosystem component selection, and Strict TDD prompts because `gentle-pi` owns those choices inside Pi.
 
 ## Installed Packages
 
-Gentle AI runs exactly these Pi setup steps:
+SelOps runs exactly these Pi setup steps:
 
 ```bash
 pi install npm:gentle-pi
@@ -55,17 +55,17 @@ pi install npm:pi-btw
 
 `gentle-pi` owns Pi's runtime behavior. Its current harness enforces parent-only delegation triggers: delegate exploration after 4+ files, use one writer for multi-file changes, require fresh review before PRs, run fresh audits after incidents, and pause long monolithic sessions before they drift.
 
-The real Engram component is provisioned separately by Gentle AI so `gentle-engram` has an Engram runtime to talk to.
-During that Engram provisioning step, Gentle AI declares `npm:pi-mcp-adapter` in Pi's agent settings and adds the npm dependency. Existing unrelated Pi settings, package entries, and npm dependencies are preserved.
+The real Engram component is provisioned separately by SelOps so `gentle-engram` has an Engram runtime to talk to.
+During that Engram provisioning step, SelOps declares `npm:pi-mcp-adapter` in Pi's agent settings and adds the npm dependency. Existing unrelated Pi settings, package entries, and npm dependencies are preserved.
 
-Files updated by Gentle AI's Engram provisioning:
+Files updated by SelOps's Engram provisioning:
 
 ```text
 .pi/agent/settings.json    # packages includes npm:pi-mcp-adapter
 .pi/npm/package.json       # dependencies.pi-mcp-adapter = ^2.6.0
 ```
 
-`gentle-engram` owns the MCP schema itself. The installer runs `pi-engram init`, which initializes Pi's Engram MCP config under the Pi agent config directory instead of having Gentle AI hand-write that file.
+`gentle-engram` owns the MCP schema itself. The installer runs `pi-engram init`, which initializes Pi's Engram MCP config under the Pi agent config directory instead of having SelOps hand-write that file.
 
 ## Pi Commands
 
@@ -84,7 +84,7 @@ Run these inside Pi after installing the package stack.
 
 ## Persona Selection
 
-Pi persona selection belongs to `gentle-pi`, not the Gentle AI installer.
+Pi persona selection belongs to `gentle-pi`, not the SelOps installer.
 
 ```text
 /gentleman:persona
@@ -105,7 +105,7 @@ Run `/reload` or start a new Pi session after switching if the current session a
 
 ## Model Assignments
 
-Pi model assignment belongs to `gentle-pi`, not the Gentle AI installer.
+Pi model assignment belongs to `gentle-pi`, not the SelOps installer.
 
 ```text
 /gentleman:models
@@ -155,7 +155,7 @@ If you start Pi with `pi -ns`, Pi skips startup skill loading/hooks. That mode i
 
 | Symptom                                                | Fix                                                                                                                                                                  |
 | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Gentle AI says Pi is missing                           | Install Pi first and make sure `pi` is on `PATH`.                                                                                                                    |
+| SelOps says Pi is missing                           | Install Pi first and make sure `pi` is on `PATH`.                                                                                                                    |
 | SDD agents are missing in Pi                           | Start Pi normally in the project so `gentle-pi` can run `session_start`, or run `/gentle-ai:install-sdd`. If you used `pi -ns`, startup hooks were skipped.          |
 | Persona did not change immediately                     | Run `/reload` or start a new Pi session.                                                                                                                             |
 | Model override should be removed                       | Open `/gentleman:models` and choose `Inherit active/default model`.                                                                                                  |
@@ -166,6 +166,6 @@ If you start Pi with `pi -ns`, Pi skips startup skill loading/hooks. That mode i
 
 - Read [Supported Agents](agents.md) for the full agent matrix.
 - Read [Engram Commands](engram.md) if you want to inspect or sync persistent memory.
-- Read [Usage](usage.md) for the general Gentle AI CLI and TUI flow.
+- Read [Usage](usage.md) for the general SelOps CLI and TUI flow.
 
 ← [Back to README](../README.md)

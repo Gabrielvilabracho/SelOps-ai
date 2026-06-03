@@ -268,19 +268,19 @@ Los sub-agente prompts SÍ se comparten porque son idénticos entre perfiles (so
 
 **R-PROF-50**: El comando `sync` DEBE aceptar un flag `--profile <name>:<orchestrator-model>` que crea/actualiza un perfil durante el sync:
 ```bash
-gentle-ai sync --profile cheap:anthropic/claude-haiku-3.5-20241022
+selops sync --profile cheap:anthropic/claude-haiku-3.5-20241022
 ```
 
 **R-PROF-51**: Se DEBEN poder especificar múltiples `--profile` flags:
 ```bash
-gentle-ai sync \
+selops sync \
   --profile cheap:anthropic/claude-haiku-3.5-20241022 \
   --profile premium:anthropic/claude-opus-4-20250514
 ```
 
 **R-PROF-52**: El formato del flag es `name:provider/model`. Para asignar modelos individuales a sub-agentes vía CLI, se usa la sintaxis extendida:
 ```bash
-gentle-ai sync --profile cheap:anthropic/claude-haiku-3.5-20241022 \
+selops sync --profile cheap:anthropic/claude-haiku-3.5-20241022 \
   --profile-phase cheap:sdd-apply:anthropic/claude-sonnet-4-20250514
 ```
 
@@ -441,7 +441,7 @@ Sync Start
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                                                          │
-│  ★  Gentleman AI Ecosystem — v0.x.x                     │
+│  ★  SelOps Ecosystem — v0.x.x                     │
 │     Supercharge your AI agents.                          │
 │                                                          │
 │  ▸ Install Ecosystem                                     │

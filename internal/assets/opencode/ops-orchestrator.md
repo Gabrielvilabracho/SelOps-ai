@@ -1,4 +1,4 @@
-# Gentle AI — OPS Orchestrator Instructions
+# SelOps — OPS Orchestrator Instructions
 
 Bind this to the dedicated `ops-orchestrator` agent only. Do NOT apply it to executor phase agents such as `ops-brief`, `ops-structure`, `ops-produce`, `ops-review`, or `ops-deliver`.
 

@@ -1,0 +1,24 @@
+change: selops-legacy-debrand
+status: apply-complete
+artifact_store: hybrid
+phases:
+  explore: complete
+  propose: skipped
+  spec: skipped
+  design: skipped
+  tasks: complete
+  apply: complete
+  verify: pending
+  archive: pending
+apply_progress:
+  mode: Strict TDD (golden-file safety net only; no behavioral code changes)
+  batches_complete: 1
+  total_tasks_complete: 35
+  total_tasks: 35
+  build: green
+  tests: green
+notes: |
+  All Bucket A+B+C+C-path changes applied.
+  Bucket B contracts (markers, env vars, state paths, Go constants, external repos) untouched.
+  Internal embedded skills (internal/assets/skills/) not touched (embedded author frontmatter exemption).
+  No commits made — awaiting orchestrator.

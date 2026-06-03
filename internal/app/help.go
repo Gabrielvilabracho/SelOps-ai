@@ -6,15 +6,15 @@ import (
 )
 
 func printHelp(w io.Writer, version string) {
-	fmt.Fprintf(w, `gentle-ai — Gentle-AI: Ecosystem, Frameworks, Workflows (%s)
+	fmt.Fprintf(w, `selops — SelOps: AI operations CLI (%s)
 
 USAGE
-  gentle-ai                     Launch interactive TUI
-  gentle-ai <command> [flags]
+  selops                     Launch interactive TUI
+  selops <command> [flags]
 
 COMMANDS
   install      Configure AI coding agents on this machine
-  uninstall    Remove Gentle AI managed files from this machine
+  uninstall    Remove SelOps managed files from this machine
   sync         Sync agent configs and skills to current version
   skill-registry refresh
                Refresh .atl/skill-registry.md with cache-hit fast path
@@ -27,7 +27,7 @@ COMMANDS
 FLAGS
   --help, -h    Show this help
 
-Run 'gentle-ai help' for this message.
-Documentation: https://github.com/Gentleman-Programming/gentle-ai
+Run 'selops help' for this message.
+Documentation: https://github.com/Gabrielvilabracho/selops-ai
 `, version)
 }

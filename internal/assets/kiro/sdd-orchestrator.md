@@ -274,7 +274,7 @@ Kiro's `.kiro/steering/*.md` files provide persistent workspace context that app
 - Reference tech stack and project structure
 - Keep custom instructions that apply across all sessions
 
-Gentle AI writes to the global steering file (`~/.kiro/steering/gentle-ai.md`) — treat it as your active working context alongside your project steering files.
+SelOps writes to the global steering file (`~/.kiro/steering/gentle-ai.md`) — treat it as your active working context alongside your project steering files.
 
 ### Phase Launch Deduplication (MANDATORY)
 
