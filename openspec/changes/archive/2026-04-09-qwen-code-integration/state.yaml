@@ -1,0 +1,9 @@
+change: qwen-code-integration
+status: archived
+archived_at: "2026-06-02"
+verify_verdict: PASS
+pr_merged:
+  - number: 263
+    repo: gentleman-programming/gentle-ai
+    description: "feat: add Qwen Code agent integration"
+artifact_store: hybrid
