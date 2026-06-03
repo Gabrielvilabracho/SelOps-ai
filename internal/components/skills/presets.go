@@ -17,7 +17,7 @@ var foundationSkills = []model.SkillID{
 	model.SkillWorkUnitCommits,
 }
 
-// opsSkills are the SelOps operational skills — included for PresetSelOpsOperational.
+// opsSkills are the SelOps operational domain knowledge skills — included for PresetSelOpsOperational.
 var opsSkills = []model.SkillID{
 	model.SkillOpsStandardDocumentation,
 	model.SkillOpsModularArchitecture,
@@ -27,12 +27,25 @@ var opsSkills = []model.SkillID{
 	model.SkillOpsGraduatedAutonomy,
 }
 
+// opsPipelineSkills are the SelOps OPS pipeline phase agents — execution roles that
+// form the 5-phase pipeline: brief → structure → produce → review → deliver.
+// Kept separate from opsSkills because they are EXECUTION ROLES, not KNOWLEDGE.
+// Domain skills inform what to do; pipeline agents define how to do it, phase by phase.
+var opsPipelineSkills = []model.SkillID{
+	model.SkillOpsBrief,
+	model.SkillOpsStructure,
+	model.SkillOpsProduce,
+	model.SkillOpsReview,
+	model.SkillOpsDeliver,
+}
+
 // SkillsForPreset returns which skills should be installed for a given preset.
 //
 //   - "minimal" / PresetMinimal:              foundation skills only
 //   - "ecosystem-only" / PresetEcosystemOnly: foundation skills
 //   - "full-gentleman" / PresetFullGentleman: foundation skills
-//   - "selops-operational" / PresetSelOpsOperational: ops-* skills only
+//   - "selops-operational" / PresetSelOpsOperational: ops domain knowledge skills only
+//     (pipeline phase agents are injected separately by the sddops component)
 //   - "custom" / PresetCustom:                empty (caller should provide explicit list)
 func SkillsForPreset(preset model.PresetID) []model.SkillID {
 	switch preset {
