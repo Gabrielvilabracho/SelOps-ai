@@ -74,7 +74,7 @@ func NormalizeInstallFlags(flags InstallFlags, detection system.DetectionResult)
 
 func normalizePersona(value string) (model.PersonaID, error) {
 	if strings.TrimSpace(value) == "" {
-		return model.PersonaGentleman, nil
+		return model.PersonaOperator, nil
 	}
 
 	switch model.PersonaID(value) {
@@ -87,7 +87,7 @@ func normalizePersona(value string) (model.PersonaID, error) {
 
 func normalizePreset(value string) (model.PresetID, error) {
 	if strings.TrimSpace(value) == "" {
-		return model.PresetFullGentleman, nil
+		return model.PresetSelOpsOperational, nil
 	}
 
 	switch model.PresetID(value) {

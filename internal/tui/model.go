@@ -475,15 +475,15 @@ func NewModel(detection system.DetectionResult, version string, installState ...
 		s = installState[0]
 	}
 	agents := preselectedAgents(detection, s)
-	components := componentsForPreset(model.PresetFullGentleman, model.PersonaGentleman)
+	components := componentsForPreset(model.PresetSelOpsOperational, model.PersonaOperator)
 	if isPiOnlyAgents(agents) {
 		components = piOnlyComponents()
 	}
 
 	selection := model.Selection{
 		Agents:     agents,
-		Persona:    model.PersonaGentleman,
-		Preset:     model.PresetFullGentleman,
+		Persona:    model.PersonaOperator,
+		Preset:     model.PresetSelOpsOperational,
 		Components: components,
 	}
 
@@ -3313,6 +3313,16 @@ func componentsForPreset(preset model.PresetID, persona model.PersonaID) []model
 		components = []model.ComponentID{model.ComponentEngram, model.ComponentSDD, model.ComponentSkills, model.ComponentContext7, model.ComponentGGA}
 	case model.PresetCustom:
 		return nil
+	case model.PresetSelOpsOperational:
+		// SelOps operational bundle: Engram + ops SDD workflow + operational MCP
+		// connections + operator persona. DEV-only components are intentionally
+		// excluded to keep OPS and DEV namespaces disjoint.
+		return []model.ComponentID{
+			model.ComponentEngram,
+			model.ComponentSDDOps,
+			model.ComponentOperationalMCP,
+			model.ComponentPersonaOperator,
+		}
 	default: // full-gentleman
 		components = []model.ComponentID{
 			model.ComponentEngram,
