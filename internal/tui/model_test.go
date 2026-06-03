@@ -2819,6 +2819,64 @@ func TestNewModel_StateAgentsArePreselected(t *testing.T) {
 	}
 }
 
+// ─── Phase 0b: default preset ───────────────────────────────────────────────
+
+// TestNewModelDefaultPresetIsSelOpsOperational verifies that NewModel()
+// initialises with PresetSelOpsOperational and PersonaOperator so that
+// first-run users land on the SelOps operational workflow.
+func TestNewModelDefaultPresetIsSelOpsOperational(t *testing.T) {
+	m := NewModel(system.DetectionResult{}, "dev")
+
+	if m.Selection.Preset != model.PresetSelOpsOperational {
+		t.Errorf("Selection.Preset = %q, want %q", m.Selection.Preset, model.PresetSelOpsOperational)
+	}
+	if m.Selection.Persona != model.PersonaOperator {
+		t.Errorf("Selection.Persona = %q, want %q", m.Selection.Persona, model.PersonaOperator)
+	}
+}
+
+// TestNewModelDefaultComponentsMatchSelOpsPreset verifies that the default
+// component list returned by NewModel equals the exact operational bundle:
+// Engram + SDDOps + OperationalMCP + PersonaOperator (no DEV components).
+func TestNewModelDefaultComponentsMatchSelOpsPreset(t *testing.T) {
+	m := NewModel(system.DetectionResult{}, "dev")
+
+	// These are the canonical OPS components (no SDD, Skills, GGA, Theme, etc.)
+	want := []model.ComponentID{
+		model.ComponentEngram,
+		model.ComponentSDDOps,
+		model.ComponentOperationalMCP,
+		model.ComponentPersonaOperator,
+	}
+	if !reflect.DeepEqual(m.Selection.Components, want) {
+		t.Errorf("Selection.Components =\n  %v\nwant\n  %v", m.Selection.Components, want)
+	}
+}
+
+// TestNewModelDefaultDoesNotContainDevComponents verifies that DEV-only
+// components (SDD dev workflow, Skills, GGA, Theme, etc.) are absent from
+// the default selops-operational selection.
+func TestNewModelDefaultDoesNotContainDevComponents(t *testing.T) {
+	m := NewModel(system.DetectionResult{}, "dev")
+
+	devOnly := []model.ComponentID{
+		model.ComponentSDD,
+		model.ComponentSkills,
+		model.ComponentContext7,
+		model.ComponentPermission,
+		model.ComponentGGA,
+		model.ComponentClaudeTheme,
+		model.ComponentOpenCodeGentleLogo,
+	}
+	for _, devComp := range devOnly {
+		for _, got := range m.Selection.Components {
+			if got == devComp {
+				t.Errorf("DEV-only component %q must NOT appear in default selops-operational selection", devComp)
+			}
+		}
+	}
+}
+
 // ─── Task 4: StrictTDD screen navigation ────────────────────────────────────
 
 // helper: returns cursor index for SDDModeSingle in SDDModeOptions.
