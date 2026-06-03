@@ -10,20 +10,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gentleman-programming/gentle-ai/internal/agents"
-	"github.com/gentleman-programming/gentle-ai/internal/backup"
-	"github.com/gentleman-programming/gentle-ai/internal/components/engram"
-	"github.com/gentleman-programming/gentle-ai/internal/components/gga"
-	"github.com/gentleman-programming/gentle-ai/internal/components/mcp"
-	"github.com/gentleman-programming/gentle-ai/internal/components/permissions"
-	"github.com/gentleman-programming/gentle-ai/internal/components/persona"
-	"github.com/gentleman-programming/gentle-ai/internal/components/sdd"
-	"github.com/gentleman-programming/gentle-ai/internal/components/skills"
-	"github.com/gentleman-programming/gentle-ai/internal/components/theme"
-	"github.com/gentleman-programming/gentle-ai/internal/model"
-	"github.com/gentleman-programming/gentle-ai/internal/pipeline"
-	"github.com/gentleman-programming/gentle-ai/internal/state"
-	"github.com/gentleman-programming/gentle-ai/internal/verify"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents"
+	"github.com/Gabrielvilabracho/selops-ai/internal/backup"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/engram"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/gga"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/mcp"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/operationalmcp"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/permissions"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/persona"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/sdd"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/skills"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/theme"
+	"github.com/Gabrielvilabracho/selops-ai/internal/model"
+	"github.com/Gabrielvilabracho/selops-ai/internal/pipeline"
+	"github.com/Gabrielvilabracho/selops-ai/internal/state"
+	"github.com/Gabrielvilabracho/selops-ai/internal/verify"
 )
 
 // SyncFlags holds parsed CLI flags for the sync command.
@@ -702,6 +703,24 @@ func (s componentSyncStep) Run() error {
 			res, err := theme.Inject(s.homeDir, adapter)
 			if err != nil {
 				return fmt.Errorf("sync theme for %q: %w", adapter.Agent(), err)
+			}
+			s.countChanged(boolToInt(res.Changed), res.Files...)
+		}
+		return nil
+
+	case model.ComponentSDDOps:
+		// MVP: ComponentSDDOps is a non-managed (install-only) component.
+		// Sync is explicitly a no-op — skill files are managed by the user
+		// or refreshed via install. This avoids overwriting customised skill content.
+		// TODO: add managed sync when ops skill content stabilises.
+		return nil
+
+	case model.ComponentOperationalMCP:
+		// Sync operational MCP connection entries (placeholder by default).
+		for _, adapter := range adapters {
+			res, err := operationalmcp.Inject(s.homeDir, adapter, s.selection.OperationalMCPServers)
+			if err != nil {
+				return fmt.Errorf("sync operationalmcp for %q: %w", adapter.Agent(), err)
 			}
 			s.countChanged(boolToInt(res.Changed), res.Files...)
 		}

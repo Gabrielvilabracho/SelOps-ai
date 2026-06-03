@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gentleman-programming/gentle-ai/internal/agents"
-	"github.com/gentleman-programming/gentle-ai/internal/assets"
-	"github.com/gentleman-programming/gentle-ai/internal/components/filemerge"
-	"github.com/gentleman-programming/gentle-ai/internal/components/skills"
-	"github.com/gentleman-programming/gentle-ai/internal/model"
-	"github.com/gentleman-programming/gentle-ai/internal/opencode"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents"
+	"github.com/Gabrielvilabracho/selops-ai/internal/assets"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/filemerge"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/skills"
+	"github.com/Gabrielvilabracho/selops-ai/internal/model"
+	"github.com/Gabrielvilabracho/selops-ai/internal/opencode"
 )
 
 type InjectionResult struct {

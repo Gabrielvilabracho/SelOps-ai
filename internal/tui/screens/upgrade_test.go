@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gentleman-programming/gentle-ai/internal/update"
-	"github.com/gentleman-programming/gentle-ai/internal/update/upgrade"
+	"github.com/Gabrielvilabracho/selops-ai/internal/update"
+	"github.com/Gabrielvilabracho/selops-ai/internal/update/upgrade"
 )
 
 // ─── RenderUpgrade states ──────────────────────────────────────────────────
@@ -26,7 +26,7 @@ func TestRenderUpgrade_CheckingState(t *testing.T) {
 func TestRenderUpgrade_AllUpToDate(t *testing.T) {
 	results := []update.UpdateResult{
 		{
-			Tool:             update.ToolInfo{Name: "gentle-ai"},
+			Tool:             update.ToolInfo{Name: "selops"},
 			InstalledVersion: "v1.0.0",
 			LatestVersion:    "v1.0.0",
 			Status:           update.UpToDate,
@@ -46,7 +46,7 @@ func TestRenderUpgrade_AllUpToDate(t *testing.T) {
 func TestRenderUpgrade_UpdatesAvailable(t *testing.T) {
 	results := []update.UpdateResult{
 		{
-			Tool:             update.ToolInfo{Name: "gentle-ai"},
+			Tool:             update.ToolInfo{Name: "selops"},
 			InstalledVersion: "v1.0.0",
 			LatestVersion:    "v2.0.0",
 			Status:           update.UpdateAvailable,
@@ -55,7 +55,7 @@ func TestRenderUpgrade_UpdatesAvailable(t *testing.T) {
 
 	out := RenderUpgrade(results, nil, nil, false, true /*updateCheckDone*/, 0, 0)
 
-	if !strings.Contains(out, "gentle-ai") {
+	if !strings.Contains(out, "selops") {
 		t.Errorf("RenderUpgrade(updates available) should contain tool name 'gentle-ai'; got:\n%s", out)
 	}
 	if !strings.Contains(out, "v1.0.0") || !strings.Contains(out, "v2.0.0") {
@@ -69,7 +69,7 @@ func TestRenderUpgrade_ResultState(t *testing.T) {
 	report := &upgrade.UpgradeReport{
 		Results: []upgrade.ToolUpgradeResult{
 			{
-				ToolName:   "gentle-ai",
+				ToolName:   "selops",
 				OldVersion: "v1.0.0",
 				NewVersion: "v2.0.0",
 				Status:     upgrade.UpgradeSucceeded,
@@ -81,7 +81,7 @@ func TestRenderUpgrade_ResultState(t *testing.T) {
 
 	lower := strings.ToLower(out)
 	if !strings.Contains(lower, "upgraded") && !strings.Contains(lower, "summary") &&
-		!strings.Contains(out, "gentle-ai") {
+		!strings.Contains(out, "selops") {
 		t.Errorf("RenderUpgrade(report) should show upgrade results; got:\n%s", out)
 	}
 }

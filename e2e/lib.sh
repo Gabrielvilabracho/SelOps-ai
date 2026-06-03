@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# lib.sh — shared test helpers for gentle-ai E2E tests
+# lib.sh — shared test helpers for selops E2E tests
 # Sourced by e2e_test.sh; never executed directly.
 set -euo pipefail
 
@@ -31,29 +31,29 @@ log_info()  { printf "${BLUE}[INFO]${NC}  %s\n" "$1"; }
 # ---------------------------------------------------------------------------
 # Binary resolution
 # ---------------------------------------------------------------------------
-# The binary should be built and placed at /usr/local/bin/gentle-ai inside
-# the Docker container. If not found, fall back to $HOME/gentle-ai or the
+# The binary should be built and placed at /usr/local/bin/selops inside
+# the Docker container. If not found, fall back to $HOME/selops or the
 # current directory.
 # Resolution priority (highest → lowest):
-#   1. ./gentle-ai in the current repo directory (freshly built local binary)
-#   2. ~/gentle-ai (explicit copy in home)
-#   3. gentle-ai on PATH (system-installed, e.g. Homebrew)
-# This ensures `go build ./cmd/gentle-ai && bash e2e/e2e_test.sh` always
+#   1. ./selops in the current repo directory (freshly built local binary)
+#   2. ~/selops (explicit copy in home)
+#   3. selops on PATH (system-installed, e.g. Homebrew)
+# This ensures `go build ./cmd/selops && bash e2e/e2e_test.sh` always
 # tests the locally built binary rather than the installed release version.
 resolve_binary() {
-    # Prefer the locally built binary (./gentle-ai) produced by `go build ./cmd/gentle-ai`.
+    # Prefer the locally built binary (./selops) produced by `go build ./cmd/selops`.
     # We check both the current directory and the script's parent directory so
     # the resolver works whether the test is invoked from the repo root or from e2e/.
     local repo_root
     repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-    if [ -x "$repo_root/gentle-ai" ]; then
-        echo "$repo_root/gentle-ai"
-    elif [ -x "./gentle-ai" ]; then
-        echo "./gentle-ai"
-    elif [ -x "$HOME/gentle-ai" ]; then
-        echo "$HOME/gentle-ai"
-    elif command -v gentle-ai >/dev/null 2>&1; then
-        echo "gentle-ai"
+    if [ -x "$repo_root/selops" ]; then
+        echo "$repo_root/selops"
+    elif [ -x "./selops" ]; then
+        echo "./selops"
+    elif [ -x "$HOME/selops" ]; then
+        echo "$HOME/selops"
+    elif command -v selops >/dev/null 2>&1; then
+        echo "selops"
     else
         echo ""
     fi
@@ -83,19 +83,19 @@ cleanup_test_env() {
 
 # setup_fake_engram_binary — install a deterministic local engram shim for E2E.
 #
-# Full Docker E2E validates gentle-ai's agent/config injection behavior, not the
+# Full Docker E2E validates selops's agent/config injection behavior, not the
 # external Engram release CDN. The real installer skips the network download when
 # an `engram` binary already exists on PATH, so this shim keeps coverage of the
 # install pipeline while avoiding flaky GitHub API/rate-limit failures.
 #
 # Set GENTLE_AI_E2E_REAL_ENGRAM=1 to opt out and exercise the live download path.
 setup_fake_engram_binary() {
-    if [ "${GENTLE_AI_E2E_REAL_ENGRAM:-0}" = "1" ]; then
+    if [ "${SELOPS_E2E_REAL_ENGRAM:-0}" = "1" ]; then
         log_info "Using real Engram binary/download path for E2E"
         return 0
     fi
 
-    local fake_bin_dir="$HOME/.gentle-ai-e2e/bin"
+    local fake_bin_dir="$HOME/.selops-e2e/bin"
     local fake_engram="$fake_bin_dir/engram"
 
     mkdir -p "$fake_bin_dir"

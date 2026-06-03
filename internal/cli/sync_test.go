@@ -8,11 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gentleman-programming/gentle-ai/internal/agents"
-	"github.com/gentleman-programming/gentle-ai/internal/backup"
-	"github.com/gentleman-programming/gentle-ai/internal/model"
-	"github.com/gentleman-programming/gentle-ai/internal/state"
-	"github.com/gentleman-programming/gentle-ai/internal/verify"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents"
+	"github.com/Gabrielvilabracho/selops-ai/internal/backup"
+	"github.com/Gabrielvilabracho/selops-ai/internal/model"
+	"github.com/Gabrielvilabracho/selops-ai/internal/state"
+	"github.com/Gabrielvilabracho/selops-ai/internal/verify"
 )
 
 // ─── Phase 1: ParseSyncFlags ───────────────────────────────────────────────
@@ -2448,5 +2448,46 @@ func TestDedupPathsFiltersEmptyStrings(t *testing.T) {
 		if p != want[i] {
 			t.Errorf("dedupPaths[%d] = %q, want %q", i, p, want[i])
 		}
+	}
+}
+
+// TestComponentSyncStepSDDOpsIsNoOp verifies that ComponentSDDOps is treated as
+// a no-op in the sync runtime (MVP exclusion from managed sync).
+func TestComponentSyncStepSDDOpsIsNoOp(t *testing.T) {
+	home := t.TempDir()
+	var changedFiles []string
+	step := componentSyncStep{
+		id:           "sync:component:sddops",
+		component:    model.ComponentSDDOps,
+		homeDir:      home,
+		agents:       []model.AgentID{model.AgentOpenCode},
+		selection:    model.Selection{},
+		changedFiles: &changedFiles,
+	}
+	err := step.Run()
+	if err != nil {
+		t.Fatalf("componentSyncStep.Run(ComponentSDDOps) error = %v; want nil (no-op)", err)
+	}
+	if len(changedFiles) != 0 {
+		t.Fatalf("componentSyncStep.Run(ComponentSDDOps) changedFiles = %v; want empty (no-op)", changedFiles)
+	}
+}
+
+// TestComponentSyncStepOperationalMCPNoError verifies that ComponentOperationalMCP
+// runs without error in the sync step.
+func TestComponentSyncStepOperationalMCPNoError(t *testing.T) {
+	home := t.TempDir()
+	var changedFiles []string
+	step := componentSyncStep{
+		id:           "sync:component:operationalmcp",
+		component:    model.ComponentOperationalMCP,
+		homeDir:      home,
+		agents:       []model.AgentID{model.AgentOpenCode},
+		selection:    model.Selection{},
+		changedFiles: &changedFiles,
+	}
+	err := step.Run()
+	if err != nil {
+		t.Fatalf("componentSyncStep.Run(ComponentOperationalMCP) error = %v; want nil", err)
 	}
 }

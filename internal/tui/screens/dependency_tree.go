@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gentleman-programming/gentle-ai/internal/catalog"
-	"github.com/gentleman-programming/gentle-ai/internal/model"
-	"github.com/gentleman-programming/gentle-ai/internal/planner"
-	"github.com/gentleman-programming/gentle-ai/internal/tui/styles"
-	"github.com/gentleman-programming/gentle-ai/internal/versions"
+	"github.com/Gabrielvilabracho/selops-ai/internal/catalog"
+	"github.com/Gabrielvilabracho/selops-ai/internal/model"
+	"github.com/Gabrielvilabracho/selops-ai/internal/planner"
+	"github.com/Gabrielvilabracho/selops-ai/internal/tui/styles"
+	"github.com/Gabrielvilabracho/selops-ai/internal/versions"
 )
 
 func DependencyTreeOptions() []string {

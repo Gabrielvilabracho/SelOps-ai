@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gentleman-programming/gentle-ai/internal/update"
-	"github.com/gentleman-programming/gentle-ai/internal/update/upgrade"
+	"github.com/Gabrielvilabracho/selops-ai/internal/update"
+	"github.com/Gabrielvilabracho/selops-ai/internal/update/upgrade"
 )
 
 // ─── RenderUpgradeSync states ──────────────────────────────────────────────
@@ -48,7 +48,7 @@ func TestRenderUpgradeSync_RunningUpgradePhase(t *testing.T) {
 func TestRenderUpgradeSync_RunningSyncPhase(t *testing.T) {
 	report := &upgrade.UpgradeReport{
 		Results: []upgrade.ToolUpgradeResult{
-			{ToolName: "gentle-ai", OldVersion: "v1.0.0", NewVersion: "v2.0.0", Status: upgrade.UpgradeSucceeded},
+			{ToolName: "selops", OldVersion: "v1.0.0", NewVersion: "v2.0.0", Status: upgrade.UpgradeSucceeded},
 		},
 	}
 
@@ -71,7 +71,7 @@ func TestRenderUpgradeSync_RunningSyncPhase(t *testing.T) {
 func TestRenderUpgradeSync_CombinedResult(t *testing.T) {
 	report := &upgrade.UpgradeReport{
 		Results: []upgrade.ToolUpgradeResult{
-			{ToolName: "gentle-ai", OldVersion: "v1.0.0", NewVersion: "v2.0.0", Status: upgrade.UpgradeSucceeded},
+			{ToolName: "selops", OldVersion: "v1.0.0", NewVersion: "v2.0.0", Status: upgrade.UpgradeSucceeded},
 		},
 	}
 	syncFiles := []string{"a", "b", "c"}
@@ -194,7 +194,7 @@ func TestRenderUpgradeSync_CheckingState(t *testing.T) {
 func TestRenderUpgradeSync_TruncatesLargeFileList(t *testing.T) {
 	report := &upgrade.UpgradeReport{
 		Results: []upgrade.ToolUpgradeResult{
-			{ToolName: "gentle-ai", OldVersion: "v1.0.0", NewVersion: "v2.0.0", Status: upgrade.UpgradeSucceeded},
+			{ToolName: "selops", OldVersion: "v1.0.0", NewVersion: "v2.0.0", Status: upgrade.UpgradeSucceeded},
 		},
 	}
 	files := make([]string, maxFilesToShow+3)

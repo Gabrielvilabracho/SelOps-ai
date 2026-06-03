@@ -3,7 +3,7 @@ package skills
 import (
 	"testing"
 
-	"github.com/gentleman-programming/gentle-ai/internal/model"
+	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 )
 
 func TestSkillsForPresetMinimalReturnsSDDOnly(t *testing.T) {
@@ -67,6 +67,63 @@ func TestSkillsForPresetCustomReturnsNil(t *testing.T) {
 	skills := SkillsForPreset(model.PresetCustom)
 	if skills != nil {
 		t.Fatalf("custom preset should return nil, got %v", skills)
+	}
+}
+
+func TestSkillsForPresetSelOpsOperationalReturnsExactlySixOpsSkills(t *testing.T) {
+	skills := SkillsForPreset(model.PresetSelOpsOperational)
+
+	if len(skills) != 6 {
+		t.Fatalf("PresetSelOpsOperational should return exactly 6 skills, got %d: %v", len(skills), skills)
+	}
+
+	expected := map[model.SkillID]struct{}{
+		model.SkillOpsStandardDocumentation: {},
+		model.SkillOpsModularArchitecture:   {},
+		model.SkillOpsDataContracts:         {},
+		model.SkillOpsGovernance:            {},
+		model.SkillOpsObservability:         {},
+		model.SkillOpsGraduatedAutonomy:     {},
+	}
+
+	for _, skill := range skills {
+		if _, ok := expected[skill]; !ok {
+			t.Fatalf("unexpected skill %q in PresetSelOpsOperational, expected only ops-* skills", skill)
+		}
+	}
+}
+
+func TestSkillsForPresetSelOpsOperationalContainsNoDevSkills(t *testing.T) {
+	skills := SkillsForPreset(model.PresetSelOpsOperational)
+
+	devSkills := map[model.SkillID]struct{}{
+		model.SkillSDDInit:         {},
+		model.SkillSDDApply:        {},
+		model.SkillSDDVerify:       {},
+		model.SkillSDDExplore:      {},
+		model.SkillSDDPropose:      {},
+		model.SkillSDDSpec:         {},
+		model.SkillSDDDesign:       {},
+		model.SkillSDDTasks:        {},
+		model.SkillSDDArchive:      {},
+		model.SkillSDDOnboard:      {},
+		model.SkillGoTesting:       {},
+		model.SkillCreator:         {},
+		model.SkillImprover:        {},
+		model.SkillJudgmentDay:     {},
+		model.SkillBranchPR:        {},
+		model.SkillIssueCreation:   {},
+		model.SkillSkillRegistry:   {},
+		model.SkillChainedPR:       {},
+		model.SkillCognitiveDoc:    {},
+		model.SkillCommentWriter:   {},
+		model.SkillWorkUnitCommits: {},
+	}
+
+	for _, skill := range skills {
+		if _, ok := devSkills[skill]; ok {
+			t.Fatalf("PresetSelOpsOperational must NOT contain DEV skill %q", skill)
+		}
 	}
 }
 

@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gentleman-programming/gentle-ai/internal/model"
+	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 )
 
 func TestTopologicalSortOrdersDependenciesFirst(t *testing.T) {
@@ -131,6 +131,22 @@ func TestApplySoftOrderingBothMVPPairsWithFullSelection(t *testing.T) {
 	// Skills must remain last
 	if result[len(result)-1] != model.ComponentSkills {
 		t.Fatalf("Skills must remain last, got %v", result)
+	}
+}
+
+func TestSoftOrderingContainsPersonaOperatorBeforeSDDOps(t *testing.T) {
+	pairs := SoftOrderingConstraints()
+
+	found := false
+	for _, pair := range pairs {
+		if pair[0] == model.ComponentPersonaOperator && pair[1] == model.ComponentSDDOps {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Fatalf("SoftOrderingConstraints() does not contain {ComponentPersonaOperator, ComponentSDDOps} pair, got: %v", pairs)
 	}
 }
 

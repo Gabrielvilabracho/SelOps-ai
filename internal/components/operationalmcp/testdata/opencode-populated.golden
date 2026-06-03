@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "selops-rag": {
+      "env": {
+        "SELOPS_RAG_API_KEY": "${SELOPS_RAG_API_KEY}"
+      },
+      "url": "https://rag.selops.internal/mcp"
+    }
+  }
+}

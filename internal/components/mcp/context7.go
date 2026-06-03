@@ -3,7 +3,7 @@ package mcp
 import (
 	"fmt"
 
-	"github.com/gentleman-programming/gentle-ai/internal/versions"
+	"github.com/Gabrielvilabracho/selops-ai/internal/versions"
 )
 
 var defaultContext7ServerJSON = []byte(fmt.Sprintf("{\n  \"command\": \"npx\",\n  \"args\": [\n    \"-y\",\n    \"--package=@upstash/context7-mcp@%s\",\n    \"--\",\n    \"context7-mcp\"\n  ]\n}\n", versions.Context7MCP))

@@ -1,6 +1,6 @@
 package catalog
 
-import "github.com/gentleman-programming/gentle-ai/internal/model"
+import "github.com/Gabrielvilabracho/selops-ai/internal/model"
 
 type Component struct {
 	ID          model.ComponentID
@@ -19,6 +19,10 @@ var mvpComponents = []Component{
 	{ID: model.ComponentTheme, Name: "Theme", Description: "Gentleman Kanagawa theme overlay"},
 	{ID: model.ComponentClaudeTheme, Name: "Claude Gentleman Theme", Description: "Claude Code Gentleman custom theme"},
 	{ID: model.ComponentOpenCodeGentleLogo, Name: "OpenCode Gentle Logo", Description: "OpenCode home logo TUI plugin with Braille rose"},
+	// SelOps operational layer components.
+	{ID: model.ComponentSDDOps, Name: "SDD Ops", Description: "SelOps operational SDD workflow layer"},
+	{ID: model.ComponentOperationalMCP, Name: "Operational MCP", Description: "SelOps operational MCP server configuration"},
+	{ID: model.ComponentPersonaOperator, Name: "Operator Persona", Description: "SelOps operator persona (replaces Gentleman persona for OPS agents)"},
 }
 
 func MVPComponents() []Component {

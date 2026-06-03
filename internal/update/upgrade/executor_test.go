@@ -12,11 +12,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gentleman-programming/gentle-ai/internal/backup"
-	"github.com/gentleman-programming/gentle-ai/internal/model"
-	"github.com/gentleman-programming/gentle-ai/internal/state"
-	"github.com/gentleman-programming/gentle-ai/internal/system"
-	"github.com/gentleman-programming/gentle-ai/internal/update"
+	"github.com/Gabrielvilabracho/selops-ai/internal/backup"
+	"github.com/Gabrielvilabracho/selops-ai/internal/model"
+	"github.com/Gabrielvilabracho/selops-ai/internal/state"
+	"github.com/Gabrielvilabracho/selops-ai/internal/system"
+	"github.com/Gabrielvilabracho/selops-ai/internal/update"
 )
 
 // --- helpers ---
@@ -50,7 +50,7 @@ func makeResult(name string, status update.UpdateStatus, oldVer, newVer string, 
 // UpdateAvailable or DevBuild status (i.e. only UpToDate and NotInstalled tools).
 func TestExecute_NoopWhenNothingIsExecutable(t *testing.T) {
 	results := []update.UpdateResult{
-		makeResult("gentle-ai", update.UpToDate, "1.0.0", "1.0.0", update.InstallBinary),
+		makeResult("selops", update.UpToDate, "1.0.0", "1.0.0", update.InstallBinary),
 		makeResult("engram", update.NotInstalled, "", "0.4.0", update.InstallGoInstall),
 		// gga: CheckFailed — should also be omitted from results.
 		makeResult("gga", update.CheckFailed, "", "", update.InstallScript),
@@ -87,7 +87,7 @@ func TestExecute_DevBuildOnlyNoBackupCreated(t *testing.T) {
 	}
 
 	results := []update.UpdateResult{
-		makeResult("gentle-ai", update.DevBuild, "dev", "1.0.0", update.InstallBinary),
+		makeResult("selops", update.DevBuild, "dev", "1.0.0", update.InstallBinary),
 	}
 
 	report := Execute(context.Background(), results, linuxProfile(), t.TempDir(), false)
@@ -372,7 +372,7 @@ func TestExecute_DevBuildIsSkipped(t *testing.T) {
 	}
 
 	results := []update.UpdateResult{
-		makeResult("gentle-ai", update.DevBuild, "dev", "1.0.0", update.InstallBinary),
+		makeResult("selops", update.DevBuild, "dev", "1.0.0", update.InstallBinary),
 		makeResult("engram", update.UpdateAvailable, "0.3.0", "0.4.0", update.InstallGoInstall),
 	}
 	results[1].Tool.GoImportPath = "github.com/Gentleman-Programming/engram/cmd/engram"
@@ -382,7 +382,7 @@ func TestExecute_DevBuildIsSkipped(t *testing.T) {
 	// gentle-ai (DevBuild) MUST appear as UpgradeSkipped with a ManualHint.
 	var devResult *ToolUpgradeResult
 	for i := range report.Results {
-		if report.Results[i].ToolName == "gentle-ai" {
+		if report.Results[i].ToolName == "selops" {
 			r := report.Results[i]
 			devResult = &r
 		}
@@ -468,7 +468,7 @@ func TestExecute_DevBuildSurfacedAsSkipped(t *testing.T) {
 	}
 
 	results := []update.UpdateResult{
-		makeResult("gentle-ai", update.DevBuild, "dev", "1.0.0", update.InstallBinary),
+		makeResult("selops", update.DevBuild, "dev", "1.0.0", update.InstallBinary),
 		makeResult("engram", update.UpdateAvailable, "0.3.0", "0.4.0", update.InstallGoInstall),
 	}
 	results[1].Tool.GoImportPath = "github.com/Gentleman-Programming/engram/cmd/engram"
@@ -478,7 +478,7 @@ func TestExecute_DevBuildSurfacedAsSkipped(t *testing.T) {
 	// gentle-ai (DevBuild) MUST appear in results as UpgradeSkipped.
 	var devResult *ToolUpgradeResult
 	for i := range report.Results {
-		if report.Results[i].ToolName == "gentle-ai" {
+		if report.Results[i].ToolName == "selops" {
 			r := report.Results[i]
 			devResult = &r
 		}
@@ -531,7 +531,7 @@ func TestExecute_ManualFallbackSurfacedAsSkippedNotFailed(t *testing.T) {
 	windowsProfile := system.PlatformProfile{OS: "windows", PackageManager: "winget", Supported: true}
 
 	results := []update.UpdateResult{
-		makeResult("gentle-ai", update.UpdateAvailable, "1.0.0", "1.5.0", update.InstallBinary),
+		makeResult("selops", update.UpdateAvailable, "1.0.0", "1.5.0", update.InstallBinary),
 	}
 	results[0].UpdateHint = "See https://github.com/Gentleman-Programming/gentle-ai/releases"
 
@@ -1264,7 +1264,7 @@ func TestExecute_SkippedUpgradeDoesNotRenderFailureMarker(t *testing.T) {
 	windowsProfile := system.PlatformProfile{OS: "windows", PackageManager: "winget", Supported: true}
 
 	results := []update.UpdateResult{
-		makeResult("gentle-ai", update.UpdateAvailable, "1.0.0", "1.5.0", update.InstallBinary),
+		makeResult("selops", update.UpdateAvailable, "1.0.0", "1.5.0", update.InstallBinary),
 	}
 	results[0].UpdateHint = "See https://github.com/Gentleman-Programming/gentle-ai/releases"
 

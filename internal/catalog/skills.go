@@ -1,6 +1,6 @@
 package catalog
 
-import "github.com/gentleman-programming/gentle-ai/internal/model"
+import "github.com/Gabrielvilabracho/selops-ai/internal/model"
 
 type Skill struct {
 	ID       model.SkillID
@@ -35,6 +35,13 @@ var mvpSkills = []Skill{
 	{ID: model.SkillCognitiveDoc, Name: "cognitive-doc-design", Category: "workflow", Priority: "p0"},
 	{ID: model.SkillCommentWriter, Name: "comment-writer", Category: "workflow", Priority: "p0"},
 	{ID: model.SkillWorkUnitCommits, Name: "work-unit-commits", Category: "workflow", Priority: "p0"},
+	// SelOps operational skills
+	{ID: model.SkillOpsStandardDocumentation, Name: "ops-standard-documentation", Category: "operational", Priority: "p0"},
+	{ID: model.SkillOpsModularArchitecture, Name: "ops-modular-architecture", Category: "operational", Priority: "p0"},
+	{ID: model.SkillOpsDataContracts, Name: "ops-data-contracts", Category: "operational", Priority: "p0"},
+	{ID: model.SkillOpsGovernance, Name: "ops-governance", Category: "operational", Priority: "p0"},
+	{ID: model.SkillOpsObservability, Name: "ops-observability", Category: "operational", Priority: "p0"},
+	{ID: model.SkillOpsGraduatedAutonomy, Name: "ops-graduated-autonomy", Category: "operational", Priority: "p0"},
 }
 
 func MVPSkills() []Skill {

@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gentleman-programming/gentle-ai/internal/system"
-	"github.com/gentleman-programming/gentle-ai/internal/update"
-	"github.com/gentleman-programming/gentle-ai/internal/update/upgrade"
+	"github.com/Gabrielvilabracho/selops-ai/internal/system"
+	"github.com/Gabrielvilabracho/selops-ai/internal/update"
+	"github.com/Gabrielvilabracho/selops-ai/internal/update/upgrade"
 )
 
 // stubProfile returns a minimal PlatformProfile for testing.
@@ -165,7 +165,7 @@ func TestSelfUpdate_UpdateAvailable_CallsUpgradeAndReExec(t *testing.T) {
 
 	checkResults := []update.UpdateResult{
 		{
-			Tool:             update.ToolInfo{Name: "gentle-ai"},
+			Tool:             update.ToolInfo{Name: "selops"},
 			InstalledVersion: "1.7.0",
 			LatestVersion:    "1.8.0",
 			Status:           update.UpdateAvailable,
@@ -173,7 +173,7 @@ func TestSelfUpdate_UpdateAvailable_CallsUpgradeAndReExec(t *testing.T) {
 	}
 	upgradeReport := upgrade.UpgradeReport{
 		Results: []upgrade.ToolUpgradeResult{
-			{ToolName: "gentle-ai", Status: upgrade.UpgradeSucceeded, NewVersion: "1.8.0"},
+			{ToolName: "selops", Status: upgrade.UpgradeSucceeded, NewVersion: "1.8.0"},
 		},
 	}
 
@@ -213,7 +213,7 @@ func TestSelfUpdate_UpToDate_NoUpgradeCall(t *testing.T) {
 
 	checkResults := []update.UpdateResult{
 		{
-			Tool:             update.ToolInfo{Name: "gentle-ai"},
+			Tool:             update.ToolInfo{Name: "selops"},
 			InstalledVersion: "1.8.0",
 			LatestVersion:    "1.8.0",
 			Status:           update.UpToDate,
@@ -240,7 +240,7 @@ func TestSelfUpdate_CheckError_ReturnsNil(t *testing.T) {
 
 	checkResults := []update.UpdateResult{
 		{
-			Tool:   update.ToolInfo{Name: "gentle-ai"},
+			Tool:   update.ToolInfo{Name: "selops"},
 			Status: update.CheckFailed,
 			Err:    context.DeadlineExceeded,
 		},
@@ -263,7 +263,7 @@ func TestSelfUpdate_UpgradeError_ReturnsNil(t *testing.T) {
 
 	checkResults := []update.UpdateResult{
 		{
-			Tool:             update.ToolInfo{Name: "gentle-ai"},
+			Tool:             update.ToolInfo{Name: "selops"},
 			InstalledVersion: "1.7.0",
 			LatestVersion:    "1.8.0",
 			Status:           update.UpdateAvailable,
@@ -272,7 +272,7 @@ func TestSelfUpdate_UpgradeError_ReturnsNil(t *testing.T) {
 	upgradeReport := upgrade.UpgradeReport{
 		Results: []upgrade.ToolUpgradeResult{
 			{
-				ToolName: "gentle-ai",
+				ToolName: "selops",
 				Status:   upgrade.UpgradeFailed,
 				Err:      os.ErrPermission,
 			},
@@ -296,7 +296,7 @@ func TestSelfUpdate_Windows_PrintsRestartMessage(t *testing.T) {
 
 	checkResults := []update.UpdateResult{
 		{
-			Tool:             update.ToolInfo{Name: "gentle-ai"},
+			Tool:             update.ToolInfo{Name: "selops"},
 			InstalledVersion: "1.7.0",
 			LatestVersion:    "1.8.0",
 			Status:           update.UpdateAvailable,
@@ -304,7 +304,7 @@ func TestSelfUpdate_Windows_PrintsRestartMessage(t *testing.T) {
 	}
 	upgradeReport := upgrade.UpgradeReport{
 		Results: []upgrade.ToolUpgradeResult{
-			{ToolName: "gentle-ai", Status: upgrade.UpgradeSucceeded, NewVersion: "1.8.0"},
+			{ToolName: "selops", Status: upgrade.UpgradeSucceeded, NewVersion: "1.8.0"},
 		},
 	}
 
@@ -338,7 +338,7 @@ func TestSelfUpdate_BrewInstallMethod_PassedToUpgradeExecutor(t *testing.T) {
 	checkResults := []update.UpdateResult{
 		{
 			Tool: update.ToolInfo{
-				Name:          "gentle-ai",
+				Name:          "selops",
 				InstallMethod: update.InstallBrew,
 			},
 			InstalledVersion: "1.7.0",
@@ -369,7 +369,7 @@ func TestSelfUpdate_BrewInstallMethod_PassedToUpgradeExecutor(t *testing.T) {
 		capturedProfile = profile
 		return upgrade.UpgradeReport{
 			Results: []upgrade.ToolUpgradeResult{
-				{ToolName: "gentle-ai", Status: upgrade.UpgradeSucceeded, NewVersion: "1.8.0"},
+				{ToolName: "selops", Status: upgrade.UpgradeSucceeded, NewVersion: "1.8.0"},
 			},
 		}
 	}
@@ -403,7 +403,7 @@ func TestSelfUpdate_ConfirmUpdate_UserAccepts(t *testing.T) {
 
 	checkResults := []update.UpdateResult{
 		{
-			Tool:             update.ToolInfo{Name: "gentle-ai"},
+			Tool:             update.ToolInfo{Name: "selops"},
 			InstalledVersion: "1.7.0",
 			LatestVersion:    "1.8.0",
 			Status:           update.UpdateAvailable,
@@ -411,7 +411,7 @@ func TestSelfUpdate_ConfirmUpdate_UserAccepts(t *testing.T) {
 	}
 	upgradeReport := upgrade.UpgradeReport{
 		Results: []upgrade.ToolUpgradeResult{
-			{ToolName: "gentle-ai", Status: upgrade.UpgradeSucceeded, NewVersion: "1.8.0"},
+			{ToolName: "selops", Status: upgrade.UpgradeSucceeded, NewVersion: "1.8.0"},
 		},
 	}
 
@@ -451,7 +451,7 @@ func TestSelfUpdate_ConfirmUpdate_UserDeclines(t *testing.T) {
 
 	checkResults := []update.UpdateResult{
 		{
-			Tool:             update.ToolInfo{Name: "gentle-ai"},
+			Tool:             update.ToolInfo{Name: "selops"},
 			InstalledVersion: "1.7.0",
 			LatestVersion:    "1.8.0",
 			Status:           update.UpdateAvailable,
@@ -493,7 +493,7 @@ func TestSelfUpdate_ConfirmUpdate_EnvUnset(t *testing.T) {
 
 	checkResults := []update.UpdateResult{
 		{
-			Tool:             update.ToolInfo{Name: "gentle-ai"},
+			Tool:             update.ToolInfo{Name: "selops"},
 			InstalledVersion: "1.7.0",
 			LatestVersion:    "1.8.0",
 			Status:           update.UpdateAvailable,
@@ -501,7 +501,7 @@ func TestSelfUpdate_ConfirmUpdate_EnvUnset(t *testing.T) {
 	}
 	upgradeReport := upgrade.UpgradeReport{
 		Results: []upgrade.ToolUpgradeResult{
-			{ToolName: "gentle-ai", Status: upgrade.UpgradeSucceeded, NewVersion: "1.8.0"},
+			{ToolName: "selops", Status: upgrade.UpgradeSucceeded, NewVersion: "1.8.0"},
 		},
 	}
 
@@ -536,7 +536,7 @@ func TestSelfUpdate_ConfirmUpdate_EnvUnset(t *testing.T) {
 func TestSelfUpdate_ConfirmUpdateTable(t *testing.T) {
 	checkResults := []update.UpdateResult{
 		{
-			Tool:             update.ToolInfo{Name: "gentle-ai"},
+			Tool:             update.ToolInfo{Name: "selops"},
 			InstalledVersion: "1.7.0",
 			LatestVersion:    "1.8.0",
 			Status:           update.UpdateAvailable,
@@ -544,7 +544,7 @@ func TestSelfUpdate_ConfirmUpdateTable(t *testing.T) {
 	}
 	successReport := upgrade.UpgradeReport{
 		Results: []upgrade.ToolUpgradeResult{
-			{ToolName: "gentle-ai", Status: upgrade.UpgradeSucceeded, NewVersion: "1.8.0"},
+			{ToolName: "selops", Status: upgrade.UpgradeSucceeded, NewVersion: "1.8.0"},
 		},
 	}
 

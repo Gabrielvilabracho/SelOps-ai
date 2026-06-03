@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gentleman-programming/gentle-ai/internal/model"
+	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 )
 
 func TestComponentPathsSDDIncludesSystemPromptForAllSupportedAgents(t *testing.T) {
@@ -236,4 +236,40 @@ func containsPath(paths []string, want string) bool {
 		}
 	}
 	return false
+}
+
+// TestComponentApplyStepRunSDDOpsNoError verifies that componentApplyStep.Run
+// for ComponentSDDOps succeeds without error when adapters are provided.
+// The new component must NOT fall into the default error branch.
+func TestComponentApplyStepRunSDDOpsNoError(t *testing.T) {
+	home := t.TempDir()
+	step := componentApplyStep{
+		id:        "component:sddops",
+		component: model.ComponentSDDOps,
+		homeDir:   home,
+		agents:    []model.AgentID{model.AgentOpenCode},
+		selection: model.Selection{},
+	}
+	// Run must not return the "not supported" error.
+	err := step.Run()
+	if err != nil {
+		t.Fatalf("componentApplyStep.Run(ComponentSDDOps) error = %v; want nil", err)
+	}
+}
+
+// TestComponentApplyStepRunOperationalMCPNoError verifies that componentApplyStep.Run
+// for ComponentOperationalMCP succeeds without error.
+func TestComponentApplyStepRunOperationalMCPNoError(t *testing.T) {
+	home := t.TempDir()
+	step := componentApplyStep{
+		id:        "component:operationalmcp",
+		component: model.ComponentOperationalMCP,
+		homeDir:   home,
+		agents:    []model.AgentID{model.AgentOpenCode},
+		selection: model.Selection{},
+	}
+	err := step.Run()
+	if err != nil {
+		t.Fatalf("componentApplyStep.Run(ComponentOperationalMCP) error = %v; want nil", err)
+	}
 }

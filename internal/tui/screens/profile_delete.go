@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gentleman-programming/gentle-ai/internal/components/sdd"
-	"github.com/gentleman-programming/gentle-ai/internal/tui/styles"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/sdd"
+	"github.com/Gabrielvilabracho/selops-ai/internal/tui/styles"
 )
 
 // RenderProfileDelete renders the profile delete confirmation screen.

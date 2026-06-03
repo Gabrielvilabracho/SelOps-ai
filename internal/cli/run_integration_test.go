@@ -11,13 +11,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gentleman-programming/gentle-ai/internal/agents/kimi"
-	"github.com/gentleman-programming/gentle-ai/internal/agents/opencode"
-	"github.com/gentleman-programming/gentle-ai/internal/backup"
-	"github.com/gentleman-programming/gentle-ai/internal/installcmd"
-	"github.com/gentleman-programming/gentle-ai/internal/model"
-	"github.com/gentleman-programming/gentle-ai/internal/system"
-	"github.com/gentleman-programming/gentle-ai/internal/versions"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents/kimi"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents/opencode"
+	"github.com/Gabrielvilabracho/selops-ai/internal/backup"
+	"github.com/Gabrielvilabracho/selops-ai/internal/installcmd"
+	"github.com/Gabrielvilabracho/selops-ai/internal/model"
+	"github.com/Gabrielvilabracho/selops-ai/internal/system"
+	"github.com/Gabrielvilabracho/selops-ai/internal/versions"
 )
 
 // missingBinaryLookPath simulates all installable binaries (engram, gga) as

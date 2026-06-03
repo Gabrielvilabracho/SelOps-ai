@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gentleman-programming/gentle-ai/internal/agents"
-	"github.com/gentleman-programming/gentle-ai/internal/assets"
-	"github.com/gentleman-programming/gentle-ai/internal/components/filemerge"
-	"github.com/gentleman-programming/gentle-ai/internal/model"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents"
+	"github.com/Gabrielvilabracho/selops-ai/internal/assets"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/filemerge"
+	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 )
 
 type InjectionResult struct {
@@ -458,6 +458,9 @@ func personaContent(agent model.AgentID, persona model.PersonaID) string {
 		return assets.MustRead("generic/persona-neutral.md")
 	case model.PersonaCustom:
 		return ""
+	case model.PersonaOperator:
+		// SelOps operational persona — shared across all agents (no agent-specific variant yet).
+		return assets.MustRead("generic/persona-operator.md")
 	default:
 		// Gentleman persona — try agent-specific asset, then generic fallback.
 		switch agent {

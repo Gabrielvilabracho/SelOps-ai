@@ -3,7 +3,7 @@ package kiro
 import (
 	"fmt"
 
-	"github.com/gentleman-programming/gentle-ai/internal/model"
+	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 )
 
 // AgentNotInstallableError is returned when Kiro IDE cannot be installed automatically.

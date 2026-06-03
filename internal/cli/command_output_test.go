@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	componentuninstall "github.com/gentleman-programming/gentle-ai/internal/components/uninstall"
+	componentuninstall "github.com/Gabrielvilabracho/selops-ai/internal/components/uninstall"
 )
 
 func TestExecuteCommandQuietModeIncludesCapturedOutputOnFailure(t *testing.T) {

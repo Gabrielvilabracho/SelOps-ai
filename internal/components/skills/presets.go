@@ -1,6 +1,6 @@
 package skills
 
-import "github.com/gentleman-programming/gentle-ai/internal/model"
+import "github.com/Gabrielvilabracho/selops-ai/internal/model"
 
 // sddSkills are the SDD orchestrator skills — always included.
 var sddSkills = []model.SkillID{
@@ -31,12 +31,23 @@ var foundationSkills = []model.SkillID{
 	model.SkillWorkUnitCommits,
 }
 
+// opsSkills are the SelOps operational skills — included for PresetSelOpsOperational.
+var opsSkills = []model.SkillID{
+	model.SkillOpsStandardDocumentation,
+	model.SkillOpsModularArchitecture,
+	model.SkillOpsDataContracts,
+	model.SkillOpsGovernance,
+	model.SkillOpsObservability,
+	model.SkillOpsGraduatedAutonomy,
+}
+
 // SkillsForPreset returns which skills should be installed for a given preset.
 //
-//   - "minimal" / PresetMinimal:       SDD skills only
+//   - "minimal" / PresetMinimal:              SDD skills only
 //   - "ecosystem-only" / PresetEcosystemOnly: SDD + common framework skills
 //   - "full-gentleman" / PresetFullGentleman: all available skills
-//   - "custom" / PresetCustom:         empty (caller should provide explicit list)
+//   - "selops-operational" / PresetSelOpsOperational: ops-* skills only
+//   - "custom" / PresetCustom:                empty (caller should provide explicit list)
 func SkillsForPreset(preset model.PresetID) []model.SkillID {
 	switch preset {
 	case model.PresetMinimal:
@@ -48,6 +59,8 @@ func SkillsForPreset(preset model.PresetID) []model.SkillID {
 		all = append(all, sddSkills...)
 		all = append(all, foundationSkills...)
 		return all
+	case model.PresetSelOpsOperational:
+		return copySkills(opsSkills)
 	case model.PresetCustom:
 		return nil
 	default:

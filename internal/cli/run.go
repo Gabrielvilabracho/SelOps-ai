@@ -12,26 +12,28 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gentleman-programming/gentle-ai/internal/agents"
-	"github.com/gentleman-programming/gentle-ai/internal/agents/kimi"
-	"github.com/gentleman-programming/gentle-ai/internal/assets"
-	"github.com/gentleman-programming/gentle-ai/internal/backup"
-	"github.com/gentleman-programming/gentle-ai/internal/components/engram"
-	"github.com/gentleman-programming/gentle-ai/internal/components/gga"
-	"github.com/gentleman-programming/gentle-ai/internal/components/mcp"
-	"github.com/gentleman-programming/gentle-ai/internal/components/opencodeplugin"
-	"github.com/gentleman-programming/gentle-ai/internal/components/permissions"
-	"github.com/gentleman-programming/gentle-ai/internal/components/persona"
-	"github.com/gentleman-programming/gentle-ai/internal/components/sdd"
-	"github.com/gentleman-programming/gentle-ai/internal/components/skills"
-	"github.com/gentleman-programming/gentle-ai/internal/components/theme"
-	"github.com/gentleman-programming/gentle-ai/internal/installcmd"
-	"github.com/gentleman-programming/gentle-ai/internal/model"
-	"github.com/gentleman-programming/gentle-ai/internal/pipeline"
-	"github.com/gentleman-programming/gentle-ai/internal/planner"
-	"github.com/gentleman-programming/gentle-ai/internal/state"
-	"github.com/gentleman-programming/gentle-ai/internal/system"
-	"github.com/gentleman-programming/gentle-ai/internal/verify"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents/kimi"
+	"github.com/Gabrielvilabracho/selops-ai/internal/assets"
+	"github.com/Gabrielvilabracho/selops-ai/internal/backup"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/engram"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/gga"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/mcp"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/opencodeplugin"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/operationalmcp"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/permissions"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/persona"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/sdd"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/sddops"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/skills"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/theme"
+	"github.com/Gabrielvilabracho/selops-ai/internal/installcmd"
+	"github.com/Gabrielvilabracho/selops-ai/internal/model"
+	"github.com/Gabrielvilabracho/selops-ai/internal/pipeline"
+	"github.com/Gabrielvilabracho/selops-ai/internal/planner"
+	"github.com/Gabrielvilabracho/selops-ai/internal/state"
+	"github.com/Gabrielvilabracho/selops-ai/internal/system"
+	"github.com/Gabrielvilabracho/selops-ai/internal/verify"
 )
 
 type InstallResult struct {
@@ -618,6 +620,16 @@ func (s componentApplyStep) Run() error {
 			}
 		}
 		return nil
+	case model.ComponentPersonaOperator:
+		// SelOps operational persona — routes persona.Inject with PersonaOperator so
+		// personaContent() returns generic/persona-operator.md for all agents.
+		for _, adapter := range adapters {
+			targetDir := componentInjectionDirScoped(s.homeDir, s.workspaceDir, s.scope, adapter)
+			if _, err := persona.Inject(targetDir, adapter, model.PersonaOperator); err != nil {
+				return fmt.Errorf("inject operator persona for %q: %w", adapter.Agent(), err)
+			}
+		}
+		return nil
 	case model.ComponentPermission:
 		for _, adapter := range adapters {
 			if _, err := permissions.Inject(s.homeDir, adapter); err != nil {
@@ -711,6 +723,26 @@ func (s componentApplyStep) Run() error {
 	case model.ComponentOpenCodeGentleLogo:
 		if _, err := opencodeplugin.Install(s.homeDir, model.OpenCodePluginGentleLogo); err != nil {
 			return fmt.Errorf("install OpenCode Gentle Logo plugin: %w", err)
+		}
+		return nil
+	case model.ComponentSDDOps:
+		// Install the SelOps operational SDD skill set for each adapter.
+		for _, adapter := range adapters {
+			targetDir := componentInjectionDirScoped(s.homeDir, s.workspaceDir, s.scope, adapter)
+			opts := sddops.InjectOptions{
+				WorkspaceDir: s.workspaceDir,
+			}
+			if _, err := sddops.Inject(targetDir, adapter, opts); err != nil {
+				return fmt.Errorf("inject sddops for %q: %w", adapter.Agent(), err)
+			}
+		}
+		return nil
+	case model.ComponentOperationalMCP:
+		// Install operational MCP connection entries for each adapter.
+		for _, adapter := range adapters {
+			if _, err := operationalmcp.Inject(s.homeDir, adapter, s.selection.OperationalMCPServers); err != nil {
+				return fmt.Errorf("inject operationalmcp for %q: %w", adapter.Agent(), err)
+			}
 		}
 		return nil
 	default:

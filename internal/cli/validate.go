@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gentleman-programming/gentle-ai/internal/catalog"
-	"github.com/gentleman-programming/gentle-ai/internal/model"
-	"github.com/gentleman-programming/gentle-ai/internal/system"
+	"github.com/Gabrielvilabracho/selops-ai/internal/catalog"
+	"github.com/Gabrielvilabracho/selops-ai/internal/model"
+	"github.com/Gabrielvilabracho/selops-ai/internal/system"
 )
 
 type InstallInput struct {
@@ -28,13 +28,19 @@ func NormalizeInstallFlags(flags InstallFlags, detection system.DetectionResult)
 	if err != nil {
 		return InstallInput{}, err
 	}
-	selection.Persona = persona
 
 	preset, err := normalizePreset(flags.Preset)
 	if err != nil {
 		return InstallInput{}, err
 	}
 	selection.Preset = preset
+
+	// For the SelOps operational preset, the default persona is PersonaOperator.
+	// If the user did not pass --persona explicitly, override the default gentleman.
+	if preset == model.PresetSelOpsOperational && strings.TrimSpace(flags.Persona) == "" {
+		persona = model.PersonaOperator
+	}
+	selection.Persona = persona
 
 	components, err := normalizeComponents(flags.Components, selection.Preset, selection.Persona)
 	if err != nil {
@@ -72,7 +78,7 @@ func normalizePersona(value string) (model.PersonaID, error) {
 	}
 
 	switch model.PersonaID(value) {
-	case model.PersonaGentleman, model.PersonaNeutral, model.PersonaCustom:
+	case model.PersonaGentleman, model.PersonaNeutral, model.PersonaCustom, model.PersonaOperator:
 		return model.PersonaID(value), nil
 	default:
 		return "", fmt.Errorf("unsupported persona %q", value)
@@ -85,7 +91,8 @@ func normalizePreset(value string) (model.PresetID, error) {
 	}
 
 	switch model.PresetID(value) {
-	case model.PresetFullGentleman, model.PresetEcosystemOnly, model.PresetMinimal, model.PresetCustom:
+	case model.PresetFullGentleman, model.PresetEcosystemOnly, model.PresetMinimal, model.PresetCustom,
+		model.PresetSelOpsOperational:
 		return model.PresetID(value), nil
 	default:
 		return "", fmt.Errorf("unsupported preset %q", value)
@@ -158,6 +165,28 @@ func componentsForPreset(preset model.PresetID, persona model.PersonaID) []model
 		components = []model.ComponentID{model.ComponentEngram, model.ComponentSDD, model.ComponentSkills, model.ComponentContext7, model.ComponentGGA}
 	case model.PresetCustom:
 		return nil
+	case model.PresetSelOpsOperational:
+		// SelOps operational bundle: Engram + ops SDD workflow + operational MCP
+		// connections + operator persona.
+		//
+		// ComponentSkills is intentionally excluded: it carries a hard graph dep on
+		// ComponentSDD (DEV) via MVPGraph (ComponentSkills → ComponentSDD). Including
+		// it would transitively pull the DEV SDD workflow into every OPS install,
+		// contaminating the OPS namespace with DEV components.
+		//
+		// The ops-* skills are delivered exclusively through ComponentSDDOps, which
+		// calls sddops.Inject directly and depends only on ComponentEngram.
+		//
+		// Deliberately excludes all DEV-only components (ComponentSDD, ComponentSkills,
+		// ComponentContext7, ComponentPermission, ComponentGGA, ComponentClaudeTheme,
+		// ComponentOpenCodeGentleLogo, ComponentPersona/gentleman) to keep OPS and DEV
+		// namespaces disjoint.
+		return []model.ComponentID{
+			model.ComponentEngram,
+			model.ComponentSDDOps,
+			model.ComponentOperationalMCP,
+			model.ComponentPersonaOperator,
+		}
 	default: // full-gentleman
 		components = []model.ComponentID{
 			model.ComponentEngram,

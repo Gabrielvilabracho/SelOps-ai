@@ -1,6 +1,6 @@
 package planner
 
-import "github.com/gentleman-programming/gentle-ai/internal/model"
+import "github.com/Gabrielvilabracho/selops-ai/internal/model"
 
 type Graph struct {
 	dependencies map[model.ComponentID][]model.ComponentID
@@ -45,6 +45,10 @@ func MVPGraph() Graph {
 		model.ComponentTheme:              nil,
 		model.ComponentClaudeTheme:        nil,
 		model.ComponentOpenCodeGentleLogo: nil,
+		// SelOps operational layer nodes.
+		model.ComponentSDDOps:          {model.ComponentEngram},
+		model.ComponentOperationalMCP:  nil,
+		model.ComponentPersonaOperator: nil,
 	})
 }
 
@@ -61,6 +65,8 @@ func MVPGraph() Graph {
 var softOrderingPairs = [][2]model.ComponentID{
 	{model.ComponentPersona, model.ComponentEngram},
 	{model.ComponentPersona, model.ComponentSDD},
+	// SelOps operational layer: PersonaOperator must write before SDDOps.
+	{model.ComponentPersonaOperator, model.ComponentSDDOps},
 }
 
 // SoftOrderingConstraints returns the static soft-ordering pairs.

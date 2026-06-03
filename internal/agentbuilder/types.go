@@ -3,7 +3,7 @@ package agentbuilder
 import (
 	"time"
 
-	"github.com/gentleman-programming/gentle-ai/internal/model"
+	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 )
 
 // SDDIntegrationMode defines how a generated agent integrates with SDD phases.
