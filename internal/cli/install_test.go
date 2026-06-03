@@ -76,6 +76,43 @@ func TestNormalizeInstallFlagsDefaults(t *testing.T) {
 	}
 }
 
+// TestNormalizeInstallFlagsCustomAcceptsKnowledgeBase verifies that
+// ComponentKnowledgeBase is accepted via --component selops-knowledge-base
+// and is excluded from the default OPS bundle (it is opt-in only).
+func TestNormalizeInstallFlagsCustomAcceptsKnowledgeBase(t *testing.T) {
+	// When explicitly requested via custom preset, ComponentKnowledgeBase is accepted.
+	input, err := NormalizeInstallFlags(InstallFlags{
+		Preset:     string(model.PresetCustom),
+		Components: []string{string(model.ComponentKnowledgeBase)},
+	}, system.DetectionResult{})
+	if err != nil {
+		t.Fatalf("NormalizeInstallFlags() error = %v", err)
+	}
+
+	want := []model.ComponentID{model.ComponentKnowledgeBase}
+	if !reflect.DeepEqual(input.Selection.Components, want) {
+		t.Fatalf("components = %#v, want %#v", input.Selection.Components, want)
+	}
+}
+
+// TestKnowledgeBaseNotInDefaultOPSBundle verifies that NormalizeInstallFlags
+// with the default selops-operational preset does NOT include ComponentKnowledgeBase.
+// It is optional — operator must explicitly opt in.
+func TestKnowledgeBaseNotInDefaultOPSBundle(t *testing.T) {
+	input, err := NormalizeInstallFlags(InstallFlags{
+		Preset: string(model.PresetSelOpsOperational),
+	}, system.DetectionResult{})
+	if err != nil {
+		t.Fatalf("NormalizeInstallFlags() error = %v", err)
+	}
+
+	for _, comp := range input.Selection.Components {
+		if comp == model.ComponentKnowledgeBase {
+			t.Errorf("ComponentKnowledgeBase must NOT be in the default OPS bundle; got %v", input.Selection.Components)
+		}
+	}
+}
+
 func TestNormalizeInstallFlagsCustomAcceptsOptionalGentlemanInstallables(t *testing.T) {
 	input, err := NormalizeInstallFlags(InstallFlags{
 		Preset:     string(model.PresetCustom),

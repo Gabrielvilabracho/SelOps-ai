@@ -127,6 +127,71 @@ func TestSkillsForPresetSelOpsOperationalContainsNoDevSkills(t *testing.T) {
 	}
 }
 
+// TestKnowledgeBaseSkillsReturnsExactlyTenNeutralSkills verifies that
+// KnowledgeBaseSkills() returns all 10 domain-agnostic foundation skills —
+// neither sdd-* skills nor ops-* skills.
+func TestKnowledgeBaseSkillsReturnsExactlyTenNeutralSkills(t *testing.T) {
+	skills := KnowledgeBaseSkills()
+
+	if len(skills) != 10 {
+		t.Fatalf("KnowledgeBaseSkills() returned %d skills, want exactly 10; got %v", len(skills), skills)
+	}
+}
+
+// TestKnowledgeBaseSkillsContainsNoSDDSkills verifies the knowledge base
+// contains no sdd-* skills (those belong to ComponentSDD, not ComponentKnowledgeBase).
+func TestKnowledgeBaseSkillsContainsNoSDDSkills(t *testing.T) {
+	skills := KnowledgeBaseSkills()
+
+	for _, skill := range skills {
+		if len(skill) >= 4 && skill[:3] == "sdd" {
+			t.Errorf("KnowledgeBaseSkills() must not contain SDD skill %q", skill)
+		}
+	}
+}
+
+// TestKnowledgeBaseSkillsContainsNoOpsSkills verifies the knowledge base
+// contains no ops-* skills (those belong to ComponentSDDOps, not ComponentKnowledgeBase).
+func TestKnowledgeBaseSkillsContainsNoOpsSkills(t *testing.T) {
+	skills := KnowledgeBaseSkills()
+
+	for _, skill := range skills {
+		if len(skill) >= 4 && skill[:4] == "ops-" {
+			t.Errorf("KnowledgeBaseSkills() must not contain OPS skill %q", skill)
+		}
+	}
+}
+
+// TestKnowledgeBaseSkillsContainsExpectedNeutralSkills verifies all 10 known
+// neutral skills are present — triangulation to force real logic.
+func TestKnowledgeBaseSkillsContainsExpectedNeutralSkills(t *testing.T) {
+	got := KnowledgeBaseSkills()
+
+	expected := []model.SkillID{
+		model.SkillGoTesting,
+		model.SkillCreator,
+		model.SkillImprover,
+		model.SkillBranchPR,
+		model.SkillIssueCreation,
+		model.SkillSkillRegistry,
+		model.SkillChainedPR,
+		model.SkillCognitiveDoc,
+		model.SkillCommentWriter,
+		model.SkillWorkUnitCommits,
+	}
+
+	skillSet := make(map[model.SkillID]struct{}, len(got))
+	for _, s := range got {
+		skillSet[s] = struct{}{}
+	}
+
+	for _, want := range expected {
+		if _, ok := skillSet[want]; !ok {
+			t.Errorf("KnowledgeBaseSkills() missing expected neutral skill %q; got %v", want, got)
+		}
+	}
+}
+
 func TestAllSkillIDsIncludesEveryKnownSkill(t *testing.T) {
 	all := AllSkillIDs()
 

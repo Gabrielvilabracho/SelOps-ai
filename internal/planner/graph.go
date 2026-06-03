@@ -49,6 +49,9 @@ func MVPGraph() Graph {
 		model.ComponentSDDOps:          {model.ComponentEngram},
 		model.ComponentOperationalMCP:  nil,
 		model.ComponentPersonaOperator: nil,
+		// ComponentKnowledgeBase is optional (nil deps — no DEV transitive pull).
+		// It injects the 10 neutral foundation skills independently of ComponentSkills/ComponentSDD.
+		model.ComponentKnowledgeBase: nil,
 	})
 }
 

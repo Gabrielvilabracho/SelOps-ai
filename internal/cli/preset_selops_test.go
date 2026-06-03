@@ -116,6 +116,17 @@ func TestPresetSelOpsOperationalDoesNotContainDEVComponents(t *testing.T) {
 	}
 }
 
+// TestPresetSelOpsOperationalExcludesKnowledgeBaseByDefault verifies that
+// ComponentKnowledgeBase is NOT automatically included in the OPS bundle.
+// It is OPTIONAL and must be explicitly requested by the user.
+func TestPresetSelOpsOperationalExcludesKnowledgeBaseByDefault(t *testing.T) {
+	got := componentsForPreset(model.PresetSelOpsOperational, model.PersonaOperator)
+
+	if slices.Contains(got, model.ComponentKnowledgeBase) {
+		t.Errorf("ComponentKnowledgeBase MUST NOT be auto-included in OPS preset (it is optional); got %v", got)
+	}
+}
+
 // TestNormalizePersonaAcceptsOperator verifies that normalizePersona("selops-operator")
 // (the renamed value) is accepted without error and maps to PersonaOperator.
 func TestNormalizePersonaAcceptsOperator(t *testing.T) {

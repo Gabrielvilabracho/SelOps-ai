@@ -192,3 +192,56 @@ func TestResolverExcludesUnsupportedAgents(t *testing.T) {
 		t.Fatalf("Resolve() unsupported agents = %v", plan.UnsupportedAgents)
 	}
 }
+
+// TestKnowledgeBaseHasNilDepsInMVPGraph verifies that ComponentKnowledgeBase
+// has nil (no) dependencies in MVPGraph — it must NOT transitively pull in
+// ComponentSDD, ComponentSkills, or any other DEV component.
+func TestKnowledgeBaseHasNilDepsInMVPGraph(t *testing.T) {
+	g := MVPGraph()
+
+	// ComponentKnowledgeBase must be registered in the graph.
+	if !g.Has(model.ComponentKnowledgeBase) {
+		t.Fatalf("MVPGraph must contain ComponentKnowledgeBase")
+	}
+
+	// It must have nil (zero) dependencies — no transitive DEV pull.
+	deps := g.DependenciesOf(model.ComponentKnowledgeBase)
+	if len(deps) != 0 {
+		t.Fatalf("ComponentKnowledgeBase must have no deps in MVPGraph (got %v)", deps)
+	}
+}
+
+// TestKnowledgeBaseDoesNotTransitivelyPullDEVComponents verifies that selecting
+// ComponentKnowledgeBase alone does not auto-add any DEV components.
+func TestKnowledgeBaseDoesNotTransitivelyPullDEVComponents(t *testing.T) {
+	resolver := NewResolver(MVPGraph())
+
+	selection := model.Selection{
+		Components: []model.ComponentID{model.ComponentKnowledgeBase},
+	}
+
+	plan, err := resolver.Resolve(selection)
+	if err != nil {
+		t.Fatalf("Resolve() returned error: %v", err)
+	}
+
+	// AddedDependencies must be empty — no transitive pull.
+	if len(plan.AddedDependencies) != 0 {
+		t.Fatalf("ComponentKnowledgeBase must not transitively pull any deps; got %v", plan.AddedDependencies)
+	}
+
+	devComponents := []model.ComponentID{
+		model.ComponentSDD,
+		model.ComponentSkills,
+		model.ComponentPermission,
+		model.ComponentGGA,
+	}
+
+	for _, dev := range devComponents {
+		for _, comp := range plan.OrderedComponents {
+			if comp == dev {
+				t.Errorf("ComponentKnowledgeBase must not pull DEV component %q; ordered = %v", dev, plan.OrderedComponents)
+			}
+		}
+	}
+}

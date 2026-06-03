@@ -745,6 +745,18 @@ func (s componentApplyStep) Run() error {
 			}
 		}
 		return nil
+	case model.ComponentKnowledgeBase:
+		// Install the 10 domain-agnostic foundation skills (knowledge base) for each adapter.
+		// ComponentKnowledgeBase is optional — it is never auto-included in any preset.
+		// It uses skills.Inject directly (no DEV graph dep, nil deps in MVPGraph).
+		kbSkills := skills.KnowledgeBaseSkills()
+		for _, adapter := range adapters {
+			targetDir := componentInjectionDirScoped(s.homeDir, s.workspaceDir, s.scope, adapter)
+			if _, err := skills.Inject(targetDir, adapter, kbSkills); err != nil {
+				return fmt.Errorf("inject knowledge-base skills for %q: %w", adapter.Agent(), err)
+			}
+		}
+		return nil
 	default:
 		return fmt.Errorf("component %q is not supported in install runtime", s.component)
 	}
@@ -1087,6 +1099,14 @@ func componentPathsWithWorkspaceScoped(homeDir, workspaceDir string, scope Insta
 				filepath.Join(homeDir, ".config", "opencode", "tui-plugins", "gentle-logo.tsx"),
 				filepath.Join(homeDir, ".config", "opencode", "tui.json"),
 			)
+		case model.ComponentKnowledgeBase:
+			// Report paths for all 10 neutral foundation skills.
+			for _, skillID := range skills.KnowledgeBaseSkills() {
+				path := skills.SkillPathForAgent(targetDir, adapter, skillID)
+				if path != "" {
+					paths = append(paths, path)
+				}
+			}
 		}
 	}
 
@@ -1162,7 +1182,7 @@ func componentPathDir(homeDir, workspaceDir string, adapter agents.Adapter, comp
 
 func componentPathDirScoped(homeDir, workspaceDir string, scope InstallScope, adapter agents.Adapter, component model.ComponentID) string {
 	switch component {
-	case model.ComponentEngram, model.ComponentSDD, model.ComponentPersona, model.ComponentSkills:
+	case model.ComponentEngram, model.ComponentSDD, model.ComponentPersona, model.ComponentSkills, model.ComponentKnowledgeBase:
 		return componentInjectionDirScoped(homeDir, workspaceDir, scope, adapter)
 	default:
 		return homeDir
