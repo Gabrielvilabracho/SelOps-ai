@@ -30,6 +30,7 @@ func TestAllEmbeddedAssetsAreReadable(t *testing.T) {
 		// OpenCode agent files
 		"opencode/persona-gentleman.md",
 		"opencode/sdd-orchestrator.md",
+		"opencode/ops-orchestrator.md",
 		"opencode/sdd-overlay-single.json",
 		"opencode/sdd-overlay-multi.json",
 		"opencode/commands/sdd-apply.md",
@@ -104,6 +105,9 @@ func TestAllEmbeddedAssetsAreReadable(t *testing.T) {
 		"skills/skill-creator/SKILL.md",
 		"skills/skill-improver/SKILL.md",
 		"skills/chained-pr/references/chaining-details.md",
+
+		// OPS orchestrator assets (Phase 2b)
+		"generic/ops-orchestrator.md",
 	}
 
 	for _, path := range expectedFiles {

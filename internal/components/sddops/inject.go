@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents"
+	"github.com/Gabrielvilabracho/selops-ai/internal/assets"
+	"github.com/Gabrielvilabracho/selops-ai/internal/components/filemerge"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/skills"
 	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 )
@@ -66,10 +68,38 @@ func allOpsSkillIDs() []model.SkillID {
 	return combined
 }
 
+// opsOrchestratorContent returns the ops-orchestrator markdown for the given adapter.
+// OpenCode gets the opencode-specific variant; all other adapters get the generic variant.
+// The opencode variant has OpenCode-specific preflight UX (coded options A1/B1/C1/D1,
+// localized Spanish block, and model assignment instructions).
+func opsOrchestratorContent(agent model.AgentID) string {
+	if agent == model.AgentOpenCode || agent == model.AgentKilocode {
+		return assets.MustRead("opencode/ops-orchestrator.md")
+	}
+	return assets.MustRead("generic/ops-orchestrator.md")
+}
+
+// readFileOrEmpty reads a file and returns its content as a string.
+// Returns "" if the file does not exist.
+func readFileOrEmpty(path string) (string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
+		return "", fmt.Errorf("read file %q: %w", path, err)
+	}
+	return string(data), nil
+}
+
 // Inject writes the operational SDD skill files for all provided adapters.
 // It injects both domain knowledge skills (sddOpsSkillIDs) and pipeline phase
 // agents (opsPipelineSkillIDs). It calls skills.InjectWithCapability, which
 // handles adapter capability checks and per-skill directory creation.
+//
+// In addition to skills, Inject writes the ops-orchestrator section into the
+// adapter's system prompt file using the InjectMarkdownSection mechanism — the
+// same approach used by the engram component for the engram-protocol section.
 //
 // MVP: install-only. Sync follow-up is a no-op (ComponentSDDOps is excluded
 // from managed sync — see TODO comment in internal/cli/sync.go).
@@ -106,6 +136,28 @@ func Inject(targetDir string, adapter agents.Adapter, opts InjectOptions) (Injec
 		if info.Size() < 100 {
 			return InjectionResult{}, fmt.Errorf("post-check: ops skill %q is too small (%d bytes) — content may be empty or corrupt", id, info.Size())
 		}
+	}
+
+	// Inject the ops-orchestrator section into the adapter's system prompt.
+	// This follows the same pattern as engram's engram-protocol injection:
+	// read the existing prompt, merge the section in via InjectMarkdownSection,
+	// and write atomically. Adapters that do not support a system prompt are skipped.
+	if adapter.SupportsSystemPrompt() {
+		orchContent := opsOrchestratorContent(adapter.Agent())
+		promptPath := adapter.SystemPromptFile(targetDir)
+		existing, readErr := readFileOrEmpty(promptPath)
+		if readErr != nil {
+			return InjectionResult{}, fmt.Errorf("read ops orchestrator prompt: %w", readErr)
+		}
+		updated := filemerge.InjectMarkdownSection(existing, "ops-orchestrator", orchContent)
+		writeResult, writeErr := filemerge.WriteFileAtomic(promptPath, []byte(updated), 0o644)
+		if writeErr != nil {
+			return InjectionResult{}, fmt.Errorf("write ops orchestrator section: %w", writeErr)
+		}
+		if writeResult.Changed {
+			result.Changed = true
+		}
+		result.Files = append(result.Files, promptPath)
 	}
 
 	return InjectionResult{Changed: result.Changed, Files: result.Files}, nil
