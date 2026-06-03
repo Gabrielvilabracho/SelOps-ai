@@ -726,6 +726,18 @@ func (s componentSyncStep) Run() error {
 		}
 		return nil
 
+	case model.ComponentKnowledgeBase:
+		// Sync the 10 domain-agnostic foundation skills for each adapter.
+		kbSkills := skills.KnowledgeBaseSkills()
+		for _, adapter := range adapters {
+			res, err := skills.Inject(s.homeDir, adapter, kbSkills)
+			if err != nil {
+				return fmt.Errorf("sync knowledge-base skills for %q: %w", adapter.Agent(), err)
+			}
+			s.countChanged(boolToInt(res.Changed), res.Files...)
+		}
+		return nil
+
 	default:
 		// Persona and any unknown components are out of sync scope.
 		return fmt.Errorf("component %q is not supported in sync runtime", s.component)

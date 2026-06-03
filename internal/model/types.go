@@ -48,6 +48,10 @@ const (
 	ComponentSDDOps          ComponentID = "selops-sddops"
 	ComponentOperationalMCP  ComponentID = "selops-operationalmcp"
 	ComponentPersonaOperator ComponentID = "selops-operator"
+	// ComponentKnowledgeBase bundles the 10 domain-agnostic foundation skills
+	// (neutral skills — not sdd-* and not ops-*). It is OPTIONAL and must be
+	// explicitly requested; it is never auto-included in any preset.
+	ComponentKnowledgeBase ComponentID = "selops-knowledge-base"
 )
 
 type UninstallMode string

@@ -72,6 +72,14 @@ func SkillsForPreset(preset model.PresetID) []model.SkillID {
 	}
 }
 
+// KnowledgeBaseSkills returns the 10 domain-agnostic foundation skills used by
+// ComponentKnowledgeBase. These are neutral skills — not sdd-* and not ops-*.
+// They are the same as foundationSkills in the DEV presets, but ComponentKnowledgeBase
+// exposes them as an optional add-on for any operator without pulling DEV deps.
+func KnowledgeBaseSkills() []model.SkillID {
+	return copySkills(foundationSkills)
+}
+
 // AllSkillIDs returns every known skill ID.
 func AllSkillIDs() []model.SkillID {
 	all := make([]model.SkillID, 0, len(sddSkills)+len(foundationSkills))

@@ -23,6 +23,8 @@ var mvpComponents = []Component{
 	{ID: model.ComponentSDDOps, Name: "SDD Ops", Description: "SelOps operational SDD workflow layer"},
 	{ID: model.ComponentOperationalMCP, Name: "Operational MCP", Description: "SelOps operational MCP server configuration"},
 	{ID: model.ComponentPersonaOperator, Name: "Operator Persona", Description: "SelOps operator persona (replaces Gentleman persona for OPS agents)"},
+	// ComponentKnowledgeBase is optional — not included in any preset by default.
+	{ID: model.ComponentKnowledgeBase, Name: "Knowledge Base", Description: "10 domain-agnostic foundation skills (opt-in for any operator)"},
 }
 
 func MVPComponents() []Component {

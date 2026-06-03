@@ -28,6 +28,8 @@ Toggle components with enter or space.
     SelOps operational MCP server configuration
   [ ] selops-operator
     SelOps operator persona (replaces Gentleman persona for OPS agents)
+  [ ] selops-knowledge-base
+    10 domain-agnostic foundation skills (opt-in for any operator)
 
   Continue
   Back
