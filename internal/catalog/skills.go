@@ -29,6 +29,12 @@ var mvpSkills = []Skill{
 	{ID: model.SkillOpsGovernance, Name: "ops-governance", Category: "operational", Priority: "p0"},
 	{ID: model.SkillOpsObservability, Name: "ops-observability", Category: "operational", Priority: "p0"},
 	{ID: model.SkillOpsGraduatedAutonomy, Name: "ops-graduated-autonomy", Category: "operational", Priority: "p0"},
+	// SelOps OPS pipeline phase agents (execution roles, not domain knowledge)
+	{ID: model.SkillOpsBrief, Name: "ops-brief", Category: "pipeline", Priority: "p0"},
+	{ID: model.SkillOpsStructure, Name: "ops-structure", Category: "pipeline", Priority: "p0"},
+	{ID: model.SkillOpsProduce, Name: "ops-produce", Category: "pipeline", Priority: "p0"},
+	{ID: model.SkillOpsReview, Name: "ops-review", Category: "pipeline", Priority: "p0"},
+	{ID: model.SkillOpsDeliver, Name: "ops-deliver", Category: "pipeline", Priority: "p0"},
 }
 
 func MVPSkills() []Skill {

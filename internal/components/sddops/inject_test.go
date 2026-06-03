@@ -51,7 +51,7 @@ func assertGolden(t *testing.T, name string, actual string) {
 	}
 }
 
-// TestSddOpsSkillIDsMembership verifies the exact set of sddOpsSkillIDs.
+// TestSddOpsSkillIDsMembership verifies the exact set of sddOpsSkillIDs (domain knowledge skills).
 func TestSddOpsSkillIDsMembership(t *testing.T) {
 	want := []model.SkillID{
 		"ops-standard-documentation",
@@ -75,20 +75,75 @@ func TestSddOpsSkillIDsMembership(t *testing.T) {
 	}
 }
 
+// TestOpsPipelineSkillIDsMembership verifies the exact set of opsPipelineSkillIDs
+// (execution-role agents that form the 5-phase operational pipeline).
+func TestOpsPipelineSkillIDsMembership(t *testing.T) {
+	want := []model.SkillID{
+		"ops-brief",
+		"ops-structure",
+		"ops-produce",
+		"ops-review",
+		"ops-deliver",
+	}
+	if len(opsPipelineSkillIDs) != len(want) {
+		t.Fatalf("opsPipelineSkillIDs len = %d, want %d", len(opsPipelineSkillIDs), len(want))
+	}
+	wantSet := make(map[model.SkillID]struct{}, len(want))
+	for _, id := range want {
+		wantSet[id] = struct{}{}
+	}
+	for _, id := range opsPipelineSkillIDs {
+		if _, ok := wantSet[id]; !ok {
+			t.Errorf("opsPipelineSkillIDs contains unexpected ID %q", id)
+		}
+	}
+}
+
+// TestAllOpsSkillIDsContainsBothLists verifies that allOpsSkillIDs() returns the
+// union of sddOpsSkillIDs and opsPipelineSkillIDs with no overlap.
+func TestAllOpsSkillIDsContainsBothLists(t *testing.T) {
+	all := allOpsSkillIDs()
+	expectedLen := len(sddOpsSkillIDs) + len(opsPipelineSkillIDs)
+	if len(all) != expectedLen {
+		t.Fatalf("allOpsSkillIDs() len = %d, want %d (sddOps=%d + pipeline=%d)",
+			len(all), expectedLen, len(sddOpsSkillIDs), len(opsPipelineSkillIDs))
+	}
+	// No duplicates.
+	seen := make(map[model.SkillID]struct{}, len(all))
+	for _, id := range all {
+		if _, ok := seen[id]; ok {
+			t.Errorf("allOpsSkillIDs() contains duplicate ID %q", id)
+		}
+		seen[id] = struct{}{}
+	}
+	// All domain knowledge skills present.
+	for _, id := range sddOpsSkillIDs {
+		if _, ok := seen[id]; !ok {
+			t.Errorf("allOpsSkillIDs() missing domain knowledge skill %q", id)
+		}
+	}
+	// All pipeline phase skills present.
+	for _, id := range opsPipelineSkillIDs {
+		if _, ok := seen[id]; !ok {
+			t.Errorf("allOpsSkillIDs() missing pipeline skill %q", id)
+		}
+	}
+}
+
 // TestSddOpsSkillIDsNoIntersectionWithSddSkills verifies zero intersection between
 // the sddops skill IDs and the SDD orchestrator skill IDs (those starting with "sdd-").
 func TestSddOpsSkillIDsNoIntersectionWithSddSkills(t *testing.T) {
-	for _, id := range sddOpsSkillIDs {
+	for _, id := range allOpsSkillIDs() {
 		s := string(id)
 		if len(s) >= 4 && s[:4] == "sdd-" {
-			t.Errorf("sddOpsSkillIDs contains SDD skill ID %q — must have zero intersection", id)
+			t.Errorf("allOpsSkillIDs() contains SDD skill ID %q — must have zero intersection", id)
 		}
 	}
 }
 
 // TestInjectWritesSkillFilesWithMinimumSize verifies that after a successful
-// Inject call each ops SKILL.md exists on disk and is ≥100 bytes.
-// Mirrors the guard in internal/components/sdd/inject.go:713.
+// Inject call each ops SKILL.md (domain knowledge + pipeline phase agents) exists
+// on disk and is ≥100 bytes. Mirrors the guard in internal/components/sdd/inject.go:713.
 func TestInjectWritesSkillFilesWithMinimumSize(t *testing.T) {
 	home := t.TempDir()
 	adapter := opencode.NewAdapter()
@@ -99,7 +154,7 @@ func TestInjectWritesSkillFilesWithMinimumSize(t *testing.T) {
 	}
 
 	skillDir := adapter.SkillsDir(home)
-	for _, id := range sddOpsSkillIDs {
+	for _, id := range allOpsSkillIDs() {
 		path := filepath.Join(skillDir, string(id), "SKILL.md")
 		info, statErr := os.Stat(path)
 		if statErr != nil {
@@ -125,8 +180,8 @@ func TestInjectWritesSkillFilesWithMinimumSize(t *testing.T) {
 	}
 }
 
-// TestInjectWritesExpectedOpsHeadings verifies that each SKILL.md stub
-// contains at least the mandatory ops heading prefix so content is not empty/stub.
+// TestInjectWritesExpectedOpsHeadings verifies that each SKILL.md
+// (domain knowledge + pipeline phase agents) contains at least one heading.
 func TestInjectWritesExpectedOpsHeadings(t *testing.T) {
 	home := t.TempDir()
 	adapter := opencode.NewAdapter()
@@ -136,7 +191,7 @@ func TestInjectWritesExpectedOpsHeadings(t *testing.T) {
 	}
 
 	skillDir := adapter.SkillsDir(home)
-	for _, id := range sddOpsSkillIDs {
+	for _, id := range allOpsSkillIDs() {
 		path := filepath.Join(skillDir, string(id), "SKILL.md")
 		content, err := os.ReadFile(path)
 		if err != nil {
@@ -144,7 +199,7 @@ func TestInjectWritesExpectedOpsHeadings(t *testing.T) {
 			continue
 		}
 		text := string(content)
-		// Each stub must have a top-level heading containing the ops skill name.
+		// Each skill must have a top-level heading.
 		if !strings.Contains(text, "#") {
 			t.Errorf("skill %q SKILL.md missing any heading", id)
 		}
@@ -154,7 +209,9 @@ func TestInjectWritesExpectedOpsHeadings(t *testing.T) {
 // TestInjectGoldenPerAdapter covers the injected SKILL.md content per adapter
 // strategy. One golden file is produced per (adapter, skill) pair, capturing
 // the exact bytes written to disk. This serves as a byte-for-byte regression
-// guard: any unintended change to an ops skill stub will cause a golden mismatch.
+// guard: any unintended change to an ops skill file will cause a golden mismatch.
+// Covers both domain knowledge skills (sddOpsSkillIDs) and pipeline phase agents
+// (opsPipelineSkillIDs) via allOpsSkillIDs().
 func TestInjectGoldenPerAdapter(t *testing.T) {
 	for _, ga := range goldenAdapters() {
 		ga := ga
@@ -173,7 +230,7 @@ func TestInjectGoldenPerAdapter(t *testing.T) {
 			}
 
 			skillDir := ga.adapter.SkillsDir(home)
-			for _, id := range sddOpsSkillIDs {
+			for _, id := range allOpsSkillIDs() {
 				id := id
 				t.Run(string(id), func(t *testing.T) {
 					path := filepath.Join(skillDir, string(id), "SKILL.md")
@@ -190,7 +247,8 @@ func TestInjectGoldenPerAdapter(t *testing.T) {
 }
 
 // TestInjectGoldenResultFiles verifies that result.Files lists every SKILL.md
-// written for a fresh inject (no pre-existing files).
+// written for a fresh inject (no pre-existing files). Covers both domain knowledge
+// skills and pipeline phase agents via allOpsSkillIDs().
 func TestInjectGoldenResultFiles(t *testing.T) {
 	for _, ga := range goldenAdapters() {
 		ga := ga
@@ -205,9 +263,9 @@ func TestInjectGoldenResultFiles(t *testing.T) {
 				t.Fatalf("Inject(%s) error = %v", ga.name, err)
 			}
 
-			// Every sddOpsSkillID must appear in result.Files.
+			// Every skill ID (domain + pipeline) must appear in result.Files.
 			skillDir := ga.adapter.SkillsDir(home)
-			for _, id := range sddOpsSkillIDs {
+			for _, id := range allOpsSkillIDs() {
 				expectedPath := filepath.Join(skillDir, string(id), "SKILL.md")
 				found := false
 				for _, f := range result.Files {

@@ -89,6 +89,14 @@ const (
 	SkillOpsGovernance            SkillID = "ops-governance"
 	SkillOpsObservability         SkillID = "ops-observability"
 	SkillOpsGraduatedAutonomy     SkillID = "ops-graduated-autonomy"
+	// SelOps OPS pipeline phase agent skill IDs.
+	// These are execution-role agents (not domain knowledge skills) that form
+	// the 5-phase operational pipeline: brief → structure → produce → review → deliver.
+	SkillOpsBrief     SkillID = "ops-brief"
+	SkillOpsStructure SkillID = "ops-structure"
+	SkillOpsProduce   SkillID = "ops-produce"
+	SkillOpsReview    SkillID = "ops-review"
+	SkillOpsDeliver   SkillID = "ops-deliver"
 )
 
 type PersonaID string
