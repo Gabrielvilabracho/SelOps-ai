@@ -16,7 +16,6 @@ import (
 	"github.com/Gabrielvilabracho/selops-ai/internal/backup"
 	"github.com/Gabrielvilabracho/selops-ai/internal/catalog"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/opencodeplugin"
-	"github.com/Gabrielvilabracho/selops-ai/internal/components/sdd"
 	componentuninstall "github.com/Gabrielvilabracho/selops-ai/internal/components/uninstall"
 	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 	"github.com/Gabrielvilabracho/selops-ai/internal/opencode"
@@ -39,17 +38,17 @@ var osRemoveFn = os.Remove
 var execCommandFn = exec.Command
 
 // readCurrentAssignmentsFn is a package-level variable so tests can override
-// how current model assignments are read from opencode.json. It wraps
-// sdd.ReadCurrentModelAssignments and is only called during ModelConfigMode.
+// how current model assignments are read from opencode.json.
+// OPS fork (Phase 0e): sdd package removed — always returns empty map.
 var readCurrentAssignmentsFn = func(settingsPath string) (map[string]model.ModelAssignment, error) {
-	return sdd.ReadCurrentModelAssignments(settingsPath)
+	return nil, nil
 }
 
 // readProfilesFn is a package-level variable so tests can override how profiles
-// are detected from opencode.json. It wraps sdd.DetectProfiles and is called
-// on ScreenProfiles entry and after SyncDoneMsg to refresh the profile list.
+// are detected from opencode.json.
+// OPS fork (Phase 0e): sdd package removed — always returns empty slice.
 var readProfilesFn = func(settingsPath string) ([]model.Profile, error) {
-	return sdd.DetectProfiles(settingsPath)
+	return nil, nil
 }
 
 func sanitizeKnownModelEfforts(assignments map[string]model.ModelAssignment, sddModels map[string][]opencode.Model) map[string]model.ModelAssignment {
@@ -1452,9 +1451,9 @@ func (m Model) confirmSelection() (tea.Model, tea.Cmd) {
 	case ScreenProfileDelete:
 		switch m.Cursor {
 		case 0: // "Delete & Sync"
-			if err := sdd.RemoveProfileAgents(opencode.DefaultSettingsPath(), m.ProfileDeleteTarget); err != nil {
-				// Store the error so it can be displayed on ScreenProfiles.
-				m.ProfileDeleteErr = err
+			// OPS fork (Phase 0e): sdd package removed — profile deletion is a no-op.
+			if false {
+				m.ProfileDeleteErr = fmt.Errorf("sdd package removed in Phase 0e")
 				m.setScreen(ScreenProfiles)
 			} else {
 				m.ProfileDeleteErr = nil
@@ -3283,25 +3282,25 @@ func (m Model) hasDetectedOpenCode() bool {
 }
 
 func (m Model) shouldShowSDDModeScreen() bool {
-	return m.Selection.HasAgent(model.AgentOpenCode) &&
-		hasSelectedComponent(m.Selection.Components, model.ComponentSDD)
+	// OPS fork (Phase 0e): ComponentSDD removed — SDD mode screen never shown.
+	return false
 }
 
 // shouldShowStrictTDDScreen reports whether the Strict TDD Mode screen should
-// be shown in the navigation flow. It requires only that the SDD component is
-// selected — the screen is agent-agnostic.
+// be shown in the navigation flow.
+// OPS fork (Phase 0e): ComponentSDD removed — always false.
 func (m Model) shouldShowStrictTDDScreen() bool {
-	return hasSelectedComponent(m.Selection.Components, model.ComponentSDD)
+	return false
 }
 
 func (m Model) shouldShowClaudeModelPickerScreen() bool {
-	return m.Selection.HasAgent(model.AgentClaudeCode) &&
-		hasSelectedComponent(m.Selection.Components, model.ComponentSDD)
+	// OPS fork (Phase 0e): ComponentSDD removed — model picker screen never shown.
+	return false
 }
 
 func (m Model) shouldShowKiroModelPickerScreen() bool {
-	return m.Selection.HasAgent(model.AgentKiroIDE) &&
-		hasSelectedComponent(m.Selection.Components, model.ComponentSDD)
+	// OPS fork (Phase 0e): ComponentSDD removed — Kiro model picker screen never shown.
+	return false
 }
 
 func componentsForPreset(preset model.PresetID, persona model.PersonaID) []model.ComponentID {
@@ -3310,7 +3309,7 @@ func componentsForPreset(preset model.PresetID, persona model.PersonaID) []model
 	case model.PresetMinimal:
 		components = []model.ComponentID{model.ComponentEngram}
 	case model.PresetEcosystemOnly:
-		components = []model.ComponentID{model.ComponentEngram, model.ComponentSDD, model.ComponentSkills, model.ComponentContext7, model.ComponentGGA}
+		components = []model.ComponentID{model.ComponentEngram, model.ComponentSkills, model.ComponentContext7, model.ComponentGGA}
 	case model.PresetCustom:
 		return nil
 	case model.PresetSelOpsOperational:
@@ -3329,7 +3328,6 @@ func componentsForPreset(preset model.PresetID, persona model.PersonaID) []model
 	default: // full-gentleman
 		components = []model.ComponentID{
 			model.ComponentEngram,
-			model.ComponentSDD,
 			model.ComponentSkills,
 			model.ComponentContext7,
 			model.ComponentPermission,
@@ -3374,16 +3372,8 @@ func profileNames(profiles []model.Profile) []string {
 }
 
 func (m Model) shouldShowUninstallProfilesSelection() bool {
-	if len(m.UninstallProfilesAvailable) == 0 {
-		return false
-	}
-	if !hasSelectedAgent(m.UninstallAgents, model.AgentOpenCode) {
-		return false
-	}
-	if !hasSelectedComponent(m.UninstallComponents, model.ComponentSDD) {
-		return false
-	}
-	return true
+	// OPS fork (Phase 0e): ComponentSDD removed — profile uninstall selection never shown.
+	return false
 }
 
 func (m Model) shouldShowUninstallEngramScopeSelection() bool {
@@ -3416,7 +3406,7 @@ func (m Model) handleProfileNameInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case tea.KeyEnter:
 		// Validate and advance to step 1.
 		name := strings.ToLower(m.ProfileNameInput)
-		if err := sdd.ValidateProfileName(name); err != nil {
+		if err := tuiValidateProfileName(name); err != nil {
 			m.ProfileNameErr = err.Error()
 			m.ProfileNameCollision = false
 			return m, nil
@@ -3848,4 +3838,21 @@ func agentBuilderSystemPromptPath(agentID model.AgentID) (string, bool) {
 	default:
 		return "", false
 	}
+}
+
+// tuiValidateProfileName validates a SDD profile name in the TUI.
+// Inlined from the deleted sdd package (Phase 0e strip).
+func tuiValidateProfileName(name string) error {
+	if strings.TrimSpace(name) == "" {
+		return fmt.Errorf("profile name must not be empty")
+	}
+	for _, c := range name {
+		if c == ':' || c == '/' || c == '\\' || c == ' ' {
+			return fmt.Errorf("profile name %q contains reserved character %q", name, c)
+		}
+	}
+	if name == "default" {
+		return fmt.Errorf("profile name %q is reserved", name)
+	}
+	return nil
 }

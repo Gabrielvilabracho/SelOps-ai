@@ -179,9 +179,10 @@ func TestBuildReviewPayloadIncludesStrictTDD(t *testing.T) {
 		Preset:    model.PresetFullGentleman,
 		StrictTDD: true,
 	}
+	// OPS fork (Phase 0e): ComponentSDD removed. HasSDD is always false now.
 	resolved := ResolvedPlan{
 		Agents:            []model.AgentID{model.AgentClaudeCode},
-		OrderedComponents: []model.ComponentID{model.ComponentEngram, model.ComponentSDD},
+		OrderedComponents: []model.ComponentID{model.ComponentEngram, model.ComponentSDDOps},
 	}
 
 	payload := BuildReviewPayload(selection, resolved)
@@ -189,8 +190,9 @@ func TestBuildReviewPayloadIncludesStrictTDD(t *testing.T) {
 	if !payload.StrictTDD {
 		t.Errorf("StrictTDD = false, want true (selection.StrictTDD=true)")
 	}
-	if !payload.HasSDD {
-		t.Errorf("HasSDD = false, want true (SDD component is in resolved plan)")
+	// HasSDD is always false in OPS fork (Phase 0e: ComponentSDD removed).
+	if payload.HasSDD {
+		t.Errorf("HasSDD = true, want false (ComponentSDD removed in OPS fork Phase 0e)")
 	}
 }
 
@@ -204,9 +206,10 @@ func TestBuildReviewPayloadStrictTDDFalseWhenDisabled(t *testing.T) {
 		Preset:    model.PresetFullGentleman,
 		StrictTDD: false,
 	}
+	// OPS fork (Phase 0e): ComponentSDD removed. HasSDD is always false now.
 	resolved := ResolvedPlan{
 		Agents:            []model.AgentID{model.AgentClaudeCode},
-		OrderedComponents: []model.ComponentID{model.ComponentEngram, model.ComponentSDD},
+		OrderedComponents: []model.ComponentID{model.ComponentEngram, model.ComponentSDDOps},
 	}
 
 	payload := BuildReviewPayload(selection, resolved)
@@ -214,8 +217,9 @@ func TestBuildReviewPayloadStrictTDDFalseWhenDisabled(t *testing.T) {
 	if payload.StrictTDD {
 		t.Errorf("StrictTDD = true, want false (selection.StrictTDD=false)")
 	}
-	if !payload.HasSDD {
-		t.Errorf("HasSDD = false, want true (SDD component is in resolved plan)")
+	// HasSDD is always false in OPS fork (Phase 0e: ComponentSDD removed).
+	if payload.HasSDD {
+		t.Errorf("HasSDD = true, want false (ComponentSDD removed in OPS fork Phase 0e)")
 	}
 }
 

@@ -18,7 +18,6 @@ import (
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/operationalmcp"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/permissions"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/persona"
-	"github.com/Gabrielvilabracho/selops-ai/internal/components/sdd"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/skills"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/theme"
 	"github.com/Gabrielvilabracho/selops-ai/internal/model"
@@ -190,7 +189,7 @@ func parseProfileFlag(raw string) (model.Profile, error) {
 	name := raw[:colonIdx]
 	modelSpec := raw[colonIdx+1:]
 
-	if err := sdd.ValidateProfileName(name); err != nil {
+	if err := validateProfileName(name); err != nil {
 		return model.Profile{}, fmt.Errorf("--profile %q: %w", raw, err)
 	}
 
@@ -220,23 +219,11 @@ func parseProfilePhaseFlag(raw string) (name, phase string, assignment model.Mod
 	if name == "" {
 		return "", "", model.ModelAssignment{}, fmt.Errorf("--profile-phase %q: profile name must not be empty", raw)
 	}
-	if err = sdd.ValidateProfileName(name); err != nil {
+	if err = validateProfileName(name); err != nil {
 		return "", "", model.ModelAssignment{}, fmt.Errorf("--profile-phase %q: %w", raw, err)
 	}
 	if phase == "" {
 		return "", "", model.ModelAssignment{}, fmt.Errorf("--profile-phase %q: phase must not be empty", raw)
-	}
-	// Validate that the phase is a known SDD phase name.
-	knownPhases := sdd.ProfilePhaseOrder()
-	validPhase := false
-	for _, p := range knownPhases {
-		if p == phase {
-			validPhase = true
-			break
-		}
-	}
-	if !validPhase {
-		return "", "", model.ModelAssignment{}, fmt.Errorf("--profile-phase %q: unknown phase %q; valid phases are: %v", raw, phase, knownPhases)
 	}
 
 	assignment, err = parseModelSpec(modelSpec)
@@ -284,14 +271,12 @@ func parseModelSpec(spec string) (model.ModelAssignment, error) {
 // This is the reusable managed-asset sync contract. A future `upgrade --sync`
 // flow can call this function to get the same managed-only selection semantics.
 func BuildSyncSelection(flags SyncFlags, agentIDs []model.AgentID) model.Selection {
-	// Order matters: Persona must run BEFORE SDD/Engram/MCP because those
-	// components inject content with substrings (e.g. "## Personality",
-	// "Senior Architect") that overlap with persona's legacy-block fingerprints.
+	// Order matters: Persona must run BEFORE Engram/MCP because those components
+	// inject content with substrings that overlap with persona's legacy-block fingerprints.
 	// Running persona last would cause its StripLegacyPersonaBlock pass to
 	// detect the just-written managed sections as legacy and strip them.
 	components := []model.ComponentID{
 		model.ComponentPersona,
-		model.ComponentSDD,
 		model.ComponentEngram,
 		model.ComponentContext7,
 		model.ComponentGGA,
@@ -326,8 +311,7 @@ func BuildSyncSelection(flags SyncFlags, agentIDs []model.AgentID) model.Selecti
 		// Persona is left as zero-value here. RunSync resolves it from
 		// state.json (the user's installed choice); only when state has no
 		// recorded persona — i.e. an old install — does it fall back to
-		// PersonaGentleman. This avoids regenerating a Gentleman persona on
-		// top of a user who installed neutral.
+		// PersonaOperator.
 	}
 }
 
@@ -509,12 +493,6 @@ func syncPersonaPathsWithWorkspace(homeDir, workspaceDir string, selection model
 		if adapter.SystemPromptStrategy() != model.StrategyJinjaModules {
 			paths = append(paths, adapter.SystemPromptFile(targetDir))
 		}
-		if selection.Persona == model.PersonaGentleman && adapter.SupportsOutputStyles() {
-			paths = append(paths, adapter.OutputStyleDir(targetDir)+"/gentleman.md")
-			if p := adapter.SettingsPath(targetDir); p != "" {
-				paths = append(paths, p)
-			}
-		}
 	}
 	return paths
 }
@@ -569,60 +547,6 @@ func (s componentSyncStep) Run() error {
 			res, err := mcp.Inject(s.homeDir, adapter)
 			if err != nil {
 				return fmt.Errorf("sync context7 for %q: %w", adapter.Agent(), err)
-			}
-			s.countChanged(boolToInt(res.Changed), res.Files...)
-		}
-		return nil
-
-	case model.ComponentSDD:
-		profileStrategy := sdd.ResolveProfileStrategy(s.homeDir, s.selection.SDDProfileStrategy)
-
-		// Resolve profiles for injection:
-		// - When profiles are explicitly provided (TUI/CLI), use them directly.
-		// - On a regular sync (no explicit profiles), detect existing named profiles
-		//   from disk so their orchestrator prompts are refreshed from updated embedded
-		//   assets while model assignments are preserved.
-		profiles := s.selection.Profiles
-		if len(profiles) == 0 && profileStrategy != model.SDDProfileStrategyExternalSingleActive {
-			settingsPath := ""
-			for _, adapter := range adapters {
-				if adapter.Agent() == model.AgentOpenCode {
-					settingsPath = adapter.SettingsPath(s.homeDir)
-					break
-				}
-			}
-			if settingsPath != "" {
-				detected, detectErr := sdd.DetectProfiles(settingsPath)
-				if detectErr == nil {
-					profiles = detected
-				}
-				// If detect fails (e.g. file missing), silently skip — no profiles to refresh.
-			}
-		}
-
-		// If profiles exist (explicit or detected), SDDModeMulti is required:
-		// shared prompt files must be written and {file:...} refs must resolve.
-		sddMode := s.selection.SDDMode
-		if profileStrategy == model.SDDProfileStrategyExternalSingleActive {
-			sddMode = model.SDDModeMulti
-		} else if len(profiles) > 0 && sddMode == "" {
-			sddMode = model.SDDModeMulti
-		}
-
-		for _, adapter := range adapters {
-			targetDir := componentInjectionDir(s.homeDir, s.workspaceDir, adapter)
-			opts := sdd.InjectOptions{
-				OpenCodeModelAssignments:           s.selection.ModelAssignments,
-				ClaudeModelAssignments:             s.selection.ClaudeModelAssignments,
-				KiroModelAssignments:               s.selection.KiroModelAssignments,
-				WorkspaceDir:                       s.workspaceDir,
-				StrictTDD:                          s.selection.StrictTDD,
-				PreserveOpenCodeOrchestratorPrompt: profileStrategy == model.SDDProfileStrategyExternalSingleActive,
-				Profiles:                           profiles,
-			}
-			res, err := sdd.Inject(targetDir, adapter, sddMode, opts)
-			if err != nil {
-				return fmt.Errorf("sync sdd for %q: %w", adapter.Agent(), err)
 			}
 			s.countChanged(boolToInt(res.Changed), res.Files...)
 		}
@@ -891,9 +815,9 @@ func RunSync(args []string) (SyncResult, error) {
 		}
 	}
 	// Backward-compat fallback: state files written before persona persistence
-	// have no Persona field. Default to Gentleman so sync still has a target.
+	// have no Persona field. Default to Operator for the OPS fork.
 	if selection.Persona == "" {
-		selection.Persona = model.PersonaGentleman
+		selection.Persona = model.PersonaOperator
 	}
 
 	if flags.DryRun {
@@ -1015,4 +939,21 @@ func runPostSyncVerification(homeDir, workspaceDir string, selection model.Selec
 	}
 
 	return verify.BuildReport(verify.RunChecks(context.Background(), checks))
+}
+
+// validateProfileName returns an error if name is empty or contains reserved characters.
+// Inlined from the deleted sdd package (Phase 0e strip).
+func validateProfileName(name string) error {
+	if strings.TrimSpace(name) == "" {
+		return fmt.Errorf("profile name must not be empty")
+	}
+	for _, c := range name {
+		if c == ':' || c == '/' || c == '\\' || c == ' ' {
+			return fmt.Errorf("profile name %q contains reserved character %q", name, c)
+		}
+	}
+	if name == "default" {
+		return fmt.Errorf("profile name %q is reserved", name)
+	}
+	return nil
 }

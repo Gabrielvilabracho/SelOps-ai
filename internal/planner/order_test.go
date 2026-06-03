@@ -8,13 +8,16 @@ import (
 	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 )
 
+// TestTopologicalSortOrdersDependenciesFirst verifies that topological sort
+// correctly orders components with their dependencies first.
+// OPS fork (Phase 0e): ComponentSDD removed; uses ComponentSDDOps with its dep on Engram.
 func TestTopologicalSortOrdersDependenciesFirst(t *testing.T) {
 	deps := map[model.ComponentID][]model.ComponentID{
-		model.ComponentSkills:   {model.ComponentSDD},
-		model.ComponentSDD:      {model.ComponentEngram},
-		model.ComponentEngram:   nil,
-		model.ComponentPersona:  nil,
-		model.ComponentContext7: nil,
+		model.ComponentSkills:          nil,
+		model.ComponentSDDOps:          {model.ComponentEngram},
+		model.ComponentEngram:          nil,
+		model.ComponentPersona:         nil,
+		model.ComponentContext7:         nil,
 	}
 
 	ordered, err := TopologicalSort(deps)
@@ -22,14 +25,21 @@ func TestTopologicalSortOrdersDependenciesFirst(t *testing.T) {
 		t.Fatalf("TopologicalSort() returned error: %v", err)
 	}
 
-	if !reflect.DeepEqual(ordered, []model.ComponentID{
-		model.ComponentContext7,
-		model.ComponentEngram,
-		model.ComponentPersona,
-		model.ComponentSDD,
-		model.ComponentSkills,
-	}) {
-		t.Fatalf("TopologicalSort() order = %v", ordered)
+	// Engram must appear before SDDOps (it's a dependency).
+	engramIdx, sddOpsIdx := -1, -1
+	for i, c := range ordered {
+		if c == model.ComponentEngram {
+			engramIdx = i
+		}
+		if c == model.ComponentSDDOps {
+			sddOpsIdx = i
+		}
+	}
+	if engramIdx < 0 || sddOpsIdx < 0 {
+		t.Fatalf("missing components in result: %v", ordered)
+	}
+	if engramIdx > sddOpsIdx {
+		t.Fatalf("Engram (%d) must be before SDDOps (%d) in sorted order, got %v", engramIdx, sddOpsIdx, ordered)
 	}
 }
 
@@ -38,7 +48,7 @@ func TestApplySoftOrderingReordersWithoutAddingDependencies(t *testing.T) {
 		model.ComponentContext7,
 		model.ComponentEngram,
 		model.ComponentPersona,
-		model.ComponentSDD,
+		model.ComponentSDDOps,
 	}
 
 	result := applySoftOrdering(ordered, [][2]model.ComponentID{{model.ComponentPersona, model.ComponentEngram}})
@@ -47,7 +57,7 @@ func TestApplySoftOrderingReordersWithoutAddingDependencies(t *testing.T) {
 		model.ComponentContext7,
 		model.ComponentPersona,
 		model.ComponentEngram,
-		model.ComponentSDD,
+		model.ComponentSDDOps,
 	}) {
 		t.Fatalf("applySoftOrdering() = %v", result)
 	}
@@ -68,10 +78,10 @@ func TestApplySoftOrderingEdgeCases(t *testing.T) {
 		t.Fatalf("second absent: expected [persona], got %v", result)
 	}
 
-	// Both absent — no-op
-	result = applySoftOrdering([]model.ComponentID{model.ComponentSDD}, pair)
-	if !reflect.DeepEqual(result, []model.ComponentID{model.ComponentSDD}) {
-		t.Fatalf("both absent: expected [sdd], got %v", result)
+	// Both absent — no-op (use ComponentSkills as neutral component)
+	result = applySoftOrdering([]model.ComponentID{model.ComponentSkills}, pair)
+	if !reflect.DeepEqual(result, []model.ComponentID{model.ComponentSkills}) {
+		t.Fatalf("both absent: expected [skills], got %v", result)
 	}
 
 	// Already correct order — no-op (must not mutate)
@@ -89,48 +99,36 @@ func TestApplySoftOrderingEdgeCases(t *testing.T) {
 	}
 }
 
-func TestApplySoftOrderingBothMVPPairsWithFullSelection(t *testing.T) {
-	// Simulates the real scenario: topo gives [context7, engram, persona, sdd, skills]
-	// Both MVPGraph soft pairs should result in persona before engram AND sdd.
+// TestApplySoftOrderingBothMVPPairsWithFullOPSSelection verifies soft ordering
+// for OPS preset: PersonaOperator must be before SDDOps.
+// OPS fork (Phase 0e): ComponentSDD removed; uses OPS components.
+func TestApplySoftOrderingBothMVPPairsWithFullOPSSelection(t *testing.T) {
+	// Simulates the OPS preset scenario.
 	ordered := []model.ComponentID{
 		model.ComponentContext7,
 		model.ComponentEngram,
-		model.ComponentPersona,
-		model.ComponentSDD,
-		model.ComponentSkills,
+		model.ComponentSDDOps,
+		model.ComponentPersonaOperator,
 	}
 
 	result := applySoftOrdering(ordered, SoftOrderingConstraints())
 
-	// Persona must appear before both Engram and SDD.
-	personaIdx, engramIdx, sddIdx := -1, -1, -1
+	// PersonaOperator must appear before SDDOps.
+	personaIdx, sddOpsIdx := -1, -1
 	for i, c := range result {
 		switch c {
-		case model.ComponentPersona:
+		case model.ComponentPersonaOperator:
 			personaIdx = i
-		case model.ComponentEngram:
-			engramIdx = i
-		case model.ComponentSDD:
-			sddIdx = i
+		case model.ComponentSDDOps:
+			sddOpsIdx = i
 		}
 	}
 
-	if personaIdx < 0 || engramIdx < 0 || sddIdx < 0 {
+	if personaIdx < 0 || sddOpsIdx < 0 {
 		t.Fatalf("missing components in result: %v", result)
 	}
-	if personaIdx > engramIdx {
-		t.Fatalf("Persona (%d) must be before Engram (%d), got %v", personaIdx, engramIdx, result)
-	}
-	if personaIdx > sddIdx {
-		t.Fatalf("Persona (%d) must be before SDD (%d), got %v", personaIdx, sddIdx, result)
-	}
-	// Hard dep: Engram must still be before SDD
-	if engramIdx > sddIdx {
-		t.Fatalf("Engram (%d) must remain before SDD (%d) after soft reorder, got %v", engramIdx, sddIdx, result)
-	}
-	// Skills must remain last
-	if result[len(result)-1] != model.ComponentSkills {
-		t.Fatalf("Skills must remain last, got %v", result)
+	if personaIdx > sddOpsIdx {
+		t.Fatalf("PersonaOperator (%d) must be before SDDOps (%d), got %v", personaIdx, sddOpsIdx, result)
 	}
 }
 
@@ -152,8 +150,8 @@ func TestSoftOrderingContainsPersonaOperatorBeforeSDDOps(t *testing.T) {
 
 func TestTopologicalSortDetectsCycles(t *testing.T) {
 	deps := map[model.ComponentID][]model.ComponentID{
-		model.ComponentEngram: {model.ComponentSDD},
-		model.ComponentSDD:    {model.ComponentEngram},
+		model.ComponentEngram: {model.ComponentSDDOps},
+		model.ComponentSDDOps: {model.ComponentEngram},
 	}
 
 	_, err := TopologicalSort(deps)

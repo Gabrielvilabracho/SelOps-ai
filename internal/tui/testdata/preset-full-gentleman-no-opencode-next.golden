@@ -1,12 +1,24 @@
-STRICT TDD MODE
+Install Plan
 
-Should agents follow Strict TDD (RED → GREEN → REFACTOR) for every task?
-When enabled, the sdd-apply agent writes tests first, confirms failure,
-then implements the minimum code to pass before refactoring.
+Components to install
+  1. claude-theme included
+     Claude Code Gentleman custom theme
+  2. context7 included
+     Latest framework and library docs
+  3. persona included
+     Gentleman, neutral or custom behavior
+  4. engram included
+     Persistent cross-session memory
+  5. gga included
+     Gentleman Guardian Angel — AI provider switcher
+  6. opencode-gentle-logo included
+     OpenCode home logo TUI plugin with Braille rose
+  7. permissions included
+     Security-first defaults and guardrails
+  8. skills included
+     Curated coding skill library
 
-▸ ( ) Enable
-  (*) Disable
-
+▸ Continue
   Back
 
 j/k: navigate • enter: select • esc: back

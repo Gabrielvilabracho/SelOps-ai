@@ -97,9 +97,9 @@ func TestPresetSelOpsOperationalExcludesGenericSkillsComponent(t *testing.T) {
 // (Phase 0c). Context7 has nil deps (no DEV transitive pull) and is
 // always-on for OPS — it provides up-to-date library/docs to the AI agent.
 func TestPresetSelOpsOperationalDoesNotContainDEVComponents(t *testing.T) {
+	// OPS fork (Phase 0e): ComponentSDD removed. devOnly list updated.
 	devOnly := []model.ComponentID{
-		model.ComponentSDD,
-		model.ComponentSkills, // transitively pulls ComponentSDD — must NOT be in OPS
+		model.ComponentSkills, // ComponentSkills: previously had dep on ComponentSDD — excluded from OPS
 		model.ComponentPermission,
 		model.ComponentGGA,
 		model.ComponentClaudeTheme,
@@ -172,12 +172,11 @@ func TestNormalizeInstallFlagsSelOpsOperationalPreset(t *testing.T) {
 		}
 	}
 
-	// Must NOT contain DEV-only components (including ComponentSkills which
-	// transitively pulls ComponentSDD via MVPGraph — not appropriate for OPS).
+	// Must NOT contain DEV-only components.
 	// NOTE: ComponentContext7 is NOT in this list — it is always-on for OPS (Phase 0c).
+	// OPS fork (Phase 0e): ComponentSDD removed.
 	devOnly := []model.ComponentID{
-		model.ComponentSDD,
-		model.ComponentSkills, // has hard dep on ComponentSDD — excluded from OPS
+		model.ComponentSkills, // excluded from OPS (was depending on ComponentSDD)
 		model.ComponentPermission,
 		model.ComponentGGA,
 		model.ComponentPersona,

@@ -4,7 +4,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -202,7 +201,6 @@ func TestBuildSyncSelectionDefaultScopeIncludesManagedComponents(t *testing.T) {
 	// users who already have a persona installed. Content outside the markers
 	// is preserved by InjectMarkdownSection.
 	mandatoryComponents := []model.ComponentID{
-		model.ComponentSDD,
 		model.ComponentEngram,
 		model.ComponentContext7,
 		model.ComponentGGA,
@@ -486,7 +484,7 @@ func TestComponentSyncStepRunsPersonaInjectForSync(t *testing.T) {
 		component: model.ComponentPersona,
 		homeDir:   home,
 		agents:    []model.AgentID{model.AgentOpenCode},
-		selection: model.Selection{Persona: model.PersonaGentleman},
+		selection: model.Selection{Persona: model.PersonaOperator},
 	}
 
 	if err := step.Run(); err != nil {
@@ -514,31 +512,6 @@ func TestComponentSyncStepRunsPersonaInjectForSync(t *testing.T) {
 	}
 }
 
-func TestComponentSyncStepRunsSDDInject(t *testing.T) {
-	home := t.TempDir()
-
-	step := componentSyncStep{
-		id:        "sync:sdd",
-		component: model.ComponentSDD,
-		homeDir:   home,
-		agents:    []model.AgentID{model.AgentOpenCode},
-		selection: model.Selection{SDDMode: model.SDDModeSingle},
-	}
-
-	if err := step.Run(); err != nil {
-		t.Fatalf("componentSyncStep.Run() SDD error = %v", err)
-	}
-
-	// Verify that the SDD injection created managed OpenCode assets.
-	settingsPath := filepath.Join(home, ".config", "opencode", "opencode.json")
-	if _, err := os.Stat(settingsPath); err != nil {
-		t.Errorf("expected SDD inject to create %q, got err: %v", settingsPath, err)
-	}
-	commandPath := filepath.Join(home, ".config", "opencode", "commands", "sdd-init.md")
-	if _, err := os.Stat(commandPath); err != nil {
-		t.Errorf("expected SDD inject to create %q, got err: %v", commandPath, err)
-	}
-}
 
 func TestComponentSyncStepRunsGGAInjectWithoutBinaryInstall(t *testing.T) {
 	home := t.TempDir()
@@ -1093,328 +1066,11 @@ func TestSyncActionsExecutedReflectsChangedFiles(t *testing.T) {
 // 4. Asserts model assignments are set correctly on the orchestrators
 // 5. Asserts prompt files exist in ~/.config/opencode/prompts/sdd/
 // 6. Runs sync AGAIN with no changes → asserts filesChanged=0 (idempotent)
-func TestRunSyncWithProfilesIntegration(t *testing.T) {
-	home := t.TempDir()
-	restoreCommand := runCommand
-	restoreLookPath := cmdLookPath
-	t.Cleanup(func() {
-		runCommand = restoreCommand
-		cmdLookPath = restoreLookPath
-	})
-	runCommand = func(string, ...string) error { return nil }
-	cmdLookPath = func(name string) (string, error) { return "/usr/local/bin/" + name, nil }
-
-	// Build 3 profiles with distinct orchestrator models.
-	profiles := []model.Profile{
-		{
-			Name: "cheap",
-			OrchestratorModel: model.ModelAssignment{
-				ProviderID: "anthropic",
-				ModelID:    "claude-haiku-3-5-20241022",
-			},
-			PhaseAssignments: map[string]model.ModelAssignment{
-				"sdd-apply": {ProviderID: "anthropic", ModelID: "claude-haiku-3-5-20241022"},
-			},
-		},
-		{
-			Name: "premium",
-			OrchestratorModel: model.ModelAssignment{
-				ProviderID: "anthropic",
-				ModelID:    "claude-opus-4-5",
-			},
-		},
-		{
-			Name: "balanced",
-			OrchestratorModel: model.ModelAssignment{
-				ProviderID: "anthropic",
-				ModelID:    "claude-sonnet-4-5",
-			},
-		},
-	}
-
-	sel := model.Selection{
-		Agents: []model.AgentID{model.AgentOpenCode},
-		Components: []model.ComponentID{
-			model.ComponentSDD,
-			model.ComponentEngram,
-			model.ComponentContext7,
-			model.ComponentGGA,
-			model.ComponentSkills,
-		},
-		SDDMode:  model.SDDModeSingle,
-		Profiles: profiles,
-	}
-
-	// Run 1: fresh home.
-	result1, err := RunSyncWithSelection(home, sel)
-	if err != nil {
-		t.Fatalf("RunSyncWithSelection() run1 error = %v", err)
-	}
-	if !result1.Verify.Ready {
-		t.Fatalf("run1: Verify.Ready = false, report = %#v", result1.Verify)
-	}
-	if result1.FilesChanged == 0 {
-		t.Errorf("run1: FilesChanged = 0, expected > 0 (fresh home)")
-	}
-
-	// Verify the opencode.json has all 33 profile agent keys (11 per profile × 3 profiles).
-	settingsPath := filepath.Join(home, ".config", "opencode", "opencode.json")
-	settingsData, err := os.ReadFile(settingsPath)
-	if err != nil {
-		t.Fatalf("ReadFile(%q) error = %v", settingsPath, err)
-	}
-	settingsStr := string(settingsData)
-
-	// Check all 11 agent keys for each profile.
-	profileNames := []string{"cheap", "premium", "balanced"}
-	phases := []string{
-		"sdd-orchestrator",
-		"sdd-init", "sdd-explore", "sdd-propose", "sdd-spec", "sdd-design",
-		"sdd-tasks", "sdd-apply", "sdd-verify", "sdd-archive", "sdd-onboard",
-	}
-
-	for _, profileName := range profileNames {
-		for _, phase := range phases {
-			key := `"` + phase + "-" + profileName + `"`
-			if !strings.Contains(settingsStr, key) {
-				t.Errorf("opencode.json missing profile agent key %s (profile=%s phase=%s)", key, profileName, phase)
-			}
-		}
-	}
-
-	// Verify model assignments are set correctly on orchestrators.
-	// cheap orchestrator should use claude-haiku.
-	if !strings.Contains(settingsStr, "claude-haiku-3-5-20241022") {
-		t.Errorf("opencode.json should contain cheap orchestrator model 'claude-haiku-3-5-20241022'")
-	}
-	// premium orchestrator should use claude-opus.
-	if !strings.Contains(settingsStr, "claude-opus-4-5") {
-		t.Errorf("opencode.json should contain premium orchestrator model 'claude-opus-4-5'")
-	}
-	// balanced orchestrator should use claude-sonnet.
-	if !strings.Contains(settingsStr, "claude-sonnet-4-5") {
-		t.Errorf("opencode.json should contain balanced orchestrator model 'claude-sonnet-4-5'")
-	}
-
-	// Verify prompt files exist in ~/.config/opencode/prompts/sdd/.
-	// Note: prompt files are written only for multi-mode. For single-mode syncs,
-	// profile sub-agents use {file:...} references that rely on prompts being written
-	// during a prior multi-mode sync. Check that the profile overlay is written correctly
-	// by verifying the agent keys themselves are present (already done above).
-	// The prompt directory is populated by the profile generator which calls
-	// SharedPromptDir internally — verify the directory path is referenced correctly.
-	promptDir := filepath.Join(home, ".config", "opencode", "prompts", "sdd")
-	promptPhases := []string{
-		"sdd-init", "sdd-explore", "sdd-propose", "sdd-spec", "sdd-design",
-		"sdd-tasks", "sdd-apply", "sdd-verify", "sdd-archive", "sdd-onboard",
-	}
-	// Verify the opencode.json file references mention the correct prompt directory.
-	slashPromptDir := filepath.ToSlash(promptDir)
-	if !strings.Contains(settingsStr, slashPromptDir) {
-		t.Errorf("opencode.json should reference prompt directory %q", slashPromptDir)
-	}
-	// Verify all phase prompt file references appear in the settings.
-	for _, phase := range promptPhases {
-		promptRef := filepath.ToSlash(filepath.Join(promptDir, phase+".md"))
-		if !strings.Contains(settingsStr, promptRef) {
-			t.Errorf("opencode.json should contain prompt file reference for %q", promptRef)
-		}
-	}
-
-	// Run 2: same selection → all assets already current → filesChanged=0.
-	// Note: The second sync with profiles will re-generate the overlay, but since
-	// DetectProfiles is called when no explicit profiles are provided (normal re-sync),
-	// we run with the SAME selection (profiles still provided) to test idempotency.
-	result2, err := RunSyncWithSelection(home, sel)
-	if err != nil {
-		t.Fatalf("RunSyncWithSelection() run2 error = %v", err)
-	}
-	if result2.FilesChanged != 0 {
-		t.Errorf("run2: FilesChanged = %d, want 0 (idempotent — all assets already current)", result2.FilesChanged)
-	}
-	if !result2.NoOp {
-		t.Errorf("run2: NoOp = false, want true (all assets already current)")
-	}
-}
 
 // TestRunSyncDetectsExistingProfilesOnRegularSync verifies Task 5.3 behavior:
 // when no explicit profiles are provided (normal sync), DetectProfiles is called
 // to find existing profiles and their prompts are regenerated.
-func TestRunSyncDetectsExistingProfilesOnRegularSync(t *testing.T) {
-	home := t.TempDir()
-	restoreCommand := runCommand
-	restoreLookPath := cmdLookPath
-	t.Cleanup(func() {
-		runCommand = restoreCommand
-		cmdLookPath = restoreLookPath
-	})
-	runCommand = func(string, ...string) error { return nil }
-	cmdLookPath = func(name string) (string, error) { return "/usr/local/bin/" + name, nil }
 
-	// Run 1: sync with a profile to establish it in opencode.json.
-	selWithProfile := model.Selection{
-		Agents: []model.AgentID{model.AgentOpenCode},
-		Components: []model.ComponentID{
-			model.ComponentSDD,
-			model.ComponentEngram,
-			model.ComponentContext7,
-			model.ComponentGGA,
-			model.ComponentSkills,
-		},
-		SDDMode: model.SDDModeSingle,
-		Profiles: []model.Profile{
-			{
-				Name: "test-profile",
-				OrchestratorModel: model.ModelAssignment{
-					ProviderID: "anthropic",
-					ModelID:    "claude-haiku-3-5-20241022",
-				},
-			},
-		},
-	}
-
-	_, err := RunSyncWithSelection(home, selWithProfile)
-	if err != nil {
-		t.Fatalf("RunSyncWithSelection() run1 error = %v", err)
-	}
-
-	// Verify the profile was created.
-	settingsPath := filepath.Join(home, ".config", "opencode", "opencode.json")
-	settingsData, err := os.ReadFile(settingsPath)
-	if err != nil {
-		t.Fatalf("ReadFile error = %v", err)
-	}
-	if !strings.Contains(string(settingsData), `"sdd-orchestrator-test-profile"`) {
-		t.Fatalf("run1 did not create sdd-orchestrator-test-profile in opencode.json")
-	}
-
-	// Run 2: normal sync (no explicit profiles) → DetectProfiles should find the
-	// existing profile and regenerate it. The result should be no-op since the
-	// regenerated content is identical.
-	selNoProfiles := model.Selection{
-		Agents: []model.AgentID{model.AgentOpenCode},
-		Components: []model.ComponentID{
-			model.ComponentSDD,
-			model.ComponentEngram,
-			model.ComponentContext7,
-			model.ComponentGGA,
-			model.ComponentSkills,
-		},
-		SDDMode: model.SDDModeSingle,
-		// No Profiles field — triggers DetectProfiles path.
-	}
-
-	result2, err := RunSyncWithSelection(home, selNoProfiles)
-	if err != nil {
-		t.Fatalf("RunSyncWithSelection() run2 (no explicit profiles) error = %v", err)
-	}
-
-	// The detected profile should be regenerated. Since content is identical,
-	// the sync should still detect the profile key exists.
-	settingsData2, err := os.ReadFile(settingsPath)
-	if err != nil {
-		t.Fatalf("ReadFile run2 error = %v", err)
-	}
-	if !strings.Contains(string(settingsData2), `"sdd-orchestrator-test-profile"`) {
-		t.Errorf("run2 (regular sync): sdd-orchestrator-test-profile key should still be present after DetectProfiles re-sync")
-	}
-	_ = result2 // result2 may or may not be no-op depending on whether profile overlay is idempotent
-}
-
-func TestRunSyncExternalSingleActiveSkipsDetectAndPreservesOrchestratorPrompt(t *testing.T) {
-	home := t.TempDir()
-	restoreCommand := runCommand
-	restoreLookPath := cmdLookPath
-	t.Cleanup(func() {
-		runCommand = restoreCommand
-		cmdLookPath = restoreLookPath
-	})
-	runCommand = func(string, ...string) error { return nil }
-	cmdLookPath = func(name string) (string, error) { return "/usr/local/bin/" + name, nil }
-
-	// Pre-create package directory to avoid npm/bun install attempts in tests.
-	if err := os.MkdirAll(filepath.Join(home, ".config", "opencode", "node_modules", "unique-names-generator"), 0o755); err != nil {
-		t.Fatalf("MkdirAll(node_modules): %v", err)
-	}
-
-	// External profile marker to mirror real integrations.
-	profilesDir := filepath.Join(home, ".config", "opencode", "profiles")
-	if err := os.MkdirAll(profilesDir, 0o755); err != nil {
-		t.Fatalf("MkdirAll(profiles): %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(profilesDir, "active.json"), []byte(`{"name":"cheap"}`), 0o644); err != nil {
-		t.Fatalf("WriteFile(active profile): %v", err)
-	}
-
-	settingsPath := filepath.Join(home, ".config", "opencode", "opencode.json")
-	if err := os.MkdirAll(filepath.Dir(settingsPath), 0o755); err != nil {
-		t.Fatalf("MkdirAll(settings dir): %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(home, ".config", "opencode", "AGENTS.md"), []byte("# Existing custom AGENTS\n"), 0o644); err != nil {
-		t.Fatalf("WriteFile(AGENTS.md): %v", err)
-	}
-
-	const customPrompt = "EXTERNAL-RUNTIME-ORCHESTRATOR-PROMPT\nBind this to the dedicated `sdd-orchestrator` agent only.\n- Treat `agent.sdd-orchestrator.model` as authoritative when it is set."
-	seed := `{
-  "agent": {
-    "sdd-orchestrator": {"mode": "primary", "prompt": ` + strconv.Quote(customPrompt) + `},
-    "gentleman": {"mode": "primary", "description": "revoked OpenCode persona", "prompt": "REVOKED_GENTLEMAN_PROMPT_SHOULD_NOT_SURVIVE"},
-    "sdd-orchestrator-cheap": {"mode": "primary", "model": "anthropic:claude-haiku-3-5"},
-    "sdd-init-cheap": {"mode": "subagent", "model": "anthropic:claude-haiku-3-5"}
-  }
-}`
-	if err := os.WriteFile(settingsPath, []byte(seed), 0o644); err != nil {
-		t.Fatalf("WriteFile(settings): %v", err)
-	}
-
-	sel := model.Selection{
-		Agents:             []model.AgentID{model.AgentOpenCode},
-		Components:         []model.ComponentID{model.ComponentSDD},
-		SDDMode:            model.SDDModeSingle,
-		SDDProfileStrategy: model.SDDProfileStrategyExternalSingleActive,
-	}
-
-	if _, err := RunSyncWithSelection(home, sel); err != nil {
-		t.Fatalf("RunSyncWithSelection() error = %v", err)
-	}
-
-	settingsData, err := os.ReadFile(settingsPath)
-	if err != nil {
-		t.Fatalf("ReadFile(settings) error = %v", err)
-	}
-	settingsText := string(settingsData)
-
-	if !strings.Contains(settingsText, "EXTERNAL-RUNTIME-ORCHESTRATOR-PROMPT") {
-		t.Fatalf("expected external runtime orchestrator prompt marker to be preserved in external-single-active mode")
-	}
-	if strings.Contains(settingsText, "Bind this to the dedicated `sdd-orchestrator` agent only.") {
-		t.Fatalf("external-single-active sync preserved stale sdd-orchestrator binding text")
-	}
-	if strings.Contains(settingsText, "agent.sdd-orchestrator.model") {
-		t.Fatalf("external-single-active sync preserved stale sdd-orchestrator model assignment key")
-	}
-	if !strings.Contains(settingsText, "Bind this to the dedicated `gentle-orchestrator` agent only.") {
-		t.Fatalf("external-single-active sync did not migrate binding text to gentle-orchestrator")
-	}
-	if !strings.Contains(settingsText, "agent.gentle-orchestrator.model") {
-		t.Fatalf("external-single-active sync did not migrate model assignment key to gentle-orchestrator")
-	}
-	if strings.Contains(settingsText, "\"sdd-onboard-cheap\"") {
-		t.Fatalf("external-single-active should not auto-detect/regenerate suffixed profiles")
-	}
-	if strings.Contains(settingsText, "\"gentleman\"") {
-		t.Fatalf("external-single-active sync should delete revoked gentleman agent")
-	}
-	if strings.Contains(settingsText, "REVOKED_GENTLEMAN_PROMPT_SHOULD_NOT_SURVIVE") {
-		t.Fatalf("external-single-active sync preserved revoked gentleman prompt")
-	}
-
-	// external-single-active forces multi-mode assets so shared prompts exist.
-	promptPath := filepath.Join(home, ".config", "opencode", "prompts", "sdd", "sdd-apply.md")
-	if _, err := os.Stat(promptPath); err != nil {
-		t.Fatalf("expected shared prompt file %q to exist (forced multi mode): %v", promptPath, err)
-	}
-}
 
 // containsAny returns true if s contains any of the given substrings (case-insensitive).
 func containsAny(s string, subs ...string) bool {
@@ -1436,7 +1092,7 @@ func TestRunSyncWithSelection_NoAgentsIsNoOp(t *testing.T) {
 
 	sel := model.Selection{
 		Agents:     nil,
-		Components: []model.ComponentID{model.ComponentSDD, model.ComponentEngram},
+		Components: []model.ComponentID{model.ComponentEngram, model.ComponentEngram},
 	}
 
 	result, err := RunSyncWithSelection(home, sel)
@@ -1450,49 +1106,6 @@ func TestRunSyncWithSelection_NoAgentsIsNoOp(t *testing.T) {
 
 // TestRunSyncWithSelection_WritesExpectedFiles verifies that the function
 // creates managed asset files for the provided agents and components.
-func TestRunSyncWithSelection_WritesExpectedFiles(t *testing.T) {
-	home := t.TempDir()
-	restoreCommand := runCommand
-	restoreLookPath := cmdLookPath
-	t.Cleanup(func() {
-		runCommand = restoreCommand
-		cmdLookPath = restoreLookPath
-	})
-
-	runCommand = func(string, ...string) error { return nil }
-	cmdLookPath = func(name string) (string, error) { return "/usr/local/bin/" + name, nil }
-
-	sel := model.Selection{
-		Agents:     []model.AgentID{model.AgentOpenCode},
-		Components: []model.ComponentID{model.ComponentSDD, model.ComponentEngram, model.ComponentContext7, model.ComponentGGA, model.ComponentSkills},
-		SDDMode:    model.SDDModeSingle,
-	}
-
-	result, err := RunSyncWithSelection(home, sel)
-	if err != nil {
-		t.Fatalf("RunSyncWithSelection() error = %v", err)
-	}
-
-	if !result.Verify.Ready {
-		t.Fatalf("Verify.Ready = false, report = %#v", result.Verify)
-	}
-
-	// SDD assets should exist for opencode and match the managed path contract
-	// used by post-sync verification.
-	managedPaths := componentPaths(home, sel, resolveAdapters(sel.Agents), model.ComponentSDD)
-	for _, want := range []string{
-		filepath.Join(home, ".config", "opencode", "opencode.json"),
-		filepath.Join(home, ".config", "opencode", "plugins", "background-agents.ts"),
-		filepath.Join(home, ".config", "opencode", "plugins", "model-variants.ts"),
-	} {
-		if !containsPath(managedPaths, want) {
-			t.Fatalf("managed SDD paths missing %q\npaths=%v", want, managedPaths)
-		}
-		if _, err := os.Stat(want); err != nil {
-			t.Errorf("expected SDD sync to create %q: %v", want, err)
-		}
-	}
-}
 
 // TestRunSyncWithSelection_FilesChangedOnFreshHome verifies that syncing a
 // fresh home dir results in FilesChanged > 0.
@@ -1510,7 +1123,7 @@ func TestRunSyncWithSelection_FilesChangedOnFreshHome(t *testing.T) {
 
 	sel := model.Selection{
 		Agents:     []model.AgentID{model.AgentOpenCode},
-		Components: []model.ComponentID{model.ComponentSDD, model.ComponentEngram, model.ComponentContext7, model.ComponentGGA, model.ComponentSkills},
+		Components: []model.ComponentID{model.ComponentEngram, model.ComponentEngram, model.ComponentContext7, model.ComponentGGA, model.ComponentSkills},
 		SDDMode:    model.SDDModeSingle,
 	}
 
@@ -1540,7 +1153,7 @@ func TestRunSyncWithSelection_IsIdempotent(t *testing.T) {
 
 	sel := model.Selection{
 		Agents:     []model.AgentID{model.AgentOpenCode},
-		Components: []model.ComponentID{model.ComponentSDD, model.ComponentEngram, model.ComponentContext7, model.ComponentGGA, model.ComponentSkills},
+		Components: []model.ComponentID{model.ComponentEngram, model.ComponentEngram, model.ComponentContext7, model.ComponentGGA, model.ComponentSkills},
 		SDDMode:    model.SDDModeSingle,
 	}
 
@@ -1582,7 +1195,7 @@ func TestRunSyncWithSelection_SelectionAgentsForwarded(t *testing.T) {
 
 	sel := model.Selection{
 		Agents:     []model.AgentID{model.AgentOpenCode},
-		Components: []model.ComponentID{model.ComponentSDD, model.ComponentEngram, model.ComponentContext7, model.ComponentGGA, model.ComponentSkills},
+		Components: []model.ComponentID{model.ComponentEngram, model.ComponentEngram, model.ComponentContext7, model.ComponentGGA, model.ComponentSkills},
 	}
 
 	result, err := RunSyncWithSelection(home, sel)
@@ -1946,14 +1559,18 @@ func TestParseSyncFlagsProfileReservedNameReturnsError(t *testing.T) {
 }
 
 // TestParseSyncFlagsProfilePhaseUnknownPhaseReturnsError verifies that
-// --profile-phase with an unknown phase name returns an error.
-func TestParseSyncFlagsProfilePhaseUnknownPhaseReturnsError(t *testing.T) {
-	_, err := ParseSyncFlags([]string{
+// TestParseSyncFlagsProfilePhaseAcceptsAnyPhase verifies that --profile-phase
+// accepts any phase name. OPS fork (Phase 0e): sdd phase validation removed.
+func TestParseSyncFlagsProfilePhaseAcceptsAnyPhase(t *testing.T) {
+	flags, err := ParseSyncFlags([]string{
 		"--profile", "cheap:anthropic/claude-haiku-3-5-20241022",
-		"--profile-phase", "cheap:sdd-bogus:anthropic/claude-haiku-3-5-20241022",
+		"--profile-phase", "cheap:any-phase:anthropic/claude-haiku-3-5-20241022",
 	})
-	if err == nil {
-		t.Fatalf("expected error for --profile-phase with unknown phase 'sdd-bogus', got nil")
+	if err != nil {
+		t.Fatalf("OPS fork should accept any phase name (sdd phase validation removed), got error: %v", err)
+	}
+	if len(flags.Profiles) == 0 {
+		t.Fatalf("expected at least 1 profile, got 0")
 	}
 }
 
@@ -2331,7 +1948,7 @@ func TestRunSyncFallsBackToGentlemanWhenStateLacksPersona(t *testing.T) {
 	if err != nil {
 		t.Fatalf("RunSync() error = %v", err)
 	}
-	if got, want := res.Selection.Persona, model.PersonaGentleman; got != want {
+	if got, want := res.Selection.Persona, model.PersonaOperator; got != want {
 		t.Errorf("Selection.Persona = %q, want %q (fallback for pre-feature state)", got, want)
 	}
 }
@@ -2351,7 +1968,7 @@ func TestRenderSyncReportIncludesChangedFilePaths(t *testing.T) {
 			"~/.config/opencode/sdd-overlay-single.json",
 		},
 		Selection: model.Selection{
-			Components: []model.ComponentID{model.ComponentSDD},
+			Components: []model.ComponentID{model.ComponentEngram},
 		},
 		Verify: verify.Report{Ready: true},
 	}

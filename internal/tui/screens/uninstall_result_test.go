@@ -28,7 +28,7 @@ func TestRenderUninstallConfirmIncludesSelectedProfiles(t *testing.T) {
 	out := RenderUninstallConfirm(
 		model.UninstallModePartial,
 		[]model.AgentID{model.AgentOpenCode},
-		[]model.ComponentID{model.ComponentSDD},
+		[]model.ComponentID{model.ComponentEngram},
 		[]string{"cheap"},
 		model.EngramUninstallScopeGlobal,
 		false,

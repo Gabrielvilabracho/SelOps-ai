@@ -7,12 +7,15 @@ import (
 	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 )
 
+// TestResolverAddsMissingDependenciesInOrder verifies that Resolve() adds
+// missing transitive dependencies. OPS fork (Phase 0e): ComponentSDD removed;
+// uses ComponentSDDOps (dep: Engram) to test the same resolver behavior.
 func TestResolverAddsMissingDependenciesInOrder(t *testing.T) {
 	resolver := NewResolver(MVPGraph())
 
 	selection := model.Selection{
 		Agents:     []model.AgentID{model.AgentClaudeCode, model.AgentOpenCode},
-		Components: []model.ComponentID{model.ComponentSkills},
+		Components: []model.ComponentID{model.ComponentSDDOps},
 	}
 
 	plan, err := resolver.Resolve(selection)
@@ -24,20 +27,23 @@ func TestResolverAddsMissingDependenciesInOrder(t *testing.T) {
 		t.Fatalf("Resolve() agents = %v", plan.Agents)
 	}
 
-	if !reflect.DeepEqual(plan.OrderedComponents, []model.ComponentID{model.ComponentEngram, model.ComponentSDD, model.ComponentSkills}) {
+	// ComponentSDDOps has dep on ComponentEngram — Engram must be auto-added.
+	if !reflect.DeepEqual(plan.OrderedComponents, []model.ComponentID{model.ComponentEngram, model.ComponentSDDOps}) {
 		t.Fatalf("Resolve() ordered components = %v", plan.OrderedComponents)
 	}
 
-	if !reflect.DeepEqual(plan.AddedDependencies, []model.ComponentID{model.ComponentEngram, model.ComponentSDD}) {
+	if !reflect.DeepEqual(plan.AddedDependencies, []model.ComponentID{model.ComponentEngram}) {
 		t.Fatalf("Resolve() added dependencies = %v", plan.AddedDependencies)
 	}
 }
 
-func TestResolverPersonaOrderedBeforeEngramAndSDDWhenSelected(t *testing.T) {
+// TestResolverPersonaOperatorOrderedBeforeSDDOpsWhenSelected verifies soft ordering.
+// OPS fork (Phase 0e): ComponentSDD removed; uses PersonaOperator+SDDOps pair.
+func TestResolverPersonaOperatorOrderedBeforeSDDOpsWhenSelected(t *testing.T) {
 	resolver := NewResolver(MVPGraph())
 
 	selection := model.Selection{
-		Components: []model.ComponentID{model.ComponentPersona, model.ComponentSDD},
+		Components: []model.ComponentID{model.ComponentPersonaOperator, model.ComponentSDDOps},
 	}
 
 	plan, err := resolver.Resolve(selection)
@@ -45,8 +51,22 @@ func TestResolverPersonaOrderedBeforeEngramAndSDDWhenSelected(t *testing.T) {
 		t.Fatalf("Resolve() returned error: %v", err)
 	}
 
-	if !reflect.DeepEqual(plan.OrderedComponents, []model.ComponentID{model.ComponentPersona, model.ComponentEngram, model.ComponentSDD}) {
-		t.Fatalf("Resolve() ordered components = %v", plan.OrderedComponents)
+	// PersonaOperator must appear before SDDOps due to soft ordering.
+	// Engram is auto-added as SDDOps dependency.
+	personaIdx, sddOpsIdx := -1, -1
+	for i, c := range plan.OrderedComponents {
+		if c == model.ComponentPersonaOperator {
+			personaIdx = i
+		}
+		if c == model.ComponentSDDOps {
+			sddOpsIdx = i
+		}
+	}
+	if personaIdx < 0 || sddOpsIdx < 0 {
+		t.Fatalf("Resolve() ordered components = %v, missing PersonaOperator or SDDOps", plan.OrderedComponents)
+	}
+	if personaIdx > sddOpsIdx {
+		t.Fatalf("PersonaOperator (%d) must be before SDDOps (%d), got %v", personaIdx, sddOpsIdx, plan.OrderedComponents)
 	}
 
 	if !reflect.DeepEqual(plan.AddedDependencies, []model.ComponentID{model.ComponentEngram}) {
@@ -75,11 +95,14 @@ func TestResolverEngramOnlyDoesNotForcePersona(t *testing.T) {
 	}
 }
 
-func TestResolverSDDOnlyDoesNotForcePersona(t *testing.T) {
+// TestResolverSDDOpsOnlyDoesNotForcePersonaOperator verifies that selecting
+// only ComponentSDDOps does not force ComponentPersonaOperator.
+// OPS fork (Phase 0e): ComponentSDD removed; equivalent test with SDDOps.
+func TestResolverSDDOpsOnlyDoesNotForcePersonaOperator(t *testing.T) {
 	resolver := NewResolver(MVPGraph())
 
 	selection := model.Selection{
-		Components: []model.ComponentID{model.ComponentSDD},
+		Components: []model.ComponentID{model.ComponentSDDOps},
 	}
 
 	plan, err := resolver.Resolve(selection)
@@ -88,8 +111,8 @@ func TestResolverSDDOnlyDoesNotForcePersona(t *testing.T) {
 	}
 
 	for _, dep := range plan.AddedDependencies {
-		if dep == model.ComponentPersona {
-			t.Fatalf("SDD-only selection should NOT force Persona, got AddedDependencies=%v", plan.AddedDependencies)
+		if dep == model.ComponentPersonaOperator {
+			t.Fatalf("SDDOps-only selection should NOT force PersonaOperator, got AddedDependencies=%v", plan.AddedDependencies)
 		}
 	}
 }
@@ -230,8 +253,8 @@ func TestKnowledgeBaseDoesNotTransitivelyPullDEVComponents(t *testing.T) {
 		t.Fatalf("ComponentKnowledgeBase must not transitively pull any deps; got %v", plan.AddedDependencies)
 	}
 
+	// OPS fork (Phase 0e): ComponentSDD removed from devComponents check.
 	devComponents := []model.ComponentID{
-		model.ComponentSDD,
 		model.ComponentSkills,
 		model.ComponentPermission,
 		model.ComponentGGA,

@@ -14,7 +14,6 @@ import (
 
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents"
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents/kimi"
-	"github.com/Gabrielvilabracho/selops-ai/internal/assets"
 	"github.com/Gabrielvilabracho/selops-ai/internal/backup"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/engram"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/gga"
@@ -23,7 +22,6 @@ import (
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/operationalmcp"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/permissions"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/persona"
-	"github.com/Gabrielvilabracho/selops-ai/internal/components/sdd"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/sddops"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/skills"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/theme"
@@ -637,21 +635,6 @@ func (s componentApplyStep) Run() error {
 			}
 		}
 		return nil
-	case model.ComponentSDD:
-		for _, adapter := range adapters {
-			targetDir := componentInjectionDirScoped(s.homeDir, s.workspaceDir, s.scope, adapter)
-			opts := sdd.InjectOptions{
-				OpenCodeModelAssignments: s.selection.ModelAssignments,
-				ClaudeModelAssignments:   s.selection.ClaudeModelAssignments,
-				KiroModelAssignments:     s.selection.KiroModelAssignments,
-				WorkspaceDir:             s.workspaceDir,
-				StrictTDD:                s.selection.StrictTDD,
-			}
-			if _, err := sdd.Inject(targetDir, adapter, s.selection.SDDMode, opts); err != nil {
-				return fmt.Errorf("inject sdd for %q: %w", adapter.Agent(), err)
-			}
-		}
-		return nil
 	case model.ComponentSkills:
 		skillIDs := selectedSkillIDs(s.selection)
 		if len(skillIDs) == 0 {
@@ -981,64 +964,8 @@ func componentPathsWithWorkspaceScoped(homeDir, workspaceDir string, scope Insta
 			if adapter.SystemPromptStrategy() == model.StrategyMarkdownSections {
 				paths = append(paths, adapter.SystemPromptFile(targetDir))
 			}
-		case model.ComponentSDD:
-			// Jinja modular hubs (e.g. Kimi KIMI.md) are appended once below so SDD+Persona
-			// do not duplicate the same system prompt path.
-			if adapter.SupportsSystemPrompt() && adapter.SystemPromptStrategy() != model.StrategyJinjaModules {
-				paths = append(paths, adapter.SystemPromptFile(targetDir))
-			}
-			if adapter.SupportsSlashCommands() {
-				for _, command := range sdd.OpenCodeCommands() {
-					paths = append(paths, filepath.Join(adapter.CommandsDir(homeDir), command.Name+".md"))
-				}
-			}
-			if adapter.Agent() == model.AgentOpenCode {
-				if p := adapter.SettingsPath(homeDir); p != "" {
-					paths = append(paths, p)
-				}
-				paths = append(paths,
-					filepath.Join(homeDir, ".config", "opencode", "plugins", "background-agents.ts"),
-					filepath.Join(homeDir, ".config", "opencode", "plugins", "model-variants.ts"),
-				)
-				// Shared prompt files in ~/.config/opencode/prompts/sdd/ — back these up
-				// so a sync does not silently overwrite user-customized prompt content.
-				// These files are only written for multi-mode (SDDModeMulti), so we only
-				// include them in the path list when that mode is active. This prevents
-				// false-negative verification failures in single/empty mode syncs.
-				if selection.SDDMode == model.SDDModeMulti {
-					promptDir := sdd.SharedPromptDir(homeDir)
-					for _, phase := range sdd.SharedPromptPhases() {
-						paths = append(paths, filepath.Join(promptDir, phase+".md"))
-					}
-				}
-			}
-			if adapter.SupportsSkills() {
-				skillDir := adapter.SkillsDir(targetDir)
-				if skillDir != "" {
-					paths = append(paths,
-						filepath.Join(skillDir, "_shared", "persistence-contract.md"),
-						filepath.Join(skillDir, "_shared", "engram-convention.md"),
-						filepath.Join(skillDir, "_shared", "openspec-convention.md"),
-						filepath.Join(skillDir, "_shared", "sdd-phase-common.md"),
-						filepath.Join(skillDir, "_shared", "skill-resolver.md"),
-						filepath.Join(skillDir, "sdd-init", "SKILL.md"),
-						filepath.Join(skillDir, "sdd-explore", "SKILL.md"),
-						filepath.Join(skillDir, "sdd-propose", "SKILL.md"),
-						filepath.Join(skillDir, "sdd-spec", "SKILL.md"),
-						filepath.Join(skillDir, "sdd-design", "SKILL.md"),
-						filepath.Join(skillDir, "sdd-tasks", "SKILL.md"),
-						filepath.Join(skillDir, "sdd-apply", "SKILL.md"),
-						filepath.Join(skillDir, "sdd-verify", "SKILL.md"),
-						filepath.Join(skillDir, "sdd-archive", "SKILL.md"),
-					)
-				}
-			}
-			paths = append(paths, sddSubAgentPaths(homeDir, adapter)...)
 		case model.ComponentSkills:
 			for _, skillID := range selectedSkillIDs(selection) {
-				if skills.IsSDDSkill(skillID) {
-					continue
-				}
 				path := skills.SkillPathForAgent(homeDir, adapter, skillID)
 				if path != "" {
 					paths = append(paths, path)
@@ -1070,14 +997,6 @@ func componentPathsWithWorkspaceScoped(homeDir, workspaceDir string, scope Insta
 			}
 			if adapter.SupportsSystemPrompt() && adapter.SystemPromptStrategy() != model.StrategyJinjaModules {
 				paths = append(paths, adapter.SystemPromptFile(targetDir))
-			}
-			if selection.Persona == model.PersonaGentleman {
-				if adapter.SupportsOutputStyles() {
-					paths = append(paths, adapter.OutputStyleDir(targetDir)+"/gentleman.md")
-					if p := adapter.SettingsPath(targetDir); p != "" {
-						paths = append(paths, p)
-					}
-				}
 			}
 		case model.ComponentPermission:
 			if p := adapter.SettingsPath(homeDir); p != "" {
@@ -1182,33 +1101,13 @@ func componentPathDir(homeDir, workspaceDir string, adapter agents.Adapter, comp
 
 func componentPathDirScoped(homeDir, workspaceDir string, scope InstallScope, adapter agents.Adapter, component model.ComponentID) string {
 	switch component {
-	case model.ComponentEngram, model.ComponentSDD, model.ComponentPersona, model.ComponentSkills, model.ComponentKnowledgeBase:
+	case model.ComponentEngram, model.ComponentPersona, model.ComponentSkills, model.ComponentKnowledgeBase:
 		return componentInjectionDirScoped(homeDir, workspaceDir, scope, adapter)
 	default:
 		return homeDir
 	}
 }
 
-func sddSubAgentPaths(homeDir string, adapter agents.Adapter) []string {
-	if !adapter.SupportsSubAgents() {
-		return nil
-	}
-
-	entries, err := assets.FS.ReadDir(adapter.EmbeddedSubAgentsDir())
-	if err != nil {
-		return nil
-	}
-
-	paths := make([]string, 0, len(entries))
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-		paths = append(paths, filepath.Join(adapter.SubAgentsDir(homeDir), entry.Name()))
-	}
-
-	return paths
-}
 
 func runPostApplyVerification(homeDir, workspaceDir string, scope InstallScope, selection model.Selection, resolved planner.ResolvedPlan) verify.Report {
 	checks := make([]verify.Check, 0)

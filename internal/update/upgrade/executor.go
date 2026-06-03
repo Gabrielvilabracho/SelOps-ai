@@ -24,7 +24,6 @@ import (
 	"github.com/Gabrielvilabracho/selops-ai/internal/assets"
 	"github.com/Gabrielvilabracho/selops-ai/internal/backup"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/gga"
-	"github.com/Gabrielvilabracho/selops-ai/internal/components/sdd"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/skills"
 	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 	"github.com/Gabrielvilabracho/selops-ai/internal/state"
@@ -219,11 +218,7 @@ func managedAgentBackupPaths(homeDir string, adapter agents.Adapter, diagnostics
 		add(filepath.Join(adapter.OutputStyleDir(homeDir), "gentleman.md"))
 	}
 
-	if adapter.SupportsSlashCommands() {
-		for _, command := range sdd.OpenCodeCommands() {
-			add(filepath.Join(adapter.CommandsDir(homeDir), command.Name+".md"))
-		}
-	}
+	// OPS fork (Phase 0e): sdd package removed — no slash commands to back up.
 
 	if adapter.SupportsSubAgents() {
 		for _, name := range embeddedFileNames(adapter.EmbeddedSubAgentsDir(), diagnostics) {
@@ -244,9 +239,7 @@ func managedAgentBackupPaths(homeDir string, adapter agents.Adapter, diagnostics
 			filepath.Join(homeDir, ".config", "opencode", "tui-plugins", "gentle-logo.tsx"),
 			filepath.Join(homeDir, ".config", "opencode", "tui.json"),
 		)
-		for _, phase := range sdd.SharedPromptPhases() {
-			add(filepath.Join(sdd.SharedPromptDir(homeDir), phase+".md"))
-		}
+		// OPS fork (Phase 0e): sdd package removed — no shared prompt files to back up.
 	}
 
 	return paths

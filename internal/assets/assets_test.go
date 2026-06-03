@@ -91,18 +91,6 @@ func TestAllEmbeddedAssetsAreReadable(t *testing.T) {
 		"kimi/agents/sdd-archive.md",
 		"kimi/agents/sdd-onboard.md",
 
-		// SDD skills
-		"skills/sdd-init/SKILL.md",
-		"skills/sdd-init/references/init-details.md",
-		"skills/sdd-apply/SKILL.md",
-		"skills/sdd-archive/SKILL.md",
-		"skills/sdd-design/SKILL.md",
-		"skills/sdd-explore/SKILL.md",
-		"skills/sdd-propose/SKILL.md",
-		"skills/sdd-spec/SKILL.md",
-		"skills/sdd-tasks/SKILL.md",
-		"skills/sdd-verify/SKILL.md",
-		"skills/sdd-verify/references/report-format.md",
 		"skills/skill-registry/SKILL.md",
 		"skills/judgment-day/references/prompts-and-formats.md",
 		"skills/_shared/persistence-contract.md",
@@ -697,11 +685,11 @@ func TestEmbeddedAssetCount(t *testing.T) {
 		}
 	}
 
-	// We expect 28 skill directories:
-	// 10 SDD + judgment-day + 6 foundation + 4 sustainable-review + _shared (was 22)
-	// + 6 SelOps operational ops-* skills added in the selops-operational-layer change.
-	if skillDirs != 28 {
-		t.Fatalf("expected 28 skill directories, got %d", skillDirs)
+	// OPS fork (Phase 0e): 10 sdd-* skill directories removed.
+	// We expect 18 skill directories:
+	// 10 foundation + 6 SelOps operational ops-* skills + judgment-day + _shared.
+	if skillDirs != 18 {
+		t.Fatalf("expected 18 skill directories, got %d", skillDirs)
 	}
 
 	// Verify each skill directory has a SKILL.md.

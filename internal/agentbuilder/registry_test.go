@@ -159,7 +159,8 @@ func TestRegistry_RemoveByName_NonExistentReturnsFalse(t *testing.T) {
 }
 
 func TestHasConflictWithBuiltin_TrueForBuiltin(t *testing.T) {
-	builtins := []string{"sdd-init", "sdd-apply", "sdd-verify", "go-testing", "skill-creator", "judgment-day"}
+	// OPS fork (Phase 0e): sdd-* skills removed from catalog. Updated to foundation skills.
+	builtins := []string{"go-testing", "skill-creator", "branch-pr", "chained-pr"}
 	for _, name := range builtins {
 		if !HasConflictWithBuiltin(name) {
 			t.Errorf("HasConflictWithBuiltin(%q) = false, want true", name)

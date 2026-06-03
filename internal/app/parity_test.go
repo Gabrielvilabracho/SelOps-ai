@@ -9,6 +9,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/Gabrielvilabracho/selops-ai/internal/cli"
+	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 	"github.com/Gabrielvilabracho/selops-ai/internal/planner"
 	"github.com/Gabrielvilabracho/selops-ai/internal/system"
 	"github.com/Gabrielvilabracho/selops-ai/internal/tui"
@@ -339,6 +340,8 @@ func TestGuardFlowLinuxArchProfileExplicitlyPasses(t *testing.T) {
 	}
 }
 
+// TestInstallPlannerParityLinuxPreservesComponentOrder verifies component order.
+// OPS fork (Phase 0e): ComponentSDD removed. Test uses ComponentSDDOps (has dep on Engram).
 func TestInstallPlannerParityLinuxPreservesComponentOrder(t *testing.T) {
 	linuxDetection := system.DetectionResult{
 		System: system.SystemInfo{
@@ -355,28 +358,27 @@ func TestInstallPlannerParityLinuxPreservesComponentOrder(t *testing.T) {
 		},
 	}
 
-	result, err := cli.RunInstall([]string{"--dry-run", "--agent", "opencode", "--component", "engram,sdd,skills"}, linuxDetection)
+	// OPS fork (Phase 0e): sdd removed; use selops-sddops (dep: engram) to verify order.
+	result, err := cli.RunInstall([]string{"--dry-run", "--agent", "opencode", "--component", "engram," + string(model.ComponentSDDOps)}, linuxDetection)
 	if err != nil {
 		t.Fatalf("RunInstall() error = %v", err)
 	}
 
-	// Engram must come before SDD, SDD before Skills (dependency order)
+	// Engram must come before SDDOps (dependency order).
 	order := result.Resolved.OrderedComponents
-	engramIdx, sddIdx, skillsIdx := -1, -1, -1
+	engramIdx, sddOpsIdx := -1, -1
 	for i, c := range order {
 		switch c {
-		case "engram":
+		case model.ComponentEngram:
 			engramIdx = i
-		case "sdd":
-			sddIdx = i
-		case "skills":
-			skillsIdx = i
+		case model.ComponentSDDOps:
+			sddOpsIdx = i
 		}
 	}
-	if engramIdx < 0 || sddIdx < 0 || skillsIdx < 0 {
+	if engramIdx < 0 || sddOpsIdx < 0 {
 		t.Fatalf("missing expected components in order: %v", order)
 	}
-	if engramIdx >= sddIdx || sddIdx >= skillsIdx {
-		t.Fatalf("dependency order violated: engram@%d sdd@%d skills@%d", engramIdx, sddIdx, skillsIdx)
+	if engramIdx >= sddOpsIdx {
+		t.Fatalf("dependency order violated: engram@%d sddops@%d", engramIdx, sddOpsIdx)
 	}
 }

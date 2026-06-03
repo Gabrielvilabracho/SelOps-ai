@@ -8,46 +8,19 @@ import (
 	"github.com/Gabrielvilabracho/selops-ai/internal/tui/styles"
 )
 
-// sddSkillIDs are the SDD orchestrator skills shown in the first group.
-var sddSkillIDs = []model.SkillID{
-	model.SkillSDDInit,
-	model.SkillSDDExplore,
-	model.SkillSDDPropose,
-	model.SkillSDDSpec,
-	model.SkillSDDDesign,
-	model.SkillSDDTasks,
-	model.SkillSDDApply,
-	model.SkillSDDVerify,
-	model.SkillSDDArchive,
-	model.SkillSDDOnboard,
-	model.SkillJudgmentDay,
-}
-
-// foundationSkillIDs are the baseline/learning skills shown in the second group.
-var foundationSkillIDs = []model.SkillID{
-	model.SkillGoTesting,
-	model.SkillCreator,
-	model.SkillBranchPR,
-	model.SkillIssueCreation,
-}
-
 // skillLabels maps each SkillID to a human-readable display label.
+// OPS fork (Phase 0e): sdd-* skill IDs removed.
 var skillLabels = map[model.SkillID]string{
-	model.SkillSDDInit:       "SDD Init",
-	model.SkillSDDExplore:    "SDD Explore",
-	model.SkillSDDPropose:    "SDD Propose",
-	model.SkillSDDSpec:       "SDD Spec",
-	model.SkillSDDDesign:     "SDD Design",
-	model.SkillSDDTasks:      "SDD Tasks",
-	model.SkillSDDApply:      "SDD Apply",
-	model.SkillSDDVerify:     "SDD Verify",
-	model.SkillSDDArchive:    "SDD Archive",
-	model.SkillSDDOnboard:    "SDD Onboard",
-	model.SkillJudgmentDay:   "Judgment Day",
 	model.SkillGoTesting:     "Go Testing",
 	model.SkillCreator:       "Skill Creator",
+	model.SkillImprover:      "Skill Improver",
 	model.SkillBranchPR:      "Branch & PR",
 	model.SkillIssueCreation: "Issue Creation",
+	model.SkillSkillRegistry: "Skill Registry",
+	model.SkillChainedPR:     "Chained PR",
+	model.SkillCognitiveDoc:  "Cognitive Doc",
+	model.SkillCommentWriter: "Comment Writer",
+	model.SkillWorkUnitCommits: "Work Unit Commits",
 }
 
 // SkillPickerOptions returns the action buttons shown after the skill checkboxes.
@@ -55,7 +28,8 @@ func SkillPickerOptions() []string {
 	return []string{"Continue", "Back"}
 }
 
-// AllSkillsOrdered returns all skills in display order: SDD group first, then Foundation.
+// AllSkillsOrdered returns all skills in display order.
+// OPS fork (Phase 0e): sdd-* skills removed; foundation skills only.
 func AllSkillsOrdered() []model.SkillID {
 	return skills.AllSkillIDs()
 }
@@ -81,25 +55,11 @@ func RenderSkillPicker(selectedSkills []model.SkillID, cursor int) string {
 
 	allSkills := AllSkillsOrdered()
 
-	// ── SDD Skills group ──────────────────────────────────────────────────────
-	b.WriteString(styles.HeadingStyle.Render("SDD Skills"))
-	b.WriteString("\n")
-
-	for idx, skillID := range sddSkillIDs {
-		_, checked := selectedSet[skillID]
-		focused := idx == cursor
-		label := skillLabelFor(skillID)
-		b.WriteString(renderCheckbox(label, checked, focused))
-	}
-
-	b.WriteString("\n")
-
 	// ── Foundation Skills group ───────────────────────────────────────────────
 	b.WriteString(styles.HeadingStyle.Render("Foundation Skills"))
 	b.WriteString("\n")
 
-	for i, skillID := range foundationSkillIDs {
-		idx := len(sddSkillIDs) + i
+	for idx, skillID := range allSkills {
 		_, checked := selectedSet[skillID]
 		focused := idx == cursor
 		label := skillLabelFor(skillID)

@@ -78,7 +78,7 @@ func normalizePersona(value string) (model.PersonaID, error) {
 	}
 
 	switch model.PersonaID(value) {
-	case model.PersonaGentleman, model.PersonaNeutral, model.PersonaCustom, model.PersonaOperator:
+	case model.PersonaNeutral, model.PersonaCustom, model.PersonaOperator:
 		return model.PersonaID(value), nil
 	default:
 		return "", fmt.Errorf("unsupported persona %q", value)
@@ -162,7 +162,7 @@ func componentsForPreset(preset model.PresetID, persona model.PersonaID) []model
 	case model.PresetMinimal:
 		components = []model.ComponentID{model.ComponentEngram}
 	case model.PresetEcosystemOnly:
-		components = []model.ComponentID{model.ComponentEngram, model.ComponentSDD, model.ComponentSkills, model.ComponentContext7, model.ComponentGGA}
+		components = []model.ComponentID{model.ComponentEngram, model.ComponentSkills, model.ComponentContext7, model.ComponentGGA}
 	case model.PresetCustom:
 		return nil
 	case model.PresetSelOpsOperational:
@@ -195,7 +195,6 @@ func componentsForPreset(preset model.PresetID, persona model.PersonaID) []model
 	default: // full-gentleman
 		components = []model.ComponentID{
 			model.ComponentEngram,
-			model.ComponentSDD,
 			model.ComponentSkills,
 			model.ComponentContext7,
 			model.ComponentPermission,
