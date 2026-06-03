@@ -332,7 +332,7 @@ func RenderUninstallConfirm(mode model.UninstallMode, selected []model.AgentID, 
 	// Workspace-scoped assets warning
 	hasWorkspaceAssets := false
 	for _, comp := range components {
-		if comp == model.ComponentSDD || comp == model.ComponentSkills {
+		if comp == model.ComponentSkills {
 			hasWorkspaceAssets = true
 			break
 		}

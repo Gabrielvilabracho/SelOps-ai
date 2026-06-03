@@ -332,62 +332,6 @@ func TestTuiSyncTargetAgentsFallsBackToDiscoveredAgents(t *testing.T) {
 	}
 }
 
-func TestTuiSyncClaudeModelConfigWritesSelectedAssignments(t *testing.T) {
-	home := t.TempDir()
-	if err := state.Write(home, state.InstallState{InstalledAgents: []string{string(model.AgentPi)}}); err != nil {
-		t.Fatalf("state.Write: %v", err)
-	}
-
-	assignments := map[string]model.ClaudeModelAlias{
-		"sdd-explore": model.ClaudeModelHaiku,
-		"sdd-propose": model.ClaudeModelHaiku,
-		"sdd-spec":    model.ClaudeModelHaiku,
-		"sdd-design":  model.ClaudeModelHaiku,
-		"sdd-tasks":   model.ClaudeModelHaiku,
-		"sdd-apply":   model.ClaudeModelHaiku,
-		"sdd-verify":  model.ClaudeModelHaiku,
-		"sdd-archive": model.ClaudeModelHaiku,
-		"default":     model.ClaudeModelHaiku,
-	}
-
-	changed, err := tuiSync(home)(&model.SyncOverrides{
-		TargetAgents:           []model.AgentID{model.AgentClaudeCode},
-		ClaudeModelAssignments: assignments,
-	})
-	if err != nil {
-		t.Fatalf("tuiSync Claude model config error: %v", err)
-	}
-	if len(changed) == 0 {
-		t.Fatal("tuiSync Claude model config changed 0 files, want Claude assets written")
-	}
-
-	applyAgent := filepath.Join(home, ".claude", "agents", "sdd-apply.md")
-	body, err := os.ReadFile(applyAgent)
-	if err != nil {
-		t.Fatalf("ReadFile(%s): %v", applyAgent, err)
-	}
-	if !strings.Contains(string(body), "model: haiku") {
-		t.Fatalf("sdd-apply agent did not receive selected model; got:\n%s", body)
-	}
-
-	claudeMD := filepath.Join(home, ".claude", "CLAUDE.md")
-	body, err = os.ReadFile(claudeMD)
-	if err != nil {
-		t.Fatalf("ReadFile(%s): %v", claudeMD, err)
-	}
-	if strings.Contains(string(body), "| orchestrator |") {
-		t.Fatalf("CLAUDE.md should not expose orchestrator as a configurable model row; got:\n%s", body)
-	}
-	for _, want := range []string{
-		"| sdd-apply | haiku | Implementation |",
-		"| default | haiku | Non-SDD general delegation |",
-		"Gentle AI does not configure the main orchestrator model",
-	} {
-		if !strings.Contains(string(body), want) {
-			t.Fatalf("CLAUDE.md missing %q; got:\n%s", want, body)
-		}
-	}
-}
 
 // TestApplyOverrides_KiroModelAssignments verifies that a non-nil KiroModelAssignments
 // override replaces the entire KiroModelAssignments map in the selection (same

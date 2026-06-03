@@ -17,7 +17,7 @@ import (
 func TestRenderReviewShowsSkillNames(t *testing.T) {
 	payload := planner.ReviewPayload{
 		Agents:  []model.AgentID{model.AgentClaudeCode},
-		Persona: model.PersonaGentleman,
+		Persona: model.PersonaOperator,
 		Preset:  model.PresetFullGentleman,
 		Components: []planner.ComponentAction{
 			{ID: model.ComponentSkills, Action: "selected"},
@@ -41,7 +41,7 @@ func TestRenderReviewShowsSkillNames(t *testing.T) {
 func TestRenderReviewHidesSkillsSectionWhenEmpty(t *testing.T) {
 	payload := planner.ReviewPayload{
 		Agents:  []model.AgentID{model.AgentClaudeCode},
-		Persona: model.PersonaGentleman,
+		Persona: model.PersonaOperator,
 		Preset:  model.PresetFullGentleman,
 		// No Skills field.
 	}
@@ -63,10 +63,10 @@ func TestRenderReviewHidesSkillsSectionWhenEmpty(t *testing.T) {
 func TestRenderReviewShowsStrictTDDEnabled(t *testing.T) {
 	payload := planner.ReviewPayload{
 		Agents:  []model.AgentID{model.AgentClaudeCode},
-		Persona: model.PersonaGentleman,
+		Persona: model.PersonaOperator,
 		Preset:  model.PresetFullGentleman,
 		Components: []planner.ComponentAction{
-			{ID: model.ComponentSDD, Action: "selected"},
+			{ID: model.ComponentEngram, Action: "selected"},
 		},
 		HasSDD:    true,
 		StrictTDD: true,
@@ -89,10 +89,10 @@ func TestRenderReviewShowsStrictTDDEnabled(t *testing.T) {
 func TestRenderReviewShowsStrictTDDDisabled(t *testing.T) {
 	payload := planner.ReviewPayload{
 		Agents:  []model.AgentID{model.AgentClaudeCode},
-		Persona: model.PersonaGentleman,
+		Persona: model.PersonaOperator,
 		Preset:  model.PresetFullGentleman,
 		Components: []planner.ComponentAction{
-			{ID: model.ComponentSDD, Action: "selected"},
+			{ID: model.ComponentEngram, Action: "selected"},
 		},
 		HasSDD:    true,
 		StrictTDD: false,
@@ -115,7 +115,7 @@ func TestRenderReviewShowsStrictTDDDisabled(t *testing.T) {
 func TestRenderReviewHidesStrictTDDWhenNoSDD(t *testing.T) {
 	payload := planner.ReviewPayload{
 		Agents:    []model.AgentID{model.AgentClaudeCode},
-		Persona:   model.PersonaGentleman,
+		Persona:   model.PersonaOperator,
 		Preset:    model.PresetFullGentleman,
 		HasSDD:    false,
 		StrictTDD: true,

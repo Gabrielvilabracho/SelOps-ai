@@ -15,7 +15,6 @@ import (
 	"github.com/Gabrielvilabracho/selops-ai/internal/backup"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/filemerge"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/gga"
-	"github.com/Gabrielvilabracho/selops-ai/internal/components/sdd"
 	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 	"github.com/Gabrielvilabracho/selops-ai/internal/state"
 )
@@ -80,7 +79,6 @@ var (
 		model.ComponentEngram,
 		model.ComponentContext7,
 		model.ComponentPermission,
-		model.ComponentSDD,
 		model.ComponentSkills,
 		model.ComponentTheme,
 		model.ComponentClaudeTheme,
@@ -92,42 +90,12 @@ var (
 		model.ComponentEngram,
 		model.ComponentContext7,
 		model.ComponentPermission,
-		model.ComponentSDD,
 		model.ComponentSkills,
 		model.ComponentTheme,
 		model.ComponentClaudeTheme,
 		model.ComponentOpenCodeGentleLogo,
 	}
-	configuredAgents = []string{
-		"gentle-orchestrator",
-		"sdd-orchestrator", // legacy key — kept for backward-compat cleanup
-		"sdd-init",
-		"sdd-explore",
-		"sdd-propose",
-		"sdd-spec",
-		"sdd-design",
-		"sdd-tasks",
-		"sdd-apply",
-		"sdd-verify",
-		"sdd-archive",
-		"sdd-onboard",
-		"jd-judge-a",
-		"jd-judge-b",
-		"jd-fix-agent",
-	}
-	// sddSkillPhaseIDs contains SDD skill phase IDs only (used for skill dir cleanup).
-	// Derived from configuredAgents: excludes the orchestrator (not a skill) and any
-	// non-skill agents (e.g. jd-*). When new phases or agents are added to
-	// configuredAgents, this list stays in sync automatically.
-	sddSkillPhaseIDs func() []string = func() []string {
-		skills := make([]string, 0, len(configuredAgents))
-		for _, id := range configuredAgents {
-			if strings.HasPrefix(id, "sdd-") && id != "sdd-orchestrator" {
-				skills = append(skills, id)
-			}
-		}
-		return skills
-	}
+
 )
 
 type operation struct {
@@ -534,128 +502,6 @@ func (s *Service) componentOperations(adapter agents.Adapter, componentID model.
 			dirPath := filepath.Join(skillDir, entry.Name())
 			targets = append(targets, dirPath)
 			ops = append(ops, removeTree(dirPath), removeDirIfEmpty(skillDir))
-		}
-	case model.ComponentSDD:
-		if adapter.SupportsSystemPrompt() {
-			path := adapter.SystemPromptFile(homeDir)
-			targets = append(targets, path)
-			ops = append(ops, rewriteMarkdownFile(path, func(content string) (string, bool) {
-				return removeMarkdownSections(content, "sdd-orchestrator", "strict-tdd-mode")
-			}))
-		}
-		if adapter.SupportsSlashCommands() {
-			commandsDir := adapter.CommandsDir(homeDir)
-			commandsAssetDir := assets.SDDCommandsAssetDir(adapter.Agent())
-			entries, err := fs.ReadDir(assets.FS, commandsAssetDir)
-			if err != nil {
-				return nil, nil, fmt.Errorf("read embedded %s: %w", commandsAssetDir, err)
-			}
-			for _, entry := range entries {
-				if entry.IsDir() {
-					continue
-				}
-				path := filepath.Join(commandsDir, entry.Name())
-				targets = append(targets, path)
-				ops = append(ops, removeFile(path))
-			}
-			ops = append(ops, removeDirIfEmpty(commandsDir))
-		}
-		if path := adapter.SettingsPath(homeDir); path != "" && adapter.Agent() == model.AgentClaudeCode {
-			targets = append(targets, path)
-			ops = append(ops, rewriteClaudeSkillRegistryHook(path))
-		}
-		if path := adapter.SettingsPath(homeDir); path != "" && adapter.Agent() == model.AgentOpenCode {
-			targets = append(targets, path)
-			paths := make([]jsonPath, 0, len(configuredAgents))
-			for _, agentKey := range configuredAgents {
-				paths = append(paths, jsonPath{"agent", agentKey})
-			}
-
-			// Remove named SDD profile agents (suffixed keys). If a profile subset was
-			// selected in the uninstall flow, remove only those profiles; otherwise,
-			// preserve legacy behavior and remove all detected profiles.
-			if s.profileSelectionScoped {
-				for _, profileName := range s.profileNamesToRemove {
-					for _, agentKey := range sdd.ProfileAgentKeys(profileName) {
-						paths = append(paths, jsonPath{"agent", agentKey})
-					}
-				}
-			} else if profiles, err := sdd.DetectProfiles(path); err == nil {
-				for _, profile := range profiles {
-					for _, agentKey := range sdd.ProfileAgentKeys(profile.Name) {
-						paths = append(paths, jsonPath{"agent", agentKey})
-					}
-				}
-			}
-
-			ops = append(ops, rewriteJSONFile(path, paths...))
-
-			pluginDir := filepath.Join(homeDir, ".config", "opencode", "plugins")
-			for _, pluginPath := range []string{
-				filepath.Join(pluginDir, "background-agents.ts"),
-				filepath.Join(pluginDir, "model-variants.ts"),
-			} {
-				targets = append(targets, pluginPath)
-				ops = append(ops, removeFile(pluginPath))
-			}
-			ops = append(ops, removeDirIfEmpty(pluginDir))
-
-			modelVariantsCacheDir := filepath.Join(homeDir, ".gentle-ai", "cache")
-			for _, cachePath := range []string{
-				filepath.Join(modelVariantsCacheDir, "model-variants.json"),
-				filepath.Join(modelVariantsCacheDir, "model-variants.json.tmp"),
-			} {
-				targets = append(targets, cachePath)
-				ops = append(ops, removeFile(cachePath))
-			}
-
-			depDir := filepath.Join(homeDir, ".config", "opencode", "node_modules", "unique-names-generator")
-			targets = append(targets, depDir)
-			ops = append(ops, removeTree(depDir), removeDirIfEmpty(filepath.Dir(depDir)))
-		}
-		if adapter.SupportsSkills() {
-			skillDir := adapter.SkillsDir(homeDir)
-			sharedDir := filepath.Join(skillDir, "_shared")
-			targets = append(targets, sharedDir)
-			ops = append(ops, removeTree(sharedDir))
-			for _, skillID := range managedSDDSkillIDs() {
-				dirPath := filepath.Join(skillDir, skillID)
-				targets = append(targets, dirPath)
-				ops = append(ops, removeTree(dirPath))
-			}
-			ops = append(ops, removeDirIfEmpty(skillDir))
-		}
-		if cap, ok := adapter.(workflowCapability); ok && cap.SupportsWorkflows() && s.workspaceDir != "" {
-			workflowsDir := cap.WorkflowsDir(s.workspaceDir)
-			entries, err := fs.ReadDir(assets.FS, cap.EmbeddedWorkflowsDir())
-			if err != nil {
-				return nil, nil, fmt.Errorf("read embedded workflows: %w", err)
-			}
-			for _, entry := range entries {
-				if entry.IsDir() {
-					continue
-				}
-				path := filepath.Join(workflowsDir, entry.Name())
-				targets = append(targets, path)
-				ops = append(ops, removeFile(path))
-			}
-			ops = append(ops, removeDirIfEmpty(workflowsDir), removeDirIfEmpty(filepath.Dir(workflowsDir)))
-		}
-		if adapter.SupportsSubAgents() {
-			agentsDir := adapter.SubAgentsDir(homeDir)
-			entries, err := fs.ReadDir(assets.FS, adapter.EmbeddedSubAgentsDir())
-			if err != nil {
-				return nil, nil, fmt.Errorf("read embedded sub-agents: %w", err)
-			}
-			for _, entry := range entries {
-				if entry.IsDir() {
-					continue
-				}
-				path := filepath.Join(agentsDir, entry.Name())
-				targets = append(targets, path)
-				ops = append(ops, removeFile(path))
-			}
-			ops = append(ops, removeDirIfEmpty(agentsDir))
 		}
 	case model.ComponentGGA:
 		for _, path := range globalBackupTargets(homeDir) {
@@ -1111,11 +957,6 @@ func compareOperations(a, b operation) int {
 		return int(a.typeID) - int(b.typeID)
 	}
 	return strings.Compare(a.path, b.path)
-}
-
-func managedSDDSkillIDs() []string {
-	ids := append([]string(nil), sddSkillPhaseIDs()...)
-	return append(ids, "judgment-day")
 }
 
 func globalBackupTargets(homeDir string) []string {

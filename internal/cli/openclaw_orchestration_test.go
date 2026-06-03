@@ -34,12 +34,6 @@ func TestComponentApplyStepOpenClawWorkspaceScopedInjections(t *testing.T) {
 			fileName:  "SOUL.md",
 			marker:    "<!-- gentle-ai:persona -->",
 		},
-		{
-			name:      "sdd writes protocol to workspace AGENTS",
-			component: model.ComponentSDD,
-			fileName:  "AGENTS.md",
-			marker:    "<!-- gentle-ai:sdd-orchestrator -->",
-		},
 	}
 
 	for _, tt := range tests {
@@ -60,7 +54,7 @@ func TestComponentApplyStepOpenClawWorkspaceScopedInjections(t *testing.T) {
 				homeDir:      home,
 				workspaceDir: workspace,
 				agents:       []model.AgentID{model.AgentOpenClaw},
-				selection:    model.Selection{Persona: model.PersonaGentleman},
+				selection:    model.Selection{Persona: model.PersonaOperator},
 				profile:      system.PlatformProfile{PackageManager: "brew"},
 			}
 
@@ -107,12 +101,6 @@ func TestComponentSyncStepOpenClawWorkspaceScopedInjections(t *testing.T) {
 			fileName:  "SOUL.md",
 			marker:    "<!-- gentle-ai:persona -->",
 		},
-		{
-			name:      "sdd sync writes protocol to workspace AGENTS",
-			component: model.ComponentSDD,
-			fileName:  "AGENTS.md",
-			marker:    "<!-- gentle-ai:sdd-orchestrator -->",
-		},
 	}
 
 	for _, tt := range tests {
@@ -129,7 +117,7 @@ func TestComponentSyncStepOpenClawWorkspaceScopedInjections(t *testing.T) {
 				homeDir:      home,
 				workspaceDir: workspace,
 				agents:       []model.AgentID{model.AgentOpenClaw},
-				selection:    model.Selection{Persona: model.PersonaGentleman},
+				selection:    model.Selection{Persona: model.PersonaOperator},
 			}
 
 			if err := step.Run(); err != nil {
@@ -171,9 +159,8 @@ func TestInstallRuntimeOpenClawUsesConfiguredActiveWorkspace(t *testing.T) {
 
 	selection := model.Selection{
 		Agents:     []model.AgentID{model.AgentOpenClaw},
-		Components: []model.ComponentID{model.ComponentPersona, model.ComponentSDD, model.ComponentEngram},
-		Persona:    model.PersonaGentleman,
-		StrictTDD:  true,
+		Components: []model.ComponentID{model.ComponentPersona, model.ComponentEngram},
+		Persona:    model.PersonaOperator,
 	}
 	resolved := planner.ResolvedPlan{
 		Agents:            []model.AgentID{model.AgentOpenClaw},
@@ -203,9 +190,8 @@ func TestSyncRuntimeOpenClawUsesConfiguredActiveWorkspace(t *testing.T) {
 
 	selection := model.Selection{
 		Agents:     []model.AgentID{model.AgentOpenClaw},
-		Components: []model.ComponentID{model.ComponentPersona, model.ComponentSDD, model.ComponentEngram},
-		Persona:    model.PersonaGentleman,
-		StrictTDD:  true,
+		Components: []model.ComponentID{model.ComponentPersona, model.ComponentEngram},
+		Persona:    model.PersonaOperator,
 	}
 	rt, err := newSyncRuntime(home, selection)
 	if err != nil {
@@ -237,18 +223,22 @@ func quoteJSON(value string) string {
 	return `"` + strings.ReplaceAll(value, `\`, `\\`) + `"`
 }
 
+// assertOpenClawInstructionsInWorkspace verifies OpenClaw workspace files.
+// OPS fork (Phase 0e): sdd-orchestrator and strict-tdd-mode markers removed.
+// PersonaOperator does not have "Senior Architect" — it has the operator persona.
 func assertOpenClawInstructionsInWorkspace(t *testing.T, workspace string) {
 	t.Helper()
 	agentsText := readOpenClawTestFile(t, filepath.Join(workspace, "AGENTS.md"))
-	for _, want := range []string{"gentle-ai:engram-protocol", "gentle-ai:sdd-orchestrator", "gentle-ai:strict-tdd-mode"} {
+	// Only engram-protocol is injected in OPS (no sdd-orchestrator).
+	for _, want := range []string{"gentle-ai:engram-protocol"} {
 		if !strings.Contains(agentsText, want) {
 			t.Fatalf("active workspace AGENTS.md missing %q; got:\n%s", want, agentsText)
 		}
 	}
 
 	soulText := readOpenClawTestFile(t, filepath.Join(workspace, "SOUL.md"))
-	if !strings.Contains(soulText, "gentle-ai:persona") || !strings.Contains(soulText, "Senior Architect") {
-		t.Fatalf("active workspace SOUL.md missing Gentle AI persona; got:\n%s", soulText)
+	if !strings.Contains(soulText, "gentle-ai:persona") {
+		t.Fatalf("active workspace SOUL.md missing gentle-ai:persona marker; got:\n%s", soulText)
 	}
 }
 

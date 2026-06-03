@@ -1,26 +1,23 @@
 package skills
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 )
 
-func TestSkillsForPresetMinimalReturnsSDDOnly(t *testing.T) {
+// TestSkillsForPresetMinimalReturnsFoundationSkills verifies that the minimal preset
+// returns foundation skills (OPS fork: sdd skills removed in Phase 0e).
+func TestSkillsForPresetMinimalReturnsFoundationSkills(t *testing.T) {
 	skills := SkillsForPreset(model.PresetMinimal)
 	if len(skills) == 0 {
 		t.Fatalf("SkillsForPreset(minimal) returned empty")
 	}
-
-	// Orchestration skills that are always bundled with SDD.
-	orchestrationSkills := map[model.SkillID]bool{
-		model.SkillJudgmentDay: true,
-	}
-
+	// No sdd-* skills in the OPS fork.
 	for _, skill := range skills {
-		isSDD := len(skill) >= 4 && skill[:3] == "sdd"
-		if !isSDD && !orchestrationSkills[skill] {
-			t.Fatalf("minimal preset should only contain SDD/orchestration skills, got %q", skill)
+		if strings.HasPrefix(string(skill), "sdd-") {
+			t.Fatalf("minimal preset must not contain SDD skills in OPS fork, got %q", skill)
 		}
 	}
 }
@@ -30,7 +27,6 @@ func TestSkillsForPresetEcosystemIncludesFrameworks(t *testing.T) {
 
 	hasGoTesting := false
 	hasSkillCreator := false
-	hasSDDInit := false
 	for _, skill := range skills {
 		if skill == model.SkillGoTesting {
 			hasGoTesting = true
@@ -38,16 +34,10 @@ func TestSkillsForPresetEcosystemIncludesFrameworks(t *testing.T) {
 		if skill == model.SkillCreator {
 			hasSkillCreator = true
 		}
-		if skill == model.SkillSDDInit {
-			hasSDDInit = true
-		}
 	}
 
 	if !hasGoTesting {
 		t.Fatalf("ecosystem preset should include go-testing")
-	}
-	if !hasSDDInit {
-		t.Fatalf("ecosystem preset should include sdd-init")
 	}
 	if !hasSkillCreator {
 		t.Fatalf("ecosystem preset should include skill-creator")
@@ -93,36 +83,19 @@ func TestSkillsForPresetSelOpsOperationalReturnsExactlySixOpsSkills(t *testing.T
 	}
 }
 
+// TestSkillsForPresetSelOpsOperationalContainsNoDevSkills verifies OPS preset
+// has no DEV-only skills. OPS fork (Phase 0e): sdd-* IDs removed from model.
 func TestSkillsForPresetSelOpsOperationalContainsNoDevSkills(t *testing.T) {
 	skills := SkillsForPreset(model.PresetSelOpsOperational)
 
-	devSkills := map[model.SkillID]struct{}{
-		model.SkillSDDInit:         {},
-		model.SkillSDDApply:        {},
-		model.SkillSDDVerify:       {},
-		model.SkillSDDExplore:      {},
-		model.SkillSDDPropose:      {},
-		model.SkillSDDSpec:         {},
-		model.SkillSDDDesign:       {},
-		model.SkillSDDTasks:        {},
-		model.SkillSDDArchive:      {},
-		model.SkillSDDOnboard:      {},
-		model.SkillGoTesting:       {},
-		model.SkillCreator:         {},
-		model.SkillImprover:        {},
-		model.SkillJudgmentDay:     {},
-		model.SkillBranchPR:        {},
-		model.SkillIssueCreation:   {},
-		model.SkillSkillRegistry:   {},
-		model.SkillChainedPR:       {},
-		model.SkillCognitiveDoc:    {},
-		model.SkillCommentWriter:   {},
-		model.SkillWorkUnitCommits: {},
-	}
-
 	for _, skill := range skills {
-		if _, ok := devSkills[skill]; ok {
-			t.Fatalf("PresetSelOpsOperational must NOT contain DEV skill %q", skill)
+		if strings.HasPrefix(string(skill), "sdd-") {
+			t.Fatalf("PresetSelOpsOperational must NOT contain SDD skill %q", skill)
+		}
+		// Foundation skills are neutral — they may appear in any preset.
+		// Only ops-* skills should be in the OPS preset.
+		if !strings.HasPrefix(string(skill), "ops-") {
+			t.Fatalf("PresetSelOpsOperational should only contain ops-* skills, got %q", skill)
 		}
 	}
 }
@@ -139,12 +112,12 @@ func TestKnowledgeBaseSkillsReturnsExactlyTenNeutralSkills(t *testing.T) {
 }
 
 // TestKnowledgeBaseSkillsContainsNoSDDSkills verifies the knowledge base
-// contains no sdd-* skills (those belong to ComponentSDD, not ComponentKnowledgeBase).
+// contains no sdd-* skills (those belonged to ComponentSDD, removed in Phase 0e).
 func TestKnowledgeBaseSkillsContainsNoSDDSkills(t *testing.T) {
 	skills := KnowledgeBaseSkills()
 
 	for _, skill := range skills {
-		if len(skill) >= 4 && skill[:3] == "sdd" {
+		if strings.HasPrefix(string(skill), "sdd-") {
 			t.Errorf("KnowledgeBaseSkills() must not contain SDD skill %q", skill)
 		}
 	}
@@ -156,7 +129,7 @@ func TestKnowledgeBaseSkillsContainsNoOpsSkills(t *testing.T) {
 	skills := KnowledgeBaseSkills()
 
 	for _, skill := range skills {
-		if len(skill) >= 4 && skill[:4] == "ops-" {
+		if strings.HasPrefix(string(skill), "ops-") {
 			t.Errorf("KnowledgeBaseSkills() must not contain OPS skill %q", skill)
 		}
 	}
@@ -192,14 +165,14 @@ func TestKnowledgeBaseSkillsContainsExpectedNeutralSkills(t *testing.T) {
 	}
 }
 
-func TestAllSkillIDsIncludesEveryKnownSkill(t *testing.T) {
+// TestAllSkillIDsIncludesFoundationSkills verifies AllSkillIDs() includes
+// the foundation skills (sdd-* removed in Phase 0e).
+func TestAllSkillIDsIncludesFoundationSkills(t *testing.T) {
 	all := AllSkillIDs()
 
 	required := []model.SkillID{
-		model.SkillSDDInit,
 		model.SkillGoTesting,
 		model.SkillCreator,
-		model.SkillJudgmentDay,
 	}
 
 	skillSet := make(map[model.SkillID]struct{}, len(all))
@@ -210,6 +183,17 @@ func TestAllSkillIDsIncludesEveryKnownSkill(t *testing.T) {
 	for _, req := range required {
 		if _, ok := skillSet[req]; !ok {
 			t.Fatalf("AllSkillIDs() missing %q", req)
+		}
+	}
+}
+
+// TestAllSkillIDsContainsNoSDDSkills verifies AllSkillIDs() has no sdd-* skills
+// after Phase 0e strip.
+func TestAllSkillIDsContainsNoSDDSkills(t *testing.T) {
+	all := AllSkillIDs()
+	for _, id := range all {
+		if strings.HasPrefix(string(id), "sdd-") {
+			t.Errorf("AllSkillIDs() must NOT contain sdd-* skill %q after Phase 0e strip", id)
 		}
 	}
 }

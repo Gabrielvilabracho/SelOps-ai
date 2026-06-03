@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Gabrielvilabracho/selops-ai/internal/components/sdd"
 	"github.com/Gabrielvilabracho/selops-ai/internal/tui/styles"
 )
 
@@ -27,11 +26,7 @@ func RenderProfileDelete(profileName string, cursor int) string {
 	b.WriteString(styles.UnselectedStyle.Render("  • sdd-orchestrator-" + profileName))
 	b.WriteString("\n")
 
-	// Show phase keys using the canonical phase list from the sdd package.
-	for _, phase := range sdd.ProfilePhaseOrder() {
-		b.WriteString(styles.UnselectedStyle.Render("  • " + phase + "-" + profileName))
-		b.WriteString("\n")
-	}
+	// OPS fork (Phase 0e): sdd package removed — no phase keys to show.
 
 	b.WriteString("\n")
 	b.WriteString(styles.WarningStyle.Render("This action cannot be undone."))

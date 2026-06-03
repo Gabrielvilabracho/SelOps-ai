@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents"
@@ -114,10 +113,12 @@ func TestInjectCopiesNonSDDSkillReferences(t *testing.T) {
 func TestInjectSkipsSddSkills(t *testing.T) {
 	home := t.TempDir()
 
-	// SDD skills should be silently skipped — they are installed by the SDD component.
+	// OPS fork (Phase 0e): sdd package removed. Test that any sdd-prefixed IDs
+	// are silently skipped (IsSDDSkill returns true for sdd-* prefixed IDs).
+	// Use a synthetic sdd-* ID since model.SkillSDD* constants are removed.
 	result, err := Inject(home, claudeAdapter(), []model.SkillID{
-		model.SkillSDDInit,
-		model.SkillSDDApply,
+		model.SkillID("sdd-init"),  // synthetic sdd-* ID — should be skipped
+		model.SkillID("sdd-apply"), // synthetic sdd-* ID — should be skipped
 		model.SkillCreator,
 	})
 	if err != nil {
@@ -130,7 +131,7 @@ func TestInjectSkipsSddSkills(t *testing.T) {
 	}
 
 	// SDD skill files must not be created by the skills component.
-	for _, id := range []model.SkillID{model.SkillSDDInit, model.SkillSDDApply} {
+	for _, id := range []model.SkillID{"sdd-init", "sdd-apply"} {
 		path := filepath.Join(home, ".claude", "skills", string(id), "SKILL.md")
 		if _, statErr := os.Stat(path); statErr == nil {
 			t.Fatalf("skills component must not write SDD skill %q — it belongs to the SDD component", id)
@@ -285,9 +286,9 @@ func assertNonEmptyFile(t *testing.T, path string) {
 func TestInjectWithCapability_SkipsSDDSkillsWhenCapabilityEmpty(t *testing.T) {
 	home := t.TempDir()
 
+	// OPS fork (Phase 0e): sdd package removed. Use synthetic sdd-* ID.
 	// When capability is empty, SDD skills are skipped (same as Inject).
-	// The skills component skips SDD skills to avoid conflicts with SDD component.
-	result, err := InjectWithCapability(home, opencodeAdapter(), []model.SkillID{model.SkillSDDApply}, "")
+	result, err := InjectWithCapability(home, opencodeAdapter(), []model.SkillID{model.SkillID("sdd-apply")}, "")
 	if err != nil {
 		t.Fatalf("InjectWithCapability() error = %v", err)
 	}
@@ -316,19 +317,26 @@ func TestInjectWithCapability_WritesNonSDDSkillsRegardlessOfCapability(t *testin
 func TestInjectWithCapability_WritesExtractedSDDSkillWithFrontmatterAtStart(t *testing.T) {
 	home := t.TempDir()
 
-	_, err := InjectWithCapability(home, opencodeAdapter(), []model.SkillID{model.SkillSDDApply}, "capable")
+	// OPS fork (Phase 0e): sdd package removed. sdd-apply embedded asset no longer exists.
+	// InjectWithCapability with a non-existent sdd-* skill should skip it gracefully.
+	result, err := InjectWithCapability(home, opencodeAdapter(), []model.SkillID{model.SkillID("sdd-apply")}, "capable")
 	if err != nil {
 		t.Fatalf("InjectWithCapability() error = %v", err)
 	}
+	// The sdd-apply embedded asset is gone — skill is in Skipped, not Files.
+	if len(result.Files) != 0 {
+		t.Fatalf("InjectWithCapability(sdd-apply, capable) files len = %d, want 0 (no embedded asset)", len(result.Files))
+	}
+	if len(result.Skipped) != 1 || result.Skipped[0] != "sdd-apply" {
+		t.Fatalf("InjectWithCapability(sdd-apply, capable) skipped = %v, want [sdd-apply]", result.Skipped)
+	}
 
+	// Legacy path check: ensure file was NOT created.
 	path := filepath.Join(home, ".config", "opencode", "skills", "sdd-apply", "SKILL.md")
-	content, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatalf("ReadFile() error = %v", err)
+	if _, statErr := os.Stat(path); statErr == nil {
+		t.Fatalf("sdd-apply skill file must not be created (embedded asset removed in Phase 0e)")
 	}
-	if !strings.HasPrefix(string(content), "---\n") {
-		t.Fatalf("extracted SDD skill must start with YAML frontmatter delimiter, got prefix %q", string(content[:min(len(content), 16)]))
-	}
+
 }
 
 func containsFile(files []string, want string) bool {

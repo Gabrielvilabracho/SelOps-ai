@@ -36,8 +36,7 @@ func (g Graph) DependenciesOf(component model.ComponentID) []model.ComponentID {
 func MVPGraph() Graph {
 	return NewGraph(map[model.ComponentID][]model.ComponentID{
 		model.ComponentEngram:             nil,
-		model.ComponentSDD:                {model.ComponentEngram},
-		model.ComponentSkills:             {model.ComponentSDD},
+		model.ComponentSkills:             nil,
 		model.ComponentContext7:           nil,
 		model.ComponentPersona:            nil,
 		model.ComponentPermission:         nil,
@@ -50,7 +49,7 @@ func MVPGraph() Graph {
 		model.ComponentOperationalMCP:  nil,
 		model.ComponentPersonaOperator: nil,
 		// ComponentKnowledgeBase is optional (nil deps — no DEV transitive pull).
-		// It injects the 10 neutral foundation skills independently of ComponentSkills/ComponentSDD.
+		// It injects the 10 neutral foundation skills independently of ComponentSkills.
 		model.ComponentKnowledgeBase: nil,
 	})
 }
@@ -67,7 +66,6 @@ func MVPGraph() Graph {
 // See applySoftOrdering() safety contract in order.go.
 var softOrderingPairs = [][2]model.ComponentID{
 	{model.ComponentPersona, model.ComponentEngram},
-	{model.ComponentPersona, model.ComponentSDD},
 	// SelOps operational layer: PersonaOperator must write before SDDOps.
 	{model.ComponentPersonaOperator, model.ComponentSDDOps},
 }

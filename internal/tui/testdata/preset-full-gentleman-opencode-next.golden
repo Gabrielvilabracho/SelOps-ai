@@ -1,12 +1,16 @@
-Select SDD Mode
-
-How should the SDD orchestrator be configured for OpenCode?
-
-▸ ( ) single
-    Single orchestrator — one agent handles all SDD phases
-  ( ) multi
-    Multi-agent — dedicated sub-agent per SDD phase (9 hidden agents)
-
-  Back
-
-j/k: navigate • enter: select • esc: back
+╔═══════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                   ║
+║  Optional OpenCode Community Plugins                                              ║
+║                                                                                   ║
+║  Install community TUI plugins now, or open their repos first to review them.     ║
+║                                                                                   ║
+║  > [ ] Sub-agent Statusline — OpenCode sidebar/statusline for sub-agent activity  ║
+║    View repo: https://github.com/Joaquinvesapa/sub-agent-statusline               ║
+║    [ ] SDD Engram Manager — OpenCode TUI for SDD profiles and Engram memories     ║
+║    View repo: https://github.com/j0k3r-dev-rgl/sdd-engram-plugin                  ║
+║    Continue                                                                       ║
+║    Back                                                                           ║
+║                                                                                   ║
+║  space/enter: toggle • repo row: open browser • esc: back                         ║
+║                                                                                   ║
+╚═══════════════════════════════════════════════════════════════════════════════════╝

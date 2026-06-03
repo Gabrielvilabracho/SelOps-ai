@@ -5,7 +5,6 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents"
@@ -18,11 +17,9 @@ import (
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents/opencode"
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents/vscode"
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents/windsurf"
-	"github.com/Gabrielvilabracho/selops-ai/internal/assets"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/engram"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/mcp"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/persona"
-	"github.com/Gabrielvilabracho/selops-ai/internal/components/sdd"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/skills"
 	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 )
@@ -60,12 +57,7 @@ func TestGoldenConfigs(t *testing.T) {
 	}
 	presetsJSON = append(presetsJSON, '\n')
 
-	commands := sdd.OpenCodeCommands()
-	if len(commands) == 0 {
-		t.Fatalf("OpenCodeCommands() returned no commands")
-	}
-	commandMarkdown := []byte("# " + commands[0].Name + "\n\n" + commands[0].Description + "\n\n" + commands[0].Body + "\n")
-
+	// OPS fork (Phase 0e): sdd package removed — sdd command golden test removed.
 	tests := []struct {
 		name    string
 		path    string
@@ -74,7 +66,6 @@ func TestGoldenConfigs(t *testing.T) {
 		{name: "context7 server", path: "context7-server.json", content: mcp.DefaultContext7ServerJSON()},
 		{name: "context7 overlay", path: "context7-overlay.json", content: mcp.DefaultContext7OverlayJSON()},
 		{name: "skills presets", path: "skills-presets.json", content: presetsJSON},
-		{name: "sdd command markdown", path: "sdd-command-sdd-init.md", content: commandMarkdown},
 	}
 
 	for _, tc := range tests {
@@ -84,354 +75,6 @@ func TestGoldenConfigs(t *testing.T) {
 	}
 }
 
-// ---------------------------------------------------------------------------
-// SDD Injector golden tests
-// ---------------------------------------------------------------------------
-
-func TestGoldenSDD_Claude(t *testing.T) {
-	home := t.TempDir()
-
-	adapter := claudeAdapter()
-
-	result, err := sdd.Inject(home, adapter, "")
-	if err != nil {
-		t.Fatalf("sdd.Inject(claude) error = %v", err)
-	}
-	if !result.Changed {
-		t.Fatalf("sdd.Inject(claude) changed = false")
-	}
-
-	claudeMD := readTestFile(t, filepath.Join(home, ".claude", "CLAUDE.md"))
-	assertGolden(t, "sdd-claude-claudemd.golden", claudeMD)
-
-	for _, name := range []string{
-		"sdd-apply", "sdd-archive", "sdd-continue", "sdd-explore",
-		"sdd-ff", "sdd-init", "sdd-new", "sdd-onboard", "sdd-verify",
-	} {
-		content := readTestFile(t, filepath.Join(home, ".claude", "commands", name+".md"))
-		assertGolden(t, "sdd-claude-cmd-"+name+".golden", content)
-	}
-
-	agentsDir := adapter.SubAgentsDir(home)
-	for _, name := range []string{
-		"sdd-explore", "sdd-propose", "sdd-spec", "sdd-design",
-		"sdd-tasks", "sdd-apply", "sdd-verify", "sdd-archive",
-	} {
-		agentContent := readTestFile(t, filepath.Join(agentsDir, name+".md"))
-		assertGolden(t, "sdd-claude-agent-"+name+".golden", agentContent)
-	}
-}
-
-func TestGoldenSDD_OpenCode(t *testing.T) {
-	home := t.TempDir()
-
-	result, err := sdd.Inject(home, opencodeAdapter(), "")
-	if err != nil {
-		t.Fatalf("sdd.Inject(opencode) error = %v", err)
-	}
-	if !result.Changed {
-		t.Fatalf("sdd.Inject(opencode) changed = false")
-	}
-
-	// Golden-check a representative command file.
-	sddInit := readTestFile(t, filepath.Join(home, ".config", "opencode", "commands", "sdd-init.md"))
-	assertGolden(t, "sdd-opencode-cmd-sdd-init.golden", sddInit)
-
-	// Golden-check a representative SDD skill file.
-	skillInit := readTestFile(t, filepath.Join(home, ".config", "opencode", "skills", "sdd-init", "SKILL.md"))
-	assertGolden(t, "sdd-opencode-skill-sdd-init.golden", skillInit)
-
-	// Verify ALL expected command files exist.
-	expectedCommands := []string{
-		"sdd-init.md", "sdd-apply.md", "sdd-archive.md", "sdd-continue.md",
-		"sdd-explore.md", "sdd-ff.md", "sdd-new.md", "sdd-onboard.md", "sdd-verify.md",
-	}
-	commandsDir := filepath.Join(home, ".config", "opencode", "commands")
-	for _, name := range expectedCommands {
-		path := filepath.Join(commandsDir, name)
-		if _, err := os.Stat(path); err != nil {
-			t.Errorf("expected command file %q not found: %v", name, err)
-		}
-	}
-}
-
-func TestGoldenSDD_OpenCode_Multi(t *testing.T) {
-	home := t.TempDir()
-
-	result, err := sdd.Inject(home, opencodeAdapter(), "multi")
-	if err != nil {
-		t.Fatalf("sdd.Inject(opencode, multi) error = %v", err)
-	}
-	if !result.Changed {
-		t.Fatalf("sdd.Inject(opencode, multi) changed = false")
-	}
-
-	// Golden-check the settings file with multi overlay merged.
-	settingsJSON := readTestFile(t, filepath.Join(home, ".config", "opencode", "opencode.json"))
-	for _, toolName := range []string{"\"delegate\"", "\"delegation_read\"", "\"delegation_list\""} {
-		if !strings.Contains(string(settingsJSON), toolName) {
-			t.Fatalf("multi-mode settings missing orchestrator tool %s", toolName)
-		}
-	}
-	// Normalize the absolute home path in the settings JSON so the golden
-	// file remains stable across test runs (temp dirs change each run).
-	// Sub-agent prompts now use {file:/abs/path/...} references.
-	jsonStr := string(settingsJSON)
-	jsonStr = strings.ReplaceAll(jsonStr, home, "{{HOME}}")
-	jsonStr = strings.ReplaceAll(jsonStr, filepath.ToSlash(home), "{{HOME}}")
-	normalizedSettings := []byte(jsonStr)
-	assertGolden(t, "sdd-opencode-multi-settings.golden", normalizedSettings)
-
-	pluginPath := filepath.Join(home, ".config", "opencode", "plugins", "background-agents.ts")
-	pluginContent := readTestFile(t, pluginPath)
-	if string(pluginContent) != assets.MustRead("opencode/plugins/background-agents.ts") {
-		t.Fatalf("plugin content mismatch for %q", pluginPath)
-	}
-}
-
-func TestGoldenSDD_Cursor(t *testing.T) {
-	home := t.TempDir()
-
-	result, err := sdd.Inject(home, cursorAdapter(), "")
-	if err != nil {
-		t.Fatalf("sdd.Inject(cursor) error = %v", err)
-	}
-	if !result.Changed {
-		t.Fatalf("sdd.Inject(cursor) changed = false")
-	}
-
-	// Cursor writes SDD orchestrator to ~/.cursor/rules/gentle-ai.mdc.
-	rulesFile := readTestFile(t, filepath.Join(home, ".cursor", "rules", "gentle-ai.mdc"))
-	assertGolden(t, "sdd-cursor-rules.golden", rulesFile)
-
-	// Golden-check a representative SDD skill file.
-	skillInit := readTestFile(t, filepath.Join(home, ".cursor", "skills", "sdd-init", "SKILL.md"))
-	assertGolden(t, "sdd-cursor-skill-sdd-init.golden", skillInit)
-
-	// Verify ALL expected SDD skill files exist.
-	expectedSkills := []string{
-		"sdd-init", "sdd-apply", "sdd-archive", "sdd-explore",
-		"sdd-propose", "sdd-spec", "sdd-design", "sdd-tasks", "sdd-verify",
-		"sdd-onboard",
-	}
-	skillsDir := filepath.Join(home, ".cursor", "skills")
-	for _, name := range expectedSkills {
-		path := filepath.Join(skillsDir, name, "SKILL.md")
-		if _, err := os.Stat(path); err != nil {
-			t.Errorf("expected SDD skill file %q not found: %v", name, err)
-		}
-	}
-}
-
-func TestGoldenSDD_Gemini(t *testing.T) {
-	home := t.TempDir()
-
-	result, err := sdd.Inject(home, geminiAdapter(), "")
-	if err != nil {
-		t.Fatalf("sdd.Inject(gemini) error = %v", err)
-	}
-	if !result.Changed {
-		t.Fatalf("sdd.Inject(gemini) changed = false")
-	}
-
-	// Gemini writes SDD orchestrator to ~/.gemini/GEMINI.md.
-	geminiMD := readTestFile(t, filepath.Join(home, ".gemini", "GEMINI.md"))
-	assertGolden(t, "sdd-gemini-geminimd.golden", geminiMD)
-
-	// Golden-check a representative SDD skill file.
-	skillInit := readTestFile(t, filepath.Join(home, ".gemini", "skills", "sdd-init", "SKILL.md"))
-	assertGolden(t, "sdd-gemini-skill-sdd-init.golden", skillInit)
-
-	// Verify ALL expected SDD skill files exist.
-	expectedSkills := []string{
-		"sdd-init", "sdd-apply", "sdd-archive", "sdd-explore",
-		"sdd-propose", "sdd-spec", "sdd-design", "sdd-tasks", "sdd-verify",
-		"sdd-onboard",
-	}
-	skillsDir := filepath.Join(home, ".gemini", "skills")
-	for _, name := range expectedSkills {
-		path := filepath.Join(skillsDir, name, "SKILL.md")
-		if _, err := os.Stat(path); err != nil {
-			t.Errorf("expected SDD skill file %q not found: %v", name, err)
-		}
-	}
-}
-
-func TestGoldenSDD_VSCode(t *testing.T) {
-	home := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(home, ".config"))
-	t.Setenv("APPDATA", filepath.Join(home, "AppData", "Roaming"))
-
-	adapter := vscodeAdapter()
-
-	result, err := sdd.Inject(home, adapter, "")
-	if err != nil {
-		t.Fatalf("sdd.Inject(vscode) error = %v", err)
-	}
-	if !result.Changed {
-		t.Fatalf("sdd.Inject(vscode) changed = false")
-	}
-
-	// VS Code writes to a platform-specific path — use the adapter to resolve it.
-	promptPath := adapter.SystemPromptFile(home)
-	instructionsFile := readTestFile(t, promptPath)
-	assertGolden(t, "sdd-vscode-instructions.golden", instructionsFile)
-
-	// Golden-check a representative SDD skill file.
-	skillInit := readTestFile(t, filepath.Join(home, ".copilot", "skills", "sdd-init", "SKILL.md"))
-	assertGolden(t, "sdd-vscode-skill-sdd-init.golden", skillInit)
-
-	// Verify ALL expected SDD skill files exist.
-	expectedSkills := []string{
-		"sdd-init", "sdd-apply", "sdd-archive", "sdd-explore",
-		"sdd-propose", "sdd-spec", "sdd-design", "sdd-tasks", "sdd-verify",
-		"sdd-onboard",
-	}
-	skillsDir := filepath.Join(home, ".copilot", "skills")
-	for _, name := range expectedSkills {
-		path := filepath.Join(skillsDir, name, "SKILL.md")
-		if _, err := os.Stat(path); err != nil {
-			t.Errorf("expected SDD skill file %q not found: %v", name, err)
-		}
-	}
-}
-
-func TestGoldenSDD_Codex(t *testing.T) {
-	home := t.TempDir()
-
-	result, err := sdd.Inject(home, codexAdapter(), "")
-	if err != nil {
-		t.Fatalf("sdd.Inject(codex) error = %v", err)
-	}
-	if !result.Changed {
-		t.Fatalf("sdd.Inject(codex) changed = false")
-	}
-
-	// Codex writes SDD orchestrator to ~/.codex/AGENTS.md.
-	agentsMD := readTestFile(t, filepath.Join(home, ".codex", "AGENTS.md"))
-	assertGolden(t, "sdd-codex-agentsmd.golden", agentsMD)
-
-	// Golden-check a representative SDD skill file.
-	skillInit := readTestFile(t, filepath.Join(home, ".codex", "skills", "sdd-init", "SKILL.md"))
-	assertGolden(t, "sdd-codex-skill-sdd-init.golden", skillInit)
-
-	// Verify ALL expected SDD skill files exist.
-	expectedSkills := []string{
-		"sdd-init", "sdd-apply", "sdd-archive", "sdd-explore",
-		"sdd-propose", "sdd-spec", "sdd-design", "sdd-tasks", "sdd-verify",
-		"sdd-onboard",
-	}
-	skillsDir := filepath.Join(home, ".codex", "skills")
-	for _, name := range expectedSkills {
-		path := filepath.Join(skillsDir, name, "SKILL.md")
-		if _, err := os.Stat(path); err != nil {
-			t.Errorf("expected SDD skill file %q not found: %v", name, err)
-		}
-	}
-}
-
-func TestGoldenSDD_Windsurf(t *testing.T) {
-	home := t.TempDir()
-	workspace := t.TempDir()
-	if err := os.WriteFile(filepath.Join(workspace, "go.mod"), []byte("module test\n"), 0o644); err != nil {
-		t.Fatalf("write go.mod marker: %v", err)
-	}
-
-	result, err := sdd.Inject(home, windsurfAdapter(), "", sdd.InjectOptions{WorkspaceDir: workspace})
-	if err != nil {
-		t.Fatalf("sdd.Inject(windsurf) error = %v", err)
-	}
-	if !result.Changed {
-		t.Fatalf("sdd.Inject(windsurf) changed = false")
-	}
-
-	rulesMD := readTestFile(t, filepath.Join(home, ".codeium", "windsurf", "memories", "global_rules.md"))
-	assertGolden(t, "sdd-windsurf-global-rules.golden", rulesMD)
-
-	skillInit := readTestFile(t, filepath.Join(home, ".codeium", "windsurf", "skills", "sdd-init", "SKILL.md"))
-	assertGolden(t, "sdd-windsurf-skill-sdd-init.golden", skillInit)
-
-	expectedSkills := []string{
-		"sdd-init", "sdd-apply", "sdd-archive", "sdd-explore",
-		"sdd-propose", "sdd-spec", "sdd-design", "sdd-tasks", "sdd-verify",
-		"sdd-onboard",
-	}
-	skillsDir := filepath.Join(home, ".codeium", "windsurf", "skills")
-	for _, name := range expectedSkills {
-		path := filepath.Join(skillsDir, name, "SKILL.md")
-		if _, err := os.Stat(path); err != nil {
-			t.Errorf("expected SDD skill file %q not found: %v", name, err)
-		}
-	}
-
-	// Verify native Cascade workflow was copied to .windsurf/workflows/.
-	workflowPath := filepath.Join(workspace, ".windsurf", "workflows", "sdd-new.md")
-	workflowContent := readTestFile(t, workflowPath)
-	assertGolden(t, "sdd-windsurf-workflow-sdd-new.golden", workflowContent)
-}
-
-func TestGoldenSDD_Kiro(t *testing.T) {
-	home := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(home, ".config"))
-	t.Setenv("APPDATA", filepath.Join(home, "AppData", "Roaming"))
-
-	adapter := kiroAdapter()
-
-	result, err := sdd.Inject(home, adapter, "")
-	if err != nil {
-		t.Fatalf("sdd.Inject(kiro) error = %v", err)
-	}
-	if !result.Changed {
-		t.Fatalf("sdd.Inject(kiro) changed = false")
-	}
-
-	// Kiro writes SDD orchestrator to ~/.kiro/steering/gentle-ai.md
-	// (StrategySteeringFile). Use the adapter to resolve the platform-specific path.
-	promptPath := adapter.SystemPromptFile(home)
-	instructionsFile := readTestFile(t, promptPath)
-	assertGolden(t, "sdd-kiro-instructions.golden", instructionsFile)
-
-	// Golden-check a representative SDD skill file.
-	skillsDir := adapter.SkillsDir(home)
-	skillInit := readTestFile(t, filepath.Join(skillsDir, "sdd-init", "SKILL.md"))
-	assertGolden(t, "sdd-kiro-skill-sdd-init.golden", skillInit)
-
-	// Verify all SDD skill files written by the SDD injector exist.
-	expectedSkills := []string{
-		"sdd-init", "sdd-apply", "sdd-archive", "sdd-explore",
-		"sdd-propose", "sdd-spec", "sdd-design", "sdd-tasks", "sdd-verify",
-		"sdd-onboard", "judgment-day",
-	}
-	for _, name := range expectedSkills {
-		path := filepath.Join(skillsDir, name, "SKILL.md")
-		if _, err := os.Stat(path); err != nil {
-			t.Errorf("expected SDD skill file %q not found: %v", name, err)
-		}
-	}
-	if _, err := os.Stat(filepath.Join(skillsDir, "_shared", "SKILL.md")); err != nil {
-		t.Errorf("expected SDD shared marker %q not found: %v", filepath.Join("_shared", "SKILL.md"), err)
-	}
-
-	// Verify all 10 Kiro native SDD phase agent files with golden snapshots.
-	// Type-assert to the concrete Kiro adapter so SubAgentsDir(home) drives
-	// the path — the test stays correct if the adapter path ever changes.
-	type subAgentDirProvider interface {
-		SubAgentsDir(homeDir string) string
-	}
-	kiro, ok := adapter.(subAgentDirProvider)
-	if !ok {
-		t.Fatal("adapter does not implement SubAgentsDir — Kiro subagent test cannot run")
-	}
-	agentsDir := kiro.SubAgentsDir(home)
-	for _, name := range []string{
-		"sdd-init", "sdd-explore", "sdd-propose", "sdd-spec",
-		"sdd-design", "sdd-tasks", "sdd-apply", "sdd-verify",
-		"sdd-archive", "sdd-onboard",
-	} {
-		agentContent := readTestFile(t, filepath.Join(agentsDir, name+".md"))
-		assertGolden(t, "sdd-kiro-agent-"+name+".golden", agentContent)
-	}
-}
 
 // ---------------------------------------------------------------------------
 // Persona Injector golden tests
@@ -745,12 +388,10 @@ func TestGoldenCombined_Claude(t *testing.T) {
 
 	engram.SetLookPathForTest(t, "/opt/homebrew/bin/engram", "")
 
-	// Inject persona first, then SDD, then Engram — all write sections into CLAUDE.md.
+	// OPS fork (Phase 0e): sdd package removed.
+	// Inject persona and Engram — both write sections into CLAUDE.md.
 	if _, err := persona.Inject(home, claudeAdapter(), model.PersonaGentleman); err != nil {
 		t.Fatalf("persona.Inject error = %v", err)
-	}
-	if _, err := sdd.Inject(home, claudeAdapter(), ""); err != nil {
-		t.Fatalf("sdd.Inject error = %v", err)
 	}
 	if _, err := engram.Inject(home, claudeAdapter()); err != nil {
 		t.Fatalf("engram.Inject error = %v", err)
@@ -769,64 +410,24 @@ func TestGoldenCombined_Windsurf(t *testing.T) {
 		t.Fatalf("write go.mod marker: %v", err)
 	}
 
-	// Windsurf: persona appends to global_rules.md; SDD appends SDD orchestrator
-	// to the same file and copies skills + workflow to workspace.
+	// OPS fork (Phase 0e): sdd package removed.
+	// Windsurf: persona appends to global_rules.md; engram injects protocol.
 	if _, err := persona.Inject(home, windsurfAdapter(), model.PersonaGentleman); err != nil {
 		t.Fatalf("persona.Inject(windsurf) error = %v", err)
-	}
-	if _, err := sdd.Inject(home, windsurfAdapter(), "", sdd.InjectOptions{WorkspaceDir: workspace}); err != nil {
-		t.Fatalf("sdd.Inject(windsurf) error = %v", err)
 	}
 	if _, err := engram.Inject(home, windsurfAdapter()); err != nil {
 		t.Fatalf("engram.Inject(windsurf) error = %v", err)
 	}
 
-	// global_rules.md must contain persona + SDD orchestrator (both appended).
+	// global_rules.md must contain persona (appended).
 	globalRules := readTestFile(t, filepath.Join(home, ".codeium", "windsurf", "memories", "global_rules.md"))
 	assertGolden(t, "combined-windsurf-global-rules.golden", globalRules)
-
-	// Workflow must be present in the workspace.
-	workflowMD := readTestFile(t, filepath.Join(workspace, ".windsurf", "workflows", "sdd-new.md"))
-	assertGolden(t, "sdd-windsurf-workflow-sdd-new.golden", workflowMD)
 }
 
 // ---------------------------------------------------------------------------
 // Antigravity golden tests
 // ---------------------------------------------------------------------------
 
-func TestGoldenSDD_Antigravity(t *testing.T) {
-	home := t.TempDir()
-
-	result, err := sdd.Inject(home, antigravityAdapter(), "")
-	if err != nil {
-		t.Fatalf("sdd.Inject(antigravity) error = %v", err)
-	}
-	if !result.Changed {
-		t.Fatalf("sdd.Inject(antigravity) changed = false")
-	}
-
-	// Antigravity writes SDD orchestrator to ~/.gemini/GEMINI.md (StrategyAppendToFile).
-	rulesFile := readTestFile(t, filepath.Join(home, ".gemini", "GEMINI.md"))
-	assertGolden(t, "sdd-antigravity-rulesmd.golden", rulesFile)
-
-	// Golden-check a representative SDD skill file.
-	skillInit := readTestFile(t, filepath.Join(home, ".gemini", "antigravity-cli", "skills", "sdd-init", "SKILL.md"))
-	assertGolden(t, "sdd-antigravity-skill-sdd-init.golden", skillInit)
-
-	// Verify ALL expected SDD skill files exist.
-	expectedSkills := []string{
-		"sdd-init", "sdd-apply", "sdd-archive", "sdd-explore",
-		"sdd-propose", "sdd-spec", "sdd-design", "sdd-tasks", "sdd-verify",
-		"sdd-onboard",
-	}
-	skillsDir := filepath.Join(home, ".gemini", "antigravity-cli", "skills")
-	for _, name := range expectedSkills {
-		path := filepath.Join(skillsDir, name, "SKILL.md")
-		if _, err := os.Stat(path); err != nil {
-			t.Errorf("expected SDD skill file %q not found: %v", name, err)
-		}
-	}
-}
 
 func TestGoldenPersona_Antigravity_Gentleman(t *testing.T) {
 	home := t.TempDir()

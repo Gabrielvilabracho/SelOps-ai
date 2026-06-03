@@ -10,10 +10,12 @@ import (
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/engram"
 	"github.com/Gabrielvilabracho/selops-ai/internal/components/persona"
-	"github.com/Gabrielvilabracho/selops-ai/internal/components/sdd"
 	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 )
 
+// TestOpenClawSelectedAdapterRoutesToExpectedInjectors verifies that the OpenClaw
+// injector chain (engram + persona) writes to the correct workspace files.
+// OPS fork (Phase 0e): sdd package removed — SDD injection step removed.
 func TestOpenClawSelectedAdapterRoutesToExpectedInjectors(t *testing.T) {
 	home := t.TempDir()
 	workspace := t.TempDir()
@@ -24,9 +26,6 @@ func TestOpenClawSelectedAdapterRoutesToExpectedInjectors(t *testing.T) {
 
 	if _, err := engram.InjectWithPromptDir(home, workspace, adapter); err != nil {
 		t.Fatalf("engram.Inject(openclaw) error = %v", err)
-	}
-	if _, err := sdd.Inject(workspace, adapter, model.SDDModeSingle, sdd.InjectOptions{StrictTDD: true, WorkspaceDir: workspace}); err != nil {
-		t.Fatalf("sdd.Inject(openclaw) error = %v", err)
 	}
 	if _, err := persona.Inject(workspace, adapter, model.PersonaGentleman); err != nil {
 		t.Fatalf("persona.Inject(openclaw) error = %v", err)
@@ -48,7 +47,7 @@ func TestOpenClawSelectedAdapterRoutesToExpectedInjectors(t *testing.T) {
 	}
 
 	agentsText := readText(t, filepath.Join(workspace, "AGENTS.md"))
-	for _, want := range []string{"gentle-ai:engram-protocol", "gentle-ai:sdd-orchestrator", "gentle-ai:strict-tdd-mode"} {
+	for _, want := range []string{"gentle-ai:engram-protocol"} {
 		if !strings.Contains(agentsText, want) {
 			t.Fatalf("OpenClaw AGENTS.md missing %q; got:\n%s", want, agentsText)
 		}
@@ -98,13 +97,11 @@ func TestOpenClawInjectorChainRerunIsIdempotent(t *testing.T) {
 	}
 }
 
+// OPS fork (Phase 0e): sdd package removed — runOpenClawInjectorChain no longer includes sdd.Inject.
 func runOpenClawInjectorChain(t *testing.T, home, workspace string, adapter agents.Adapter) {
 	t.Helper()
 	if _, err := engram.InjectWithPromptDir(home, workspace, adapter); err != nil {
 		t.Fatalf("engram.Inject(openclaw) error = %v", err)
-	}
-	if _, err := sdd.Inject(workspace, adapter, model.SDDModeSingle, sdd.InjectOptions{StrictTDD: true, WorkspaceDir: workspace}); err != nil {
-		t.Fatalf("sdd.Inject(openclaw) error = %v", err)
 	}
 	if _, err := persona.Inject(workspace, adapter, model.PersonaGentleman); err != nil {
 		t.Fatalf("persona.Inject(openclaw) error = %v", err)
