@@ -1,0 +1,10 @@
+SDD Integration
+
+How should your agent integrate with the SDD workflow?
+
+▸ (*) Standalone — no SDD integration
+  ( ) New SDD Phase — add a new phase to the SDD graph
+  ( ) Phase Support — enhance an existing SDD phase
+  Back
+
+j/k: navigate • enter: select • esc: back
