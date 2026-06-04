@@ -1,0 +1,10 @@
+Generating Your Agent...
+
+✗ Generation failed
+  Engine: claude-code
+  Error: timeout: engine did not respond
+
+▸ Retry
+  Back
+
+enter: select • esc: back

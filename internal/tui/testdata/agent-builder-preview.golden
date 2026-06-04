@@ -1,0 +1,17 @@
+Preview: A11y Reviewer
+
+Name:        a11y-reviewer
+Description: Reviews CSS and HTML for accessibility issues
+Trigger:     When reviewing frontend code for accessibility
+
+SKILL.md content:
+  # A11y Reviewer
+  
+  Reviews CSS for a11y compliance.
+  
+
+▸ Install
+  Regenerate
+  Back
+
+↑/↓: scroll content • j/k: navigate actions • enter: select • esc: back
