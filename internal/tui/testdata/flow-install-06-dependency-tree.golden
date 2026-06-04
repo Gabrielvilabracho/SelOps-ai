@@ -1,0 +1,33 @@
+Install Plan
+
+Components to install
+  1. context7 included
+     Latest framework and library docs
+  2. engram included
+     Persistent cross-session memory
+  3. selops-operationalmcp included
+     SelOps operational MCP server configuration
+  4. selops-operator included
+     SelOps operator persona (replaces Gentleman persona for OPS agents)
+  5. selops-sddops included
+     SelOps operational SDD workflow layer
+
+Pi agent support will be installed.
+  • Engram component will be installed/provisioned.
+  • Pi package stack will be installed:
+    - pi install npm:gentle-pi
+    - pi install npm:gentle-engram
+    - pi install npm:pi-mcp-adapter
+    - npm exec --yes --package gentle-engram@0.1.4 -- pi-engram init
+    - pi install npm:pi-subagents
+    - pi install npm:pi-intercom
+    - pi install npm:@juicesharp/rpiv-ask-user-question
+    - pi install npm:pi-web-access
+    - pi install npm:pi-lens
+    - pi install npm:@juicesharp/rpiv-todo
+    - pi install npm:pi-btw
+
+▸ Continue
+  Back
+
+j/k: navigate • enter: select • esc: back

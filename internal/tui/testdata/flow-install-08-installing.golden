@@ -1,0 +1,31 @@
+Installing
+
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 0%
+Current: prepare:check-dependencies
+
+  ⠋ prepare:check-dependencies
+  · prepare:backup-snapshot
+  · apply:rollback-restore
+  · agent:claude-code
+  · agent:opencode
+  · agent:kilocode
+  · agent:gemini-cli
+  · agent:codex
+  · agent:cursor
+  · agent:vscode-copilot
+  · agent:antigravity
+  · agent:windsurf
+  · agent:kimi
+  · agent:qwen-code
+  · agent:kiro-ide
+  · agent:openclaw
+  · agent:pi
+  · agent:trae-ide
+  · component:context7
+  · component:engram
+  · component:selops-operationalmcp
+  · component:selops-operator
+  · component:selops-sddops
+
+Logs
+  starting installation
