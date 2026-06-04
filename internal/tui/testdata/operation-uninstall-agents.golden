@@ -1,0 +1,26 @@
+Uninstall Managed Configs
+
+Use j/k to move, space to toggle, enter to continue.
+
+Select the agents whose gentle-ai managed configuration should be removed.
+
+▸ [x] Claude Code
+  [ ] OpenCode
+  [ ] Kilo Code
+  [ ] Gemini CLI
+  [ ] Codex
+  [ ] Cursor
+  [ ] VS Code Copilot
+  [ ] Google Antigravity
+  [ ] Windsurf
+  [ ] Kimi Code
+  [ ] Qwen Code
+  [ ] Kiro IDE
+  [ ] OpenClaw
+  [ ] Pi
+  [ ] Trae IDE
+
+  Continue
+  Back
+
+space: toggle • enter: confirm • esc: back
