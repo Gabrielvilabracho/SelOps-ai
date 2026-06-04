@@ -240,6 +240,20 @@ func presetCursor(t *testing.T, preset model.PresetID) int {
 	return 0
 }
 
+// newOpsTestModel creates a deterministic OPS Model for golden tests.
+// It uses NewModel defaults (PresetSelOpsOperational + PersonaOperator),
+// overrides Screen to the given screen (if not ScreenUnknown), and sets Cursor.
+// Version is always "dev" and Detection is empty for determinism.
+func newOpsTestModel(t testing.TB, screen Screen, cursor int) Model {
+	t.Helper()
+	m := NewModel(system.DetectionResult{}, "dev")
+	if screen != ScreenUnknown {
+		m.Screen = screen
+	}
+	m.Cursor = cursor
+	return m
+}
+
 func assertTUIGolden(t *testing.T, name string, actual string) {
 	t.Helper()
 	goldenPath := filepath.Join("testdata", name)
