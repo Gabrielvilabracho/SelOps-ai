@@ -1,0 +1,12 @@
+Installation completed with errors.
+
+Failed steps
+  ✗ Configure selected agents
+    permission denied
+
+What to do
+  1. Check the error messages above
+  2. Fix the underlying issue (missing deps, permissions, etc.)
+  3. Run gentle-ai again to retry
+
+Press Enter to exit.
