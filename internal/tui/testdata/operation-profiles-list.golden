@@ -1,0 +1,13 @@
+╔═══════════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                                       ║
+║  OpenCode SDD Profiles                                                                                ║
+║                                                                                                       ║
+║  Your SDD model profiles for OpenCode. Each profile creates its own orchestrator (visible with Tab).  ║
+║                                                                                                       ║
+║  ▸ • work ─── anthropic/claude-sonnet-4-5                                                             ║
+║    Create new profile                                                                                 ║
+║    Back                                                                                               ║
+║                                                                                                       ║
+║  j/k: navigate • enter: edit • n: new • d: delete • esc: back                                         ║
+║                                                                                                       ║
+╚═══════════════════════════════════════════════════════════════════════════════════════════════════════╝

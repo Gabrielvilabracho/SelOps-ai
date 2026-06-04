@@ -1,0 +1,12 @@
+Delete Result
+
+✗ Delete failed
+
+Backup: backup-20260101-120000
+
+Error:
+  no such file or directory
+
+The backup directory may still exist.
+
+enter: back to backups • esc: back

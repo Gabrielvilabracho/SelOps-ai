@@ -1,0 +1,13 @@
+Uninstall Scope Selection
+
+Use j/k to move, space to toggle/select, enter to continue.
+
+Choose which OpenCode SDD profiles should be removed from opencode.json.
+
+▸ [ ] work
+  [ ] personal
+
+  Continue
+  Back
+
+space: toggle/select • enter: continue • esc: back

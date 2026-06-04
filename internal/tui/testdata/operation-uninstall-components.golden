@@ -1,0 +1,37 @@
+Uninstall Managed Components
+
+Use j/k to move, space to toggle, enter to continue.
+
+Select which gentle-ai managed components should be removed from the selected agents.
+
+▸ [x] Engram
+    Persistent cross-session memory
+  [ ] Skills
+    Curated coding skill library
+  [ ] Context7
+    Latest framework and library docs
+  [ ] Persona
+    Gentleman, neutral or custom behavior
+  [ ] Permissions
+    Security-first defaults and guardrails
+  [ ] GGA
+    Gentleman Guardian Angel — AI provider switcher
+  [ ] Theme
+    Gentleman Kanagawa theme overlay
+  [ ] Claude Gentleman Theme
+    Claude Code Gentleman custom theme
+  [ ] OpenCode Gentle Logo
+    OpenCode home logo TUI plugin with Braille rose
+  [ ] SDD Ops
+    SelOps operational SDD workflow layer
+  [ ] Operational MCP
+    SelOps operational MCP server configuration
+  [ ] Operator Persona
+    SelOps operator persona (replaces Gentleman persona for OPS agents)
+  [ ] Knowledge Base
+    10 domain-agnostic foundation skills (opt-in for any operator)
+
+  Continue
+  Back
+
+space: toggle • enter: continue • esc: back
