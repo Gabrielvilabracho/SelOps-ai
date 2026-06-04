@@ -244,6 +244,10 @@ func presetCursor(t *testing.T, preset model.PresetID) int {
 // It uses NewModel defaults (PresetSelOpsOperational + PersonaOperator),
 // overrides Screen to the given screen (if not ScreenUnknown), and sets Cursor.
 // Version is always "dev" and Detection is empty for determinism.
+//
+// AgentBuilder.AvailableEngines is set to a fixed sentinel so that
+// hasAgentBuilderEngines() returns true on all environments (CI included),
+// preventing the "Create your own Agent (no agents)" label variant.
 func newOpsTestModel(t testing.TB, screen Screen, cursor int) Model {
 	t.Helper()
 	m := NewModel(system.DetectionResult{}, "dev")
@@ -251,6 +255,7 @@ func newOpsTestModel(t testing.TB, screen Screen, cursor int) Model {
 		m.Screen = screen
 	}
 	m.Cursor = cursor
+	m.AgentBuilder.AvailableEngines = []model.AgentID{model.AgentClaudeCode}
 	return m
 }
 
