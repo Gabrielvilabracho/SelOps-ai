@@ -1,0 +1,13 @@
+Upgrade + Sync
+
+This will perform two operations in sequence:
+
+  1. Upgrade tools
+     Updates gentle-ai, engram, and gga to latest versions
+
+  2. Sync configurations
+     Re-applies dotfile configs to all detected agents
+
+Press enter to begin
+
+enter: confirm • esc: back • q: quit

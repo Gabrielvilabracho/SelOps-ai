@@ -1,0 +1,20 @@
+Uninstall Mode Selection
+
+Choose how you want to uninstall gentle-ai:
+
+▸ Partial Uninstall
+  Select specific agents and components to remove
+
+  Full Uninstall
+  Remove all gentle-ai managed configuration from all agents
+
+  Full Uninstall & Remove Binary
+  Remove all configuration AND delete the gentle-ai binary itself
+  ⚠ WARNING: This cannot be undone without reinstalling
+
+  Full Uninstall + Clean Install
+  Remove all configuration, then re-sync all managed assets from scratch
+
+  Back
+
+j/k: navigate • enter: select • esc: back
