@@ -8,6 +8,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/Gabrielvilabracho/selops-ai/internal/model"
+	"github.com/Gabrielvilabracho/selops-ai/internal/pipeline"
 	"github.com/Gabrielvilabracho/selops-ai/internal/system"
 	"github.com/Gabrielvilabracho/selops-ai/internal/tui/screens"
 )
@@ -256,6 +257,104 @@ func newOpsTestModel(t testing.TB, screen Screen, cursor int) Model {
 	}
 	m.Cursor = cursor
 	return m
+}
+
+// TestInstallHappyPathFlow_OpsDefaults drives the model through the full Install
+// flow from ScreenWelcome to ScreenComplete using OPS defaults
+// (PresetSelOpsOperational + PersonaOperator).
+//
+// Key constraints:
+//   - No Init(), no goroutines — all transitions via m.Update() or direct state mutation.
+//   - SpinnerFrame=0 and Version="dev" for determinism.
+//   - PipelineDoneMsg is synthetic with an empty successful ExecutionResult.
+//
+// Snapshots are taken at 8 major transition points.
+func TestInstallHappyPathFlow_OpsDefaults(t *testing.T) {
+	// --- Step 1: Welcome ---
+	m := newOpsTestModel(t, ScreenWelcome, 0)
+	assertTUIGolden(t, "flow-install-01-welcome.golden", m.View())
+
+	// Welcome → Detection (cursor=0 = "Install")
+	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m = updated.(Model)
+	if m.Screen != ScreenDetection {
+		t.Fatalf("expected ScreenDetection after Welcome Enter, got %v", m.Screen)
+	}
+
+	// --- Step 2: Detection ---
+	assertTUIGolden(t, "flow-install-02-detection.golden", m.View())
+
+	// Detection → Agents (cursor=0 = "Continue")
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m = updated.(Model)
+	if m.Screen != ScreenAgents {
+		t.Fatalf("expected ScreenAgents after Detection Enter, got %v", m.Screen)
+	}
+
+	// --- Step 3: Agents ---
+	assertTUIGolden(t, "flow-install-03-agents.golden", m.View())
+
+	// --- Step 4: Persona snapshot (OPS defaults — PersonaOperator pre-set) ---
+	// PersonaOperator is not in PersonaOptions(), so we snapshot the Persona screen
+	// with the OPS pre-configured state directly, then advance manually.
+	{
+		snap := m
+		snap.Screen = ScreenPersona
+		snap.Cursor = 0
+		assertTUIGolden(t, "flow-install-04-persona.golden", snap.View())
+	}
+
+	// --- Step 5: Preset snapshot (OPS defaults — PresetSelOpsOperational pre-set) ---
+	// PresetSelOpsOperational is not in PresetOptions(), so we snapshot the Preset
+	// screen with the OPS pre-configured state directly, then advance manually.
+	{
+		snap := m
+		snap.Screen = ScreenPreset
+		snap.Cursor = 0
+		assertTUIGolden(t, "flow-install-05-preset.golden", snap.View())
+	}
+
+	// Advance to DependencyTree (OPS path: build plan directly, skip Preset nav).
+	// Selection already has PresetSelOpsOperational + PersonaOperator from NewModel.
+	m.buildDependencyPlan()
+	m.setScreen(ScreenDependencyTree)
+	m.Cursor = 0
+
+	// DependencyTree → Review (cursor=0 = "Continue")
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m = updated.(Model)
+	if m.Screen != ScreenReview {
+		t.Fatalf("expected ScreenReview after DependencyTree Enter, got %v", m.Screen)
+	}
+
+	// --- Step 6: Review ---
+	assertTUIGolden(t, "flow-install-06-review.golden", m.View())
+
+	// Review → Installing (cursor=0 = "Install")
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m = updated.(Model)
+	if m.Screen != ScreenInstalling {
+		t.Fatalf("expected ScreenInstalling after Review Enter, got %v", m.Screen)
+	}
+
+	// --- Step 7: Installing (pipeline started, first step running) ---
+	assertTUIGolden(t, "flow-install-07-installing.golden", m.View())
+
+	// Inject synthetic PipelineDoneMsg with a successful (empty) ExecutionResult.
+	// An empty ExecutionResult has zero steps → ProgressFromExecution produces an
+	// empty ProgressState → Percent()==100 → Done()==true.
+	updated, _ = m.Update(PipelineDoneMsg{Result: pipeline.ExecutionResult{}})
+	m = updated.(Model)
+
+	// Still on ScreenInstalling — Progress.Done()==true now. Press Enter → Complete.
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m = updated.(Model)
+	if m.Screen != ScreenComplete {
+		t.Fatalf("expected ScreenComplete after PipelineDoneMsg + Enter, got %v", m.Screen)
+	}
+
+	// --- Step 8: Complete ---
+	assertTUIGolden(t, "flow-install-08-complete.golden", m.View())
 }
 
 func assertTUIGolden(t *testing.T, name string, actual string) {

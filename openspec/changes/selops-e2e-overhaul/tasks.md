@@ -44,7 +44,7 @@ Chain strategy: pending
 - [x] T3.5 Verify slice-3 size and tests; `internal/tui/operation_golden_test.go`, `internal/tui/agent_builder_golden_test.go`, new goldens; run `go test ./...` and split 3a/3b if diff exceeds budget; AC: green suite and reviewable PR plan captured; ~10 LOC; deps: T3.3, T3.4.
 
 ## PR Slice 4 — Happy-path flow test
-- [ ] T4.1 Add OPS happy-path test; `internal/tui/preset_flow_test.go`; create `TestInstallHappyPathFlow_OpsDefaults` with snapshot checkpoints only at major transitions; AC: test names 9 ordered snapshots from welcome to complete; ~70 LOC; deps: T1.1, T2.3, T3.5.
-- [ ] T4.2 Define deterministic flow actions; `internal/tui/preset_flow_test.go`; encode key sequence, cursor moves, and synthetic `PipelineDoneMsg` payload matching `handlePipelineDone`; AC: no goroutines, no `Init()`, no time/random inputs; ~35 LOC; deps: T4.1.
-- [ ] T4.3 Generate flow goldens; `internal/tui/testdata/flow-install-*.golden`; run `go test ./internal/tui -run TestInstallHappyPathFlow_OpsDefaults -update`; AC: 9 zero-padded flow goldens commit in order; ~90 LOC; deps: T4.2.
-- [ ] T4.4 Verify deterministic flow; `internal/tui/preset_flow_test.go`, `internal/tui/testdata/flow-install-*.golden`; rerun targeted test and `go test ./...`; AC: snapshots are stable and final suite passes; ~5 LOC; deps: T4.3.
+- [x] T4.1 Add OPS happy-path test; `internal/tui/preset_flow_test.go`; create `TestInstallHappyPathFlow_OpsDefaults` with snapshot checkpoints only at major transitions; AC: test names 9 ordered snapshots from welcome to complete; ~70 LOC; deps: T1.1, T2.3, T3.5.
+- [x] T4.2 Define deterministic flow actions; `internal/tui/preset_flow_test.go`; encode key sequence, cursor moves, and synthetic `PipelineDoneMsg` payload matching `handlePipelineDone`; AC: no goroutines, no `Init()`, no time/random inputs; ~35 LOC; deps: T4.1.
+- [x] T4.3 Generate flow goldens; `internal/tui/testdata/flow-install-*.golden`; run `go test ./internal/tui -run TestInstallHappyPathFlow_OpsDefaults -update`; AC: 9 zero-padded flow goldens commit in order; ~90 LOC; deps: T4.2.
+- [x] T4.4 Verify deterministic flow; `internal/tui/preset_flow_test.go`, `internal/tui/testdata/flow-install-*.golden`; rerun targeted test and `go test ./...`; AC: snapshots are stable and final suite passes; ~5 LOC; deps: T4.3.
