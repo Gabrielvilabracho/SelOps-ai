@@ -68,8 +68,10 @@ Expanded TUI golden file coverage for SelOps-ai from 13 files (covering only pre
 - `testManifest()` helper in one file is accessible cross-file within the same Go package — no need to duplicate
 
 ## Follow-on Changes (deferred)
-1. **teatest integration** (Approach 2 from exploration) — add `charmbracelet/x/exp/teatest` to cover the real `tea.Program` event loop, async messages, and goroutine safety. Deferred from this change.
-2. **Go-based binary E2E** (Approach 3) — replace or augment the bash E2E harness with `os/exec` Go tests. Lower priority.
+1. **teatest integration** (Approach 2 from exploration) — add `charmbracelet/x/exp/teatest` to cover the real `tea.Program` event loop, async messages, and goroutine safety. This is the only genuine coverage gap left: neither golden files nor the bash harness exercise the async event loop.
+
+## Explicitly NOT pursued
+- **Go-based binary E2E** (Approach 3) — was listed as an option during exploration but is NOT recommended. The existing bash E2E harness (`e2e/e2e_test.sh`, 70+ functions, 3 tiers, Docker multi-distro) already covers real binary installation end-to-end across Ubuntu/Arch/Fedora. Rewriting it in Go with `os/exec` would add no coverage and sacrifice bash's natural fit for system-level scripting. The golden-file layer (this change) and the bash harness are complementary, not competing: goldens test TUI render, bash tests real installation.
 
 ## Golden File Count
 - Before: 13
