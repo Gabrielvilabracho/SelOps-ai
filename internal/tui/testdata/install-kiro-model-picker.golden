@@ -1,0 +1,18 @@
+Kiro Model Assignments
+
+Choose how Kiro models are assigned to each SDD execution phase (explore → apply → archive):
+
+▸ ( ) balanced
+    Smart defaults: opus for architecture, sonnet for most phases, haiku for archiving
+  ( ) performance
+    Maximum quality: opus for architecture, planning & verification phases
+  ( ) economy
+    Cost-optimised: sonnet for all phases, haiku for archiving
+  ( ) diversity
+    Diversity: Opus for Judge A, Haiku for Judge B, Sonnet for fixes
+  ( ) custom
+    Pick the model alias for each SDD phase, JD agent, and general delegation entry individually
+
+  ← Back
+
+j/k: navigate • enter: select • esc: back
