@@ -1,0 +1,13 @@
+Sync Configurations
+
+Sync will re-apply your dotfile configurations
+to all detected AI agents on this machine.
+
+This operation:
+  • Reads your current agent selections
+  • Re-writes agent config files from templates
+  • Does not modify your global dotfiles
+
+Press enter to sync
+
+enter: confirm • esc: back • q: quit

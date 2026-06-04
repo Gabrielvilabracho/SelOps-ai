@@ -37,11 +37,11 @@ Chain strategy: pending
 - [x] T2.3 Verify slice-2 green; `internal/tui/install_golden_test.go`, `internal/tui/testdata/install-*.golden`; run targeted tests and `go test ./...`; AC: suite stays green with no new deps; ~5 LOC; deps: T2.2.
 
 ## PR Slice 3 — Operation/progress screens
-- [ ] T3.1 Create operation golden suite; `internal/tui/operation_golden_test.go`; cover upgrade/sync/backups/restore/delete/uninstall/profiles variants with deterministic state fixtures; AC: all non-builder operation screens from design are asserted; ~150 LOC; deps: T2.3.
-- [ ] T3.2 Create agent-builder golden suite; `internal/tui/agent_builder_golden_test.go`; cover all 7 agent-builder screens with fixed cursor/state setup; AC: one committed case per builder screen; ~95 LOC; deps: T2.3.
-- [ ] T3.3 Generate operation goldens; `internal/tui/testdata/operation-*.golden`; run targeted `-update`; AC: operation goldens commit cleanly and use success/error suffixes; ~220 LOC; deps: T3.1.
-- [ ] T3.4 Generate agent-builder goldens; `internal/tui/testdata/agent-builder-*.golden`; run targeted `-update`; AC: 7 builder goldens commit with ordered names; ~120 LOC; deps: T3.2.
-- [ ] T3.5 Verify slice-3 size and tests; `internal/tui/operation_golden_test.go`, `internal/tui/agent_builder_golden_test.go`, new goldens; run `go test ./...` and split 3a/3b if diff exceeds budget; AC: green suite and reviewable PR plan captured; ~10 LOC; deps: T3.3, T3.4.
+- [x] T3.1 Create operation golden suite; `internal/tui/operation_golden_test.go`; cover upgrade/sync/backups/restore/delete/uninstall/profiles variants with deterministic state fixtures; AC: all non-builder operation screens from design are asserted; ~150 LOC; deps: T2.3.
+- [x] T3.2 Create agent-builder golden suite; `internal/tui/agent_builder_golden_test.go`; cover all 7 agent-builder screens with fixed cursor/state setup; AC: one committed case per builder screen; ~95 LOC; deps: T2.3.
+- [x] T3.3 Generate operation goldens; `internal/tui/testdata/operation-*.golden`; run targeted `-update`; AC: operation goldens commit cleanly and use success/error suffixes; ~220 LOC; deps: T3.1.
+- [x] T3.4 Generate agent-builder goldens; `internal/tui/testdata/agent-builder-*.golden`; run targeted `-update`; AC: 7 builder goldens commit with ordered names; ~120 LOC; deps: T3.2.
+- [x] T3.5 Verify slice-3 size and tests; `internal/tui/operation_golden_test.go`, `internal/tui/agent_builder_golden_test.go`, new goldens; run `go test ./...` and split 3a/3b if diff exceeds budget; AC: green suite and reviewable PR plan captured; ~10 LOC; deps: T3.3, T3.4.
 
 ## PR Slice 4 — Happy-path flow test
 - [ ] T4.1 Add OPS happy-path test; `internal/tui/preset_flow_test.go`; create `TestInstallHappyPathFlow_OpsDefaults` with snapshot checkpoints only at major transitions; AC: test names 9 ordered snapshots from welcome to complete; ~70 LOC; deps: T1.1, T2.3, T3.5.
