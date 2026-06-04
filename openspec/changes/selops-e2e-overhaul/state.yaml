@@ -1,0 +1,18 @@
+change: selops-e2e-overhaul
+status: archived
+started_at: 2026-06-04
+archived_at: 2026-06-04
+prs:
+  - 18
+  - 19
+  - 23
+  - 24
+  - 25
+  - 22
+tasks_total: 17
+tasks_completed: 17
+golden_files_before: 13
+golden_files_after: 80
+fr_compliance: 5/5
+nfr_compliance: 3/3
+test_result: PASS
