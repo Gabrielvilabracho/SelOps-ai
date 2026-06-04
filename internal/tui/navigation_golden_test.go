@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -79,6 +81,18 @@ func TestNavigationGoldens(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.screen == ScreenWelcome {
+				// hasAgentBuilderEngines() calls exec.LookPath at render time.
+				// Inject a fake "claude" binary into a temp dir so the menu
+				// renders "Create your own Agent" (not the "(no agents)" variant)
+				// consistently across all environments including CI.
+				fakeDir := t.TempDir()
+				fakeExe := filepath.Join(fakeDir, "claude")
+				if err := os.WriteFile(fakeExe, []byte("#!/bin/sh\n"), 0o755); err != nil {
+					t.Fatalf("create fake claude: %v", err)
+				}
+				t.Setenv("PATH", fakeDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+			}
 			m := newOpsTestModel(t, tt.screen, tt.cursor)
 			assertTUIGolden(t, tt.golden, m.View())
 		})
