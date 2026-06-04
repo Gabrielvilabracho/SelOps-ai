@@ -331,13 +331,14 @@ test_preset_custom_no_components() {
 test_preset_custom_explicit_components() {
     log_test "Preset custom with explicit --component flags"
 
-    output=$($BINARY install --preset custom --agent claude-code --component engram --component sdd --component skills --dry-run 2>&1) || true
+    # OPS fork: sdd is not a supported component — use engram + skills only
+    output=$($BINARY install --preset custom --agent claude-code --component engram --component skills --dry-run 2>&1) || true
 
     local components_line
     components_line=$(echo "$output" | grep "Components order:")
     assert_output_contains "$components_line" "engram" "Custom + explicit components includes engram"
-    assert_output_contains "$components_line" "sdd" "Custom + explicit components includes sdd"
     assert_output_contains "$components_line" "skills" "Custom + explicit components includes skills"
+    assert_output_not_contains "$components_line" "sdd" "OPS fork: sdd is not a supported component"
     assert_output_not_contains "$components_line" "persona" "Custom + explicit components excludes persona"
     assert_output_not_contains "$components_line" "context7" "Custom + explicit components excludes context7"
 }
@@ -351,9 +352,14 @@ test_dry_run_component_engram() {
 }
 
 test_dry_run_component_sdd() {
-    log_test "Dry-run with --component sdd"
-    output=$($BINARY install --agent claude-code --component sdd --dry-run 2>&1) || true
-    assert_output_contains "$output" "sdd" "Shows sdd component"
+    log_test "OPS fork: --component sdd is unsupported and rejected"
+    # In the OPS fork, sdd was stripped as a component (chore(ops)!: strip DEV sdd package).
+    # The binary must reject it with a non-zero exit code.
+    if $BINARY install --agent claude-code --component sdd --dry-run 2>&1; then
+        log_fail "--component sdd should be rejected in OPS fork"
+    else
+        log_pass "--component sdd correctly rejected (unsupported component)"
+    fi
 }
 
 test_dry_run_component_skills() {
