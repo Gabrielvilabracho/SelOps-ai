@@ -1,0 +1,18 @@
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║  Delete Profile                                                   ║
+║                                                                   ║
+║  Are you sure you want to delete profile "work"?                  ║
+║                                                                   ║
+║  The following 11 agent keys will be removed from opencode.json:  ║
+║                                                                   ║
+║    • sdd-orchestrator-work                                        ║
+║                                                                   ║
+║  This action cannot be undone.                                    ║
+║                                                                   ║
+║  ▸ Delete & Sync                                                  ║
+║    Cancel                                                         ║
+║                                                                   ║
+║  j/k: navigate • enter: confirm • esc: back                       ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
