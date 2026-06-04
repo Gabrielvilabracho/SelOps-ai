@@ -215,21 +215,22 @@ test_preset_minimal_with_default_persona_includes_persona() {
 }
 
 test_preset_ecosystem_components() {
-    log_test "Preset ecosystem-only with persona=custom produces 5 components"
+    log_test "Preset ecosystem-only with persona=custom produces 4 components"
 
     # Use persona=custom to test the preset alone, since persona is now
     # driven by Selection.Persona (decoupled from preset).
     output=$($BINARY install --preset ecosystem-only --persona custom --agent claude-code --dry-run 2>&1) || true
 
-    # ecosystem-only (without persona) = engram, sdd, skills, context7, gga
+    # OPS fork: ecosystem-only (without persona) = context7, engram, gga, skills
+    # Note: sdd was removed from ecosystem-only in the OPS fork (chore(ops)!: strip DEV sdd package)
     local components_line
     components_line=$(echo "$output" | grep "Components order:")
 
     assert_output_contains "$components_line" "engram" "Ecosystem includes engram"
-    assert_output_contains "$components_line" "sdd" "Ecosystem includes sdd"
     assert_output_contains "$components_line" "skills" "Ecosystem includes skills"
     assert_output_contains "$components_line" "context7" "Ecosystem includes context7"
     assert_output_contains "$components_line" "gga" "Ecosystem includes gga"
+    assert_output_not_contains "$components_line" "sdd" "OPS fork: Ecosystem excludes sdd"
     assert_output_not_contains "$components_line" "persona" "Ecosystem + persona=custom excludes persona"
     assert_output_not_contains "$components_line" "permissions" "Ecosystem excludes permissions"
 }
@@ -258,7 +259,6 @@ test_preset_full_components() {
     components_line=$(echo "$output" | grep "Components order:")
 
     assert_output_contains "$components_line" "engram" "Full includes engram"
-    assert_output_contains "$components_line" "sdd" "Full includes sdd"
     assert_output_contains "$components_line" "skills" "Full includes skills"
     assert_output_contains "$components_line" "context7" "Full includes context7"
     assert_output_contains "$components_line" "persona" "Full includes persona"
@@ -266,41 +266,34 @@ test_preset_full_components() {
     assert_output_contains "$components_line" "gga" "Full includes gga"
     assert_output_contains "$components_line" "claude-theme" "Full includes Claude Gentleman theme"
     assert_output_contains "$components_line" "opencode-gentle-logo" "Full includes OpenCode Gentle logo"
+    assert_output_not_contains "$components_line" "sdd" "OPS fork: full-gentleman excludes sdd"
 }
 
-test_dry_run_full_preset_persona_before_sdd() {
-    log_test "Dry-run: persona appears before engram and sdd in component order"
+test_dry_run_full_preset_persona_before_engram() {
+    log_test "Dry-run: persona appears before engram in component order"
 
     output=$($BINARY install --preset full-gentleman --agent opencode --dry-run 2>&1) || true
 
     local components_line
     components_line=$(echo "$output" | grep "Components order:")
 
-    # Verify all are present
+    # Verify key components are present
+    # OPS fork: sdd is not part of full-gentleman preset
     assert_output_contains "$components_line" "persona" "Full preset has persona"
     assert_output_contains "$components_line" "engram" "Full preset has engram"
-    assert_output_contains "$components_line" "sdd" "Full preset has sdd"
 
-    # Verify ordering: persona before engram, persona before sdd
-    # Extract the order string and check persona comes first
+    # Verify ordering: persona before engram
     local order_str
     order_str=$(echo "$components_line" | sed 's/.*Components order: *//')
 
-    local persona_idx engram_idx sdd_idx
+    local persona_idx engram_idx
     persona_idx=$(echo "$order_str" | tr ',' '\n' | grep -n '^persona$' | cut -d: -f1)
     engram_idx=$(echo "$order_str" | tr ',' '\n' | grep -n '^engram$' | cut -d: -f1)
-    sdd_idx=$(echo "$order_str" | tr ',' '\n' | grep -n '^sdd$' | cut -d: -f1)
 
     if [ -n "$persona_idx" ] && [ -n "$engram_idx" ] && [ "$persona_idx" -lt "$engram_idx" ]; then
         log_pass "Persona ($persona_idx) before engram ($engram_idx)"
     else
         log_fail "Persona must appear before engram in component order: $order_str"
-    fi
-
-    if [ -n "$persona_idx" ] && [ -n "$sdd_idx" ] && [ "$persona_idx" -lt "$sdd_idx" ]; then
-        log_pass "Persona ($persona_idx) before sdd ($sdd_idx)"
-    else
-        log_fail "Persona must appear before sdd in component order: $order_str"
     fi
 }
 
@@ -2179,7 +2172,7 @@ test_preset_minimal_with_default_persona_includes_persona
 test_preset_ecosystem_components
 test_preset_full_components
 test_preset_full_with_custom_persona_excludes_persona
-test_dry_run_full_preset_persona_before_sdd
+test_dry_run_full_preset_persona_before_engram
 test_preset_no_legacy_theme_in_any_preset
 test_preset_custom_no_components
 test_preset_custom_explicit_components
