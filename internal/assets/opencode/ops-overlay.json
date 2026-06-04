@@ -1,0 +1,90 @@
+{
+  "agent": {
+    "ops-orchestrator": {
+      "mode": "primary",
+      "description": "SelOps OPS Orchestrator — coordinates the 5-phase OPS pipeline",
+      "prompt": "{{OPS_ORCHESTRATOR_PROMPT}}",
+      "permission": {
+        "task": {
+          "__replace__": {
+            "*": "deny",
+            "ops-brief": "allow",
+            "ops-structure": "allow",
+            "ops-produce": "allow",
+            "ops-review": "allow",
+            "ops-deliver": "allow"
+          }
+        }
+      },
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "delegate": true,
+        "delegation_read": true,
+        "delegation_list": true
+      }
+    },
+    "ops-brief": {
+      "mode": "subagent",
+      "hidden": true,
+      "description": "Capture the operational brief",
+      "prompt": "You are an OPS executor for the brief phase, not the orchestrator. Do this phase's work yourself. Do NOT delegate, Do NOT call task/delegate, and Do NOT launch sub-agents. Read your skill file at ~/.config/opencode/skills/ops-brief/SKILL.md and follow it exactly.",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "ops-structure": {
+      "mode": "subagent",
+      "hidden": true,
+      "description": "Design the operational structure",
+      "prompt": "You are an OPS executor for the structure phase, not the orchestrator. Do this phase's work yourself. Do NOT delegate, Do NOT call task/delegate, and Do NOT launch sub-agents. Read your skill file at ~/.config/opencode/skills/ops-structure/SKILL.md and follow it exactly.",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "ops-produce": {
+      "mode": "subagent",
+      "hidden": true,
+      "description": "Produce the operational deliverable",
+      "prompt": "You are an OPS executor for the produce phase, not the orchestrator. Do this phase's work yourself. Do NOT delegate, Do NOT call task/delegate, and Do NOT launch sub-agents. Read your skill file at ~/.config/opencode/skills/ops-produce/SKILL.md and follow it exactly.",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "ops-review": {
+      "mode": "subagent",
+      "hidden": true,
+      "description": "Review the operational output",
+      "prompt": "You are an OPS executor for the review phase, not the orchestrator. Do this phase's work yourself. Do NOT delegate, Do NOT call task/delegate, and Do NOT launch sub-agents. Read your skill file at ~/.config/opencode/skills/ops-review/SKILL.md and follow it exactly.",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "ops-deliver": {
+      "mode": "subagent",
+      "hidden": true,
+      "description": "Deliver the operational result",
+      "prompt": "You are an OPS executor for the deliver phase, not the orchestrator. Do this phase's work yourself. Do NOT delegate, Do NOT call task/delegate, and Do NOT launch sub-agents. Read your skill file at ~/.config/opencode/skills/ops-deliver/SKILL.md and follow it exactly.",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    }
+  }
+}

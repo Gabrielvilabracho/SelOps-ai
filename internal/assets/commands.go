@@ -13,3 +13,15 @@ func SDDCommandsAssetDir(agent model.AgentID) string {
 		return "opencode/commands"
 	}
 }
+
+// OpsCommandsAssetDir returns the embedded OPS slash-command asset directory
+// for an agent. Claude uses Claude-native frontmatter under claude/ops-commands;
+// agents without a dedicated command set fall back to OpenCode-compatible assets.
+func OpsCommandsAssetDir(agent model.AgentID) string {
+	switch agent {
+	case model.AgentClaudeCode:
+		return "claude/ops-commands"
+	default:
+		return "opencode/ops-commands"
+	}
+}

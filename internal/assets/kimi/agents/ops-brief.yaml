@@ -1,0 +1,7 @@
+version: "1"
+agent:
+  name: ops-brief
+  extend: default
+  system_prompt_path: ./ops-brief.md
+  exclude_tools:
+    - "kimi_cli.tools.multiagent:Task"
