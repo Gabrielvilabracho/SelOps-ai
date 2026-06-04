@@ -1,0 +1,14 @@
+╔═══════════════════════════════════════════════════════╗
+║                                                       ║
+║  Model Configuration                                  ║
+║                                                       ║
+║  Choose which AI model to configure:                  ║
+║                                                       ║
+║  ▸ Configure Claude models                            ║
+║    Configure OpenCode models                          ║
+║    Configure Kiro models                              ║
+║    Back                                               ║
+║                                                       ║
+║  j/k: navigate • enter: select • esc: back • q: quit  ║
+║                                                       ║
+╚═══════════════════════════════════════════════════════╝

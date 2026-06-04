@@ -1,0 +1,19 @@
+Claude Model Assignments
+Current: 
+
+Choose how Claude models are assigned to each SDD phase:
+
+▸ ( ) balanced
+    Smart defaults: opus for architecture, sonnet for most phases, haiku for archiving
+  ( ) performance
+    Maximum quality: opus for architecture, planning & verification phases
+  ( ) economy
+    Cost-optimised: sonnet for all phases, haiku for archiving
+  ( ) diversity
+    Diversity: Opus for Judge A, Haiku for Judge B, Sonnet for fixes
+  ( ) custom
+    Pick the model alias for each SDD phase, JD agent, and general delegation entry individually
+
+  ← Back
+
+j/k: navigate • enter: select • esc: back

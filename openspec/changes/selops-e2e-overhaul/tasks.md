@@ -26,15 +26,15 @@ Chain strategy: pending
 | 4 | Add deterministic happy-path flow | PR 4 | final integration proof |
 
 ## PR Slice 1 — Navigation screens
-- [ ] T1.1 Add `newOpsTestModel`; `internal/tui/preset_flow_test.go`; centralize OPS defaults plus screen/cursor overrides; AC: helper returns deterministic OPS model and is reused by new tests; ~15 LOC; deps: none.
-- [ ] T1.2 Create navigation golden suite; `internal/tui/navigation_golden_test.go`; add table-driven coverage for 10 navigation screens via `Update()`/`View()` and `assertTUIGolden`; AC: each target screen has one deterministic case; ~110 LOC; deps: T1.1.
-- [ ] T1.3 Generate navigation goldens; `internal/tui/testdata/navigation-*.golden`; run `go test ./internal/tui -run TestNavigation -update`; AC: 10 committed goldens match kebab-case naming; ~180 LOC; deps: T1.2.
-- [ ] T1.4 Verify slice-1 green; `internal/tui/navigation_golden_test.go`, `internal/tui/testdata/navigation-*.golden`; run targeted test then `go test ./...`; AC: no flaky snapshots and full suite passes; ~5 LOC; deps: T1.3.
+- [x] T1.1 Add `newOpsTestModel`; `internal/tui/preset_flow_test.go`; centralize OPS defaults plus screen/cursor overrides; AC: helper returns deterministic OPS model and is reused by new tests; ~15 LOC; deps: none.
+- [x] T1.2 Create navigation golden suite; `internal/tui/navigation_golden_test.go`; add table-driven coverage for 10 navigation screens via `Update()`/`View()` and `assertTUIGolden`; AC: each target screen has one deterministic case; ~110 LOC; deps: T1.1.
+- [x] T1.3 Generate navigation goldens; `internal/tui/testdata/navigation-*.golden`; run `go test ./internal/tui -run TestNavigation -update`; AC: 10 committed goldens match kebab-case naming; ~180 LOC; deps: T1.2.
+- [x] T1.4 Verify slice-1 green; `internal/tui/navigation_golden_test.go`, `internal/tui/testdata/navigation-*.golden`; run targeted test then `go test ./...`; AC: no flaky snapshots and full suite passes; ~5 LOC; deps: T1.3.
 
 ## PR Slice 2 — Install screens
-- [ ] T2.1 Create install golden suite; `internal/tui/install_golden_test.go`; cover model pickers, dependency tree, installing variants, complete variants, model config, plugin result using OPS helper; AC: 10 deterministic install/result cases exist; ~120 LOC; deps: T1.4.
-- [ ] T2.2 Generate install goldens; `internal/tui/testdata/install-*.golden`; run `go test ./internal/tui -run TestInstall -update`; AC: 10 committed install goldens regenerate without manual edits; ~190 LOC; deps: T2.1.
-- [ ] T2.3 Verify slice-2 green; `internal/tui/install_golden_test.go`, `internal/tui/testdata/install-*.golden`; run targeted tests and `go test ./...`; AC: suite stays green with no new deps; ~5 LOC; deps: T2.2.
+- [x] T2.1 Create install golden suite; `internal/tui/install_golden_test.go`; cover model pickers, dependency tree, installing variants, complete variants, model config, plugin result using OPS helper; AC: 10 deterministic install/result cases exist; ~120 LOC; deps: T1.4.
+- [x] T2.2 Generate install goldens; `internal/tui/testdata/install-*.golden`; run `go test ./internal/tui -run TestInstall -update`; AC: 10 committed install goldens regenerate without manual edits; ~190 LOC; deps: T2.1.
+- [x] T2.3 Verify slice-2 green; `internal/tui/install_golden_test.go`, `internal/tui/testdata/install-*.golden`; run targeted tests and `go test ./...`; AC: suite stays green with no new deps; ~5 LOC; deps: T2.2.
 
 ## PR Slice 3 — Operation/progress screens
 - [ ] T3.1 Create operation golden suite; `internal/tui/operation_golden_test.go`; cover upgrade/sync/backups/restore/delete/uninstall/profiles variants with deterministic state fixtures; AC: all non-builder operation screens from design are asserted; ~150 LOC; deps: T2.3.
