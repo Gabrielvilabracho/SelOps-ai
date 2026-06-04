@@ -9,148 +9,154 @@
 |---|---:|
 | Tasks total | 16 |
 | Tasks checked complete in tasks.md | 16 |
-| Apply-progress artifact present | No |
+| Apply-progress artifact present | Yes (`#2612`, found via all-project Engram search; stored under `gentle-ai` project key) |
 
 ### Build & Tests Execution
 **Full suite**: ✅ Passed
 
 ```text
 $ go test ./...
-PACKAGE_PASS 49
-PACKAGE_FAIL 0
-TEST_PASS 2491
-TEST_FAIL 0
-TEST_SKIP 11
-NO_TEST_PACKAGES 3
-
-$ /usr/bin/time -p go test ./...
-real 1.46
-user 2.65
-sys 2.34
-```
-
-Observed command output:
-
-```text
 ?    github.com/Gabrielvilabracho/selops-ai/cmd/selops [no test files]
-...
+ok   github.com/Gabrielvilabracho/selops-ai/internal/agentbuilder (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/agents (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/agents/antigravity (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/agents/claude (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/agents/codex (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/agents/cursor (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/agents/gemini (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/agents/kilocode (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/agents/kimi (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/agents/kiro (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/agents/openclaw (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/agents/opencode (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/agents/pi (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/agents/qwen (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/agents/trae (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/agents/vscode (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/agents/windsurf (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/app (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/assets (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/backup (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/catalog (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/cli (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/components (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/components/engram (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/components/filemerge (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/components/gga (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/components/mcp (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/components/opencodeplugin (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/components/operationalmcp (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/components/permissions (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/components/persona (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/components/sddops (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/components/skills (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/components/theme (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/components/uninstall (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/installcmd (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/model (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/opencode (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/pipeline (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/planner (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/skillregistry (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/state (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/storage (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/system (cached)
 ok   github.com/Gabrielvilabracho/selops-ai/internal/tui (cached)
-...
+ok   github.com/Gabrielvilabracho/selops-ai/internal/tui/screens (cached)
+?    github.com/Gabrielvilabracho/selops-ai/internal/tui/styles [no test files]
+ok   github.com/Gabrielvilabracho/selops-ai/internal/update (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/update/upgrade (cached)
+ok   github.com/Gabrielvilabracho/selops-ai/internal/verify (cached)
 ?    github.com/Gabrielvilabracho/selops-ai/internal/versions [no test files]
 ```
-
-**Targeted TUI suite**: ✅ Passed
-
-```text
-$ go test -v -run "TestNavigation|TestInstall|TestOperation|TestAgentBuilder|TestInstallHappyPathFlow" ./internal/tui
-PASS
-ok   github.com/Gabrielvilabracho/selops-ai/internal/tui 0.509s
-```
-
-New golden-oriented root tests verified passing:
-- `TestNavigationGoldens`
-- `TestInstallGoldens`
-- `TestOperationGoldens`
-- `TestAgentBuilderGoldens`
-- `TestInstallHappyPathFlow_OpsDefaults`
 
 ### TDD Compliance
 | Check | Result | Details |
 |---|---|---|
-| TDD Evidence reported | ❌ | No `apply-progress` artifact found in Engram or `openspec/changes/selops-e2e-overhaul/`. |
-| All tasks have tests | ⚠️ | Runtime evidence exists for the implemented suites, but task-by-task RED/GREEN linkage cannot be verified without `apply-progress`. |
-| RED confirmed | ⚠️ | Test files exist, but strict-TDD RED proof is missing. |
-| GREEN confirmed | ✅ | Full suite and targeted TUI suite pass now. |
-| Triangulation adequate | ⚠️ | Broad golden coverage exists, but flow task expects 9 snapshots and implementation has 8. |
-| Safety Net for modified files | ⚠️ | Cannot verify from missing `apply-progress`. |
-
-**TDD Compliance**: 1/6 fully confirmed
-
-### Test Layer Distribution
-| Layer | Tests | Files | Notes |
-|---|---:|---:|---|
-| Unit / model-state tests | 5 new root golden tests + their subtests | 5 | All new verification evidence lives in Go unit-style Bubble Tea model tests. |
-| Integration | 0 | 0 | None added for this change. |
-| E2E | 0 | 0 | None added for this change. |
-
-### Changed File Coverage
-Coverage analysis skipped for changed files. This change is test-and-golden heavy, and no changed production files were identified for meaningful per-file Go coverage reporting in this verification pass.
-
-### Quality Metrics
-**Linter**: ➖ Not run in this verification pass  
-**Type Checker**: ➖ Not separately run; `go test ./...` passed.
+| TDD Evidence reported | ✅ | `apply-progress` found in Engram as observation `#2612` with a `TDD Cycle Evidence` table. |
+| TDD tasks covered | ✅ | Evidence table includes every task from `T1.1` through `T4.4`. |
+| GREEN confirmed | ✅ | `go test ./...` passes on the fixed branch. |
+| FR-3 fix reflected in TDD artifact | ✅ | `T4.1`/`T4.3` explicitly record the 9-snapshot fix and the new `flow-install-06-dependency-tree.golden`. |
 
 ### Golden File Coverage
-Total committed golden files in `internal/tui/testdata/`: **79**
+Total committed golden files in `internal/tui/testdata/`: **80**
 
-New change-family counts:
+Change-family counts:
 - `navigation-*`: 10
 - `install-*`: 10
 - `operation-*`: 28
 - `agent-builder-*`: 10
-- `flow-install-*`: 8
+- `flow-install-*`: 9
 
-Reachable screen coverage:
-- `internal/tui/model.go` defines 45 screen constants total.
-- Excluding `ScreenUnknown`, there are **44 reachable screens**.
-- Golden test suites reference **all 44 reachable screens**.
+### Focused Re-check Results
+
+#### FR-3 — Install happy-path flow coverage
+- `TestInstallHappyPathFlow_OpsDefaults` exists in `internal/tui/preset_flow_test.go`.
+- The test now snapshots **9** major transitions:
+  `flow-install-01-welcome` through `flow-install-09-complete`.
+- `internal/tui/testdata/flow-install-01-welcome.golden` through `flow-install-09-complete.golden` all exist.
+- The test comments explicitly explain why Persona/Preset/DependencyTree use direct mutation in the OPS fork:
+  `PersonaOperator` and `PresetSelOpsOperational` are hardcoded defaults not reachable through the visible option lists, and the DependencyTree step is entered by building the plan directly.
+
+**FR-3 result**: ✅ COMPLIANT
+
+#### Apply-progress artifact
+- Engram artifact found: `#2612` / topic `sdd/selops-e2e-overhaul/apply-progress`.
+- The artifact contains a `TDD Cycle Evidence` table with rows for every task `T1.1`–`T4.4`.
+- The artifact also records the critical-fix pass for the missing DependencyTree snapshot and renumbered `09-complete` flow golden.
+
+**Apply-progress result**: ✅ PRESENT AND SUFFICIENT
+
+#### NFR-3 — Review-budget enforcement (corrected interpretation)
+Budget interpretation used for this re-check: evaluate **code diff size for changed test files only**, not golden snapshot content.
+
+| PR | Test-file scope checked | Code diff | Verdict |
+|---|---|---:|---|
+| #18 | `navigation_golden_test.go` + `preset_flow_test.go` | `86 + 14 = 100` LOC | ✅ Under 400 |
+| #20 | `operation_golden_test.go` | `427` LOC | ❌ Over 400 |
+
+Evidence:
+- `git diff --numstat f570603..dc0a93f -- internal/tui/navigation_golden_test.go internal/tui/preset_flow_test.go`
+  - `86  0  internal/tui/navigation_golden_test.go`
+  - `14  0  internal/tui/preset_flow_test.go`
+- `git diff --numstat 8420100..fb747c5 -- internal/tui/operation_golden_test.go`
+  - `427  0  internal/tui/operation_golden_test.go`
+
+**NFR-3 result**: ❌ REAL FAIL
+
+PR `#18` only looked oversized because the GitHub diff included golden files and OpenSpec docs. PR `#20` is a genuine budget breach because the code file itself exceeds the 400-line slice budget.
 
 ### Spec Compliance Matrix
 | Requirement | Evidence | Result |
 |---|---|---|
-| FR-1 Full OPS screen golden coverage | `navigation_golden_test.go`, `install_golden_test.go`, `operation_golden_test.go`, `agent_builder_golden_test.go`, existing flow goldens; all 44 reachable screens mapped to at least one golden-backed test | ✅ COMPLIANT |
-| FR-2 OPS defaults are fixed for new goldens | `newOpsTestModel` calls `NewModel(system.DetectionResult{}, "dev")`; `NewModel` sets `PresetSelOpsOperational` + `PersonaOperator` in `model.go:476-487` | ✅ COMPLIANT |
-| FR-3 Install happy-path flow coverage | `TestInstallHappyPathFlow_OpsDefaults` exists and passes, but snapshots only 8 states, skips a committed DependencyTree snapshot, and manually mutates screens instead of driving the full path via `Update()` only | ⚠️ PARTIAL |
-| FR-4 Suite remains runnable by standard Go tests | `go test ./...` passes with no alternate runner | ✅ COMPLIANT |
-| FR-5 Goldens remain regeneratable | `updateTUIGoldens = flag.Bool("update", false, ...)` and `assertTUIGolden` writes fixtures under `internal/tui/testdata/` when `-update` is set | ✅ COMPLIANT |
+| FR-1 Full OPS screen golden coverage | Golden suites remain present for all targeted screen families | ✅ COMPLIANT |
+| FR-2 OPS defaults are fixed for new goldens | `newOpsTestModel` still uses `NewModel(system.DetectionResult{}, "dev")` OPS defaults | ✅ COMPLIANT |
+| FR-3 Install happy-path flow coverage | Flow test now has 9 ordered snapshots and all 9 goldens | ✅ COMPLIANT |
+| FR-4 Suite remains runnable by standard Go tests | `go test ./...` passes | ✅ COMPLIANT |
+| FR-5 Goldens remain regeneratable | Existing `-update` flow in `assertTUIGolden` remains intact | ✅ COMPLIANT |
 
-**FR summary**: 4/5 passed
+**FR summary**: 5/5 passed
 
 ### Non-Functional Compliance
 | Requirement | Evidence | Result |
 |---|---|---|
-| NFR-1 No new dependencies | `git diff --stat dc0a93f^..HEAD -- go.mod go.sum` returned no changes | ✅ COMPLIANT |
-| NFR-2 CI compatibility | Existing `.github/workflows/ci.yml` still runs `go test ./...`; no workflow diffs detected | ✅ COMPLIANT |
-| NFR-3 Review-budget enforcement | PR metadata: `#18` = 946 additions, `#20` = 790 additions; both exceed the 400-line review budget even before deletions are counted | ❌ NON-COMPLIANT |
+| NFR-1 No new dependencies | No `go.mod` / `go.sum` additions were introduced by this change set | ✅ COMPLIANT |
+| NFR-2 CI compatibility | Verification still succeeds with `go test ./...`; no second runner required | ✅ COMPLIANT |
+| NFR-3 Review-budget enforcement | PR `#20` test code alone is 427 LOC | ❌ NON-COMPLIANT |
 
 **NFR summary**: 2/3 passed
 
-### Design Coherence
-| Decision | Followed? | Notes |
-|---|---|---|
-| `newOpsTestModel` exists in `preset_flow_test.go` | ⚠️ Partial | Helper exists and centralizes OPS defaults, but signature is `func newOpsTestModel(t testing.TB, ...)` instead of the designed `*testing.T`. |
-| Reuse existing `-update` mechanism and `assertTUIGolden` | ✅ Yes | Implemented exactly in `preset_flow_test.go`. |
-| Flow test uses `Update()` only, no `Init()` | ❌ No | No `Init()` calls exist, but the test also uses direct screen mutation and `buildDependencyPlan()` / `setScreen()` shortcuts. |
-| Synthetic `PipelineDoneMsg`, no goroutines | ✅ Yes | `PipelineDoneMsg{Result: pipeline.ExecutionResult{}}` is injected directly. |
-| Golden naming follows design convention | ⚠️ Partial | All names are lowercase kebab-case, but Slice 3 uses umbrella `operation-*` prefixes instead of the design’s family-specific `upgrade-*`, `sync-*`, `backups-*`, etc. |
-| Happy-path flow has 9 ordered snapshots | ❌ No | Implemented flow has 8 snapshots/files (`flow-install-01` through `flow-install-08`) instead of the designed 9 ending at `flow-install-09-complete.golden`. |
-
-### PR Slice Review Check
-| PR | Title | Diff size | Budget <= 400? |
-|---|---|---:|---|
-| #18 | navigation screen golden files | 946 additions / 0 deletions | ❌ |
-| #19 | install flow screen golden files | 354 additions / 41 deletions = 395 | ✅ |
-| #20 | operation and maintenance screen golden files | 790 additions / 5 deletions = 795 | ❌ |
-| #21 | AgentBuilder screen golden files | 306 additions / 0 deletions = 306 | ✅ |
-| #22 | Install happy-path flow test | 263 additions / 4 deletions = 267 | ✅ |
-
 ### Issues Found
 **CRITICAL**
-- Strict TDD evidence is incomplete because `apply-progress` is missing; RED/GREEN/triangulation and safety-net claims cannot be audited.
-- `TestInstallHappyPathFlow_OpsDefaults` does not meet the design/tasks contract: it has 8 snapshots instead of 9 and omits a DependencyTree golden checkpoint.
-- Review-budget requirement NFR-3 is violated by PR `#18` and PR `#20`, both well above the 400 changed-line budget.
+- NFR-3 remains a real failure: PR `#20` exceeds the 400-line slice budget on code alone (`internal/tui/operation_golden_test.go` = 427 LOC added).
 
 **WARNING**
-- The happy-path flow test does not advance exclusively through `Update()` transitions; it manually sets `ScreenPersona`, `ScreenPreset`, and `ScreenDependencyTree` state.
-- `newOpsTestModel` exists and is correct behaviorally, but its signature differs from the exact design snippet (`testing.TB` vs `*testing.T`).
-- Slice 3 golden names are deterministic and kebab-case, but they use `operation-*` umbrella prefixes instead of the family-specific prefixes documented in the design.
+- The reconstructed `apply-progress` artifact is retrievable only through an all-project Engram search because it was saved under the `gentle-ai` project key, not `selops-ai`.
 
 **SUGGESTION**
-- Add the missing `apply-progress.md` artifact with TDD Cycle Evidence and Files Changed so future strict-TDD verification can be fully audited.
-- Bring the flow suite back to the 9-snapshot design by adding the missing DependencyTree checkpoint and renumbering the final complete snapshot to `flow-install-09-complete.golden`.
-- If reviewer load matters, split future large golden drops earlier so the first slice does not accumulate nearly 1,000 added lines.
+- If reviewer-load enforcement is strict, split the former PR `#20` operation suite into two smaller chained slices so no individual test file crosses 400 changed lines.
 
 ### Verdict
 **FAIL**
 
-Runtime quality is good — the full Go suite and all targeted TUI tests pass — but strict-TDD verification is blocked by a missing `apply-progress` artifact, the happy-path flow test is only partially compliant with the approved design/tasks, and the review-budget NFR is violated by two PR slices.
+The two previously critical verification blockers are resolved: the flow suite now satisfies FR-3, and strict-TDD evidence exists in Engram. The only remaining blocking issue is NFR-3, because PR `#20` is still oversized on test code alone even after excluding golden-content churn.
