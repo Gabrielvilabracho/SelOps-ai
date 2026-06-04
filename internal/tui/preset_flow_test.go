@@ -281,6 +281,16 @@ func newOpsTestModel(t testing.TB, screen Screen, cursor int) Model {
 //   These three direct mutations are intentional and correct for the OPS fork; they are not
 //   test shortcuts but accurate reflections of how the OPS defaults bypass those screens.
 func TestInstallHappyPathFlow_OpsDefaults(t *testing.T) {
+	// Inject a fake "claude" binary so hasAgentBuilderEngines() returns true
+	// on all environments (CI included), matching the navigation golden.
+	// See navigation_golden_test.go for the same pattern and rationale.
+	fakeDir := t.TempDir()
+	fakeExe := filepath.Join(fakeDir, "claude")
+	if err := os.WriteFile(fakeExe, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatalf("create fake claude: %v", err)
+	}
+	t.Setenv("PATH", fakeDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+
 	// --- Step 1: Welcome ---
 	m := newOpsTestModel(t, ScreenWelcome, 0)
 	assertTUIGolden(t, "flow-install-01-welcome.golden", m.View())
