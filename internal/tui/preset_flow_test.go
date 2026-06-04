@@ -268,7 +268,18 @@ func newOpsTestModel(t testing.TB, screen Screen, cursor int) Model {
 //   - SpinnerFrame=0 and Version="dev" for determinism.
 //   - PipelineDoneMsg is synthetic with an empty successful ExecutionResult.
 //
-// Snapshots are taken at 8 major transition points.
+// Snapshots are taken at 9 major transition points.
+//
+// Design note — why steps 4–6 use direct state mutation instead of Update() keypresses:
+//   - PersonaOperator is NOT in PersonaOptions() (Gentleman/Neutral/Custom only). The OPS
+//     fork hardcodes it via NewModel; it is never reachable by pressing Enter on a persona
+//     row. Using Update() would select the wrong persona.
+//   - PresetSelOpsOperational is NOT in PresetOptions() (Full/EcosystemOnly/Minimal/Custom
+//     only). Same reasoning: the OPS fork hardcodes it via NewModel.
+//   - ScreenDependencyTree is reached by calling buildDependencyPlan()+setScreen() directly
+//     because the Persona/Preset nav is bypassed entirely in the OPS flow.
+//   These three direct mutations are intentional and correct for the OPS fork; they are not
+//   test shortcuts but accurate reflections of how the OPS defaults bypass those screens.
 func TestInstallHappyPathFlow_OpsDefaults(t *testing.T) {
 	// --- Step 1: Welcome ---
 	m := newOpsTestModel(t, ScreenWelcome, 0)
@@ -297,6 +308,7 @@ func TestInstallHappyPathFlow_OpsDefaults(t *testing.T) {
 	// --- Step 4: Persona snapshot (OPS defaults — PersonaOperator pre-set) ---
 	// PersonaOperator is not in PersonaOptions(), so we snapshot the Persona screen
 	// with the OPS pre-configured state directly, then advance manually.
+	// See design note at top of this test for why direct mutation is correct here.
 	{
 		snap := m
 		snap.Screen = ScreenPersona
@@ -307,6 +319,7 @@ func TestInstallHappyPathFlow_OpsDefaults(t *testing.T) {
 	// --- Step 5: Preset snapshot (OPS defaults — PresetSelOpsOperational pre-set) ---
 	// PresetSelOpsOperational is not in PresetOptions(), so we snapshot the Preset
 	// screen with the OPS pre-configured state directly, then advance manually.
+	// See design note at top of this test for why direct mutation is correct here.
 	{
 		snap := m
 		snap.Screen = ScreenPreset
@@ -316,9 +329,13 @@ func TestInstallHappyPathFlow_OpsDefaults(t *testing.T) {
 
 	// Advance to DependencyTree (OPS path: build plan directly, skip Preset nav).
 	// Selection already has PresetSelOpsOperational + PersonaOperator from NewModel.
+	// See design note at top of this test for why direct mutation is correct here.
 	m.buildDependencyPlan()
 	m.setScreen(ScreenDependencyTree)
 	m.Cursor = 0
+
+	// --- Step 6: DependencyTree ---
+	assertTUIGolden(t, "flow-install-06-dependency-tree.golden", m.View())
 
 	// DependencyTree → Review (cursor=0 = "Continue")
 	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
@@ -327,8 +344,8 @@ func TestInstallHappyPathFlow_OpsDefaults(t *testing.T) {
 		t.Fatalf("expected ScreenReview after DependencyTree Enter, got %v", m.Screen)
 	}
 
-	// --- Step 6: Review ---
-	assertTUIGolden(t, "flow-install-06-review.golden", m.View())
+	// --- Step 7: Review ---
+	assertTUIGolden(t, "flow-install-07-review.golden", m.View())
 
 	// Review → Installing (cursor=0 = "Install")
 	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
@@ -337,8 +354,8 @@ func TestInstallHappyPathFlow_OpsDefaults(t *testing.T) {
 		t.Fatalf("expected ScreenInstalling after Review Enter, got %v", m.Screen)
 	}
 
-	// --- Step 7: Installing (pipeline started, first step running) ---
-	assertTUIGolden(t, "flow-install-07-installing.golden", m.View())
+	// --- Step 8: Installing (pipeline started, first step running) ---
+	assertTUIGolden(t, "flow-install-08-installing.golden", m.View())
 
 	// Inject synthetic PipelineDoneMsg with a successful (empty) ExecutionResult.
 	// An empty ExecutionResult has zero steps → ProgressFromExecution produces an
@@ -353,8 +370,8 @@ func TestInstallHappyPathFlow_OpsDefaults(t *testing.T) {
 		t.Fatalf("expected ScreenComplete after PipelineDoneMsg + Enter, got %v", m.Screen)
 	}
 
-	// --- Step 8: Complete ---
-	assertTUIGolden(t, "flow-install-08-complete.golden", m.View())
+	// --- Step 9: Complete ---
+	assertTUIGolden(t, "flow-install-09-complete.golden", m.View())
 }
 
 func assertTUIGolden(t *testing.T, name string, actual string) {
