@@ -1,18 +1,71 @@
 change: selops-divergent-fork
-status: planned
+status: in-progress
 created_at: "2026-06-03"
+last_updated: "2026-06-03"
 artifact_store: hybrid
-phase_ready: "Phase 0 — Fork mechanics"
+phase_ready: "Phase 4 — Hermes integration"
 depends_on:
   - selops-operational-layer  # archived; provides the OPS components this fork keeps
 notes: |
-  Planning complete. Next session starts at Phase 0a (rename module + binary).
-  Strict TDD is active. Keep go build + go test green at every phase boundary.
-  Engine ~90-92% reusable. OPS has ZERO dependency on DEV — stripping is low-risk.
+  Phase 0, 1, 2, and 3 COMPLETE. All PRs merged for 0-2; Phase 3 ready for verify+PR.
+  Next session starts at Phase 4 (Hermes via MCP).
+
+  Strict TDD active. go build + go test green at every phase boundary.
+  IMPORTANT: Always run `go test ./...` fully (including golden tests) before
+  merging any PR touching internal/assets/ — Phase 1 was merged with broken
+  goldens, caught in Phase 2a.
+
+sdd_session_preflight:
+  pace: interactive
+  artifact_store: both
+  prs: ask-always
+  review_budget_lines: 400
+
+phases_completed:
+  - phase: "Phase 0 — Fork mechanics"
+    prs: [5, 6, 7, 8, 9]
+    status: merged
+    summary: |
+      Module → github.com/Gabrielvilabracho/selops-ai, binary → cmd/selops,
+      default preset selops-operational, Context7 always-on, KnowledgeBase
+      optional (10 neutral skills), strip DEV (16,274 lines deleted).
+  - phase: "Phase 1 — Content"
+    prs: [10]
+    status: merged
+    summary: |
+      Operator persona (48 lines) + 6 domain skill bodies (ops-governance,
+      ops-graduated-autonomy, ops-observability, ops-modular-architecture,
+      ops-data-contracts, ops-standard-documentation). 418 lines total.
+  - phase: "Phase 2 — Conditional OPS pipeline"
+    prs: [11, 12]
+    status: merged
+    summary: |
+      PR #11: 5 pipeline phase agents (ops-brief, ops-structure, ops-produce,
+      ops-review, ops-deliver) + fixed Phase 1 golden test debt.
+      PR #12: OPS orchestrator with hybrid veto-gate + weighted-score threshold.
+      Threshold: 7 veto gates (incl. 2 AI-native), 5-dim score, route 0-3 inline
+      / 4-6 pipeline Supervised / 7+ pipeline Suggest. Grounded in ITIL4, SRE,
+      NIST AI RMF. Internal/assets/generic/ops-orchestrator.md (keystone).
+  - phase: "Phase 3 — Visual rebrand (The Operator)"
+    prs: []
+    status: ready-for-verify
+    summary: |
+      Operator palette: 13 color vars with new hex values (midnight blue base #0D1B2A,
+      cyan blueprint accent #48CAE4, orange safety #FF6B35, deep blue #2BA8C9).
+      SELOPS industrial badge wordmark replaces Braille-rose ASCII art.
+      Tagline updated to "SelOps <version> — Your AI operations engineer".
+      Personality line added: "On shift. Risk gates armed. Let's keep prod boring."
+      Catalog description + plugin roseArt/compactArt updated to match.
+      6 new TDD tests. 3 golden files regenerated. 49/49 packages green.
+
 artifacts:
   proposal: openspec/changes/selops-divergent-fork/proposal.md
   tasks: openspec/changes/selops-divergent-fork/tasks.md
+  state: openspec/changes/selops-divergent-fork/state.yaml
+
 engram_topic_keys:
   - architecture/selops-ai-architecture-clean-divergent-fork
   - decision/selops-ai-component-decisions-context7-always-on-gga-kept
   - sdd/selops-divergent-fork/plan
+  - sdd/selops-divergent-fork/apply-progress
+  - architecture/selops-ops-threshold-model

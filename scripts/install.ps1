@@ -1,19 +1,19 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Gentle-AI — Install Script for Windows
-    Ecosystem, Frameworks, Workflows for AI coding agents.
+    SelOps — Install Script for Windows
+    AI operations CLI for coding agents.
 
 .DESCRIPTION
-    Downloads and installs the gentle-ai binary for Windows.
+    Downloads and installs the selops binary for Windows.
     Supports installation via Go or pre-built binary from GitHub Releases.
 
 .EXAMPLE
     # Run directly:
-    irm https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/scripts/install.ps1 | iex
+    irm https://raw.githubusercontent.com/Gabrielvilabracho/selops-ai/main/scripts/install.ps1 | iex
 
     # Or download and run:
-    Invoke-WebRequest -Uri https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/scripts/install.ps1 -OutFile install.ps1
+    Invoke-WebRequest -Uri https://raw.githubusercontent.com/Gabrielvilabracho/selops-ai/main/scripts/install.ps1 -OutFile install.ps1
     .\install.ps1
 
     # Force a specific method:
@@ -44,9 +44,9 @@ $ErrorActionPreference = "Stop"
 $null = & chcp 65001 2>$null
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
 
-$GITHUB_OWNER = "Gentleman-Programming"
-$GITHUB_REPO = "gentle-ai"
-$BINARY_NAME = "gentle-ai"
+$GITHUB_OWNER = "Gabrielvilabracho"
+$GITHUB_REPO = "selops-ai"
+$BINARY_NAME = "selops"
 
 # ============================================================================
 # Logging helpers
@@ -76,7 +76,7 @@ function Show-Banner {
     Write-Host " | |_| |  __/ | | | |_| |  __/_____/ ___ \ | | " -ForegroundColor Cyan
     Write-Host "  \____|\___|_| |_|\__|_|\___|    /_/   \_\___|" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "  Gentle-AI — Ecosystem, Frameworks, Workflows" -ForegroundColor DarkGray
+    Write-Host "  SelOps — AI operations CLI" -ForegroundColor DarkGray
     Write-Host ""
 }
 

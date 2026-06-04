@@ -6,39 +6,34 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// logoLines contains the ASCII art for the Gentle-AI neon rose logo.
+// logoLines contains the SelOps Operator badge logo.
+// ANSI Shadow style "SELOPS" wordmark inside a clean double-line box frame.
+// All lines are exactly 72 display cells wide (verified by TestRenderLogoFrameIsRectangular).
 var logoLines = []string{
-	"             ⣠⣾⣷⣶⣦⣤⣤⣄⣠⣄⣀  ⢀⣀⣀",
-	"          ⢀⣴⣿⣿⠿⣋⣭⣭⣯⣭⣍⣭⣿⣟⠛⠛⠿⠿⣿⣷⣄",
-	"      ⢀⣴⣾⡟⢻⣿⡟⠁⣼⣿⠏⣵⢻⣿⣻⣿⣿⢿⡻⣿⣿⣶⡌⢿⣿⣷⣦⣤⡄",
-	"   ⣤⣶⣾⣿⣿⠏ ⠈⢿⣄ ⢹⣏⠠⠟⣾⣿⣿⣿⣿⣿⠷⣏⣼⠟⢡⣿⡟⠋⢻⣿⣿⡄",
-	"   ⠈⣿⣿⣿⣿⡆   ⣽⢧⡘⠈⠳⣦⣍⠛⠛⢦⣉⣴⣛⣫⣭⣴⡟⠋  ⣾⣿⣿⡿",
-	"   ⢀⠹⣿⣿⣿⣷⣤⡄ ⠋ ⠙⢆ ⣠⠴⠟⠛⣛⣛⣛⠟⠋⠁⠺⡇ ⣀⣴⣿⣿⡟⠁",
-	"   ⠈⣀⠈⠛⠷⠿⣿⣿⣷⣤⣀ ⢠⠋   ⠈⠉⠉    ⣠⣴⣥⠾⠛⠉⣰⣿⣷",
-	"          ⠹⣯⣝⠛⠛⠷⢶⣤⣤⣀   ⢀⡠⠖⠋⠉⢉⣀⣀⣴⣾⣿⠿⠟⠃ ⠠⠦",
-	"⠁       ⠖  ⠘⠻⢿⣦⣄⡀  ⠉⠛⢦⠠⢊⠤⠴⢒⣛⣛⣩⣽⡿⠟⠁⢀⡀",
-	"⠲⠶⣦⠴⠶⠶⠶⠶⡶⠶⢶⣤⣄⡀⠨⠭⠽⠟⣓⢦⣀⠈⢇⡥⠖⠛⠋⠉⠉⠉    ⠈  ⢠⡤",
-	"  ⠈⢷ ⠐⠂⢤⣽⣄ ⠰⡎⠙⠳⣄⡀ ⠈⢣⠘⢦⠋⣀⡬⠟⠛⠛⠉⢀⣀⣀⣠⡤⠄⠃",
-	"   ⠈⢳⣀⡒⠉⠉⣉⠙⡲⣽⣄ ⣏⠳⡄ ⠘⡇ ⡾⠁ ⢀⡤⠖⣻⣿⡏⢡⡎ ⠰⠄",
-	"     ⠛⠻⢦⣄⣉⡁⣀⣀⣈⣙⣺⣌⡇⢠⢀⡇⡾  ⣴⣿⡷⠊ ⢲⣠⠟",
-	"          ⠈⠉    ⠈⠳⡄⣸⢱⠇⢀⣰⣯⣭⣥⠭⠾⠛⠃",
-	"                  ⡷⠡⡯⢖⠉   ⢠⠤",
-	"                ⡠⢊⡴⠤⠂⠃ ⠒",
-	"             ⢀⡴⢪⠔⣉⠔⠋",
-	"               ⠐⠈",
+	"╔══════════════════════════════════════════════════════════════════════╗",
+	"║                                                                      ║",
+	"║          ███████╗███████╗██╗      ██████╗ ██████╗ ███████╗           ║",
+	"║          ██╔════╝██╔════╝██║     ██╔═══██╗██╔══██╗██╔════╝           ║",
+	"║          ███████╗█████╗  ██║     ██║   ██║██████╔╝███████╗           ║",
+	"║          ╚════██║██╔══╝  ██║     ██║   ██║██╔═══╝ ╚════██║           ║",
+	"║          ███████║███████╗███████╗╚██████╔╝██║     ███████║           ║",
+	"║          ╚══════╝╚══════╝╚══════╝ ╚═════╝ ╚═╝     ╚══════╝           ║",
+	"║                                                                      ║",
+	"║       AI Engineering · Company Operations · Production Systems       ║",
+	"║                                                                      ║",
+	"╚══════════════════════════════════════════════════════════════════════╝",
 }
 
 // gradientColors defines the top-to-bottom gradient for the logo.
-// Distributed across rows: neon rose → lavender → blue → teal → green.
+// Operator gradient: cyan blueprint fading to deeper blueprint blue.
 var gradientColors = []lipgloss.Color{
-	ColorMauve,    // band 1
-	ColorLavender, // band 2
-	ColorBlue,     // band 3
-	ColorTeal,     // band 4
-	ColorGreen,    // band 5
+	ColorLavender, // cyan blueprint top
+	ColorLavender, // cyan blueprint mid-top
+	ColorBlue,     // deeper blueprint blue mid-bottom
+	ColorBlue,     // deeper blueprint blue bottom
 }
 
-// RenderLogo returns the ASCII logo with a top-to-bottom gradient.
+// RenderLogo returns the SelOps Operator badge logo with a top-to-bottom gradient.
 func RenderLogo() string {
 	total := len(logoLines)
 	if total == 0 {

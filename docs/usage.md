@@ -42,29 +42,29 @@ First-time setup — detects your tools, configures agents, injects all componen
 
 ```bash
 # Full ecosystem for multiple agents
-gentle-ai install \
+selops install \
   --agent claude-code,opencode,gemini-cli \
   --preset full-gentleman
 
 # Minimal setup for Cursor
-gentle-ai install \
+selops install \
   --agent cursor \
   --preset minimal
 
 # OpenClaw setup after installing OpenClaw manually
-gentle-ai install \
+selops install \
   --agent openclaw \
   --preset full-gentleman
 
 # Pick specific components and skills
-gentle-ai install \
+selops install \
   --agent claude-code \
   --component engram,sdd,skills,context7,persona,permissions \
   --skill go-testing,skill-creator,branch-pr,issue-creation \
   --persona gentleman
 
 # Dry-run first (preview plan without applying changes)
-gentle-ai install --dry-run \
+selops install --dry-run \
   --agent claude-code,opencode \
   --preset full-gentleman
 ```
@@ -91,24 +91,24 @@ See [Skill Registry](skill-registry.md) for the full index-first flow and diagra
 
 Refresh managed assets to the current version. Use after `brew upgrade gentle-ai` or when you want your local configs aligned with the latest release. Does NOT reinstall binaries (engram, GGA) — only updates prompt content, skills, MCP configs, and SDD orchestrators.
 
-> **Important:** `gentle-ai sync` updates the agents recorded as installed by Gentle AI, not every AI agent config directory on your machine.
+> **Important:** `selops sync` updates the agents recorded as installed by SelOps, not every AI agent config directory on your machine.
 >
-> Gentle AI stores your selected install targets in `~/.gentle-ai/state.json`. Future `sync` runs use that stored selection so Gentle AI does not accidentally write into tools you did not choose to manage. If you rerun install and select only one agent, that new selection becomes the default sync scope.
+> SelOps stores your selected install targets in `~/.gentle-ai/state.json`. Future `sync` runs use that stored selection so SelOps does not accidentally write into tools you did not choose to manage. If you rerun install and select only one agent, that new selection becomes the default sync scope.
 >
-> Before syncing, you can preview the active scope with `gentle-ai sync --dry-run`. If you want to sync agents outside the stored selection, pass them explicitly with `--agent`.
+> Before syncing, you can preview the active scope with `selops sync --dry-run`. If you want to sync agents outside the stored selection, pass them explicitly with `--agent`.
 
 ```bash
 # Preview which agents sync will update
-gentle-ai sync --dry-run
+selops sync --dry-run
 
 # Sync the agents currently registered in ~/.gentle-ai/state.json
-gentle-ai sync
+selops sync
 
 # Sync specific agents only
-gentle-ai sync --agent claude-code --agent opencode
+selops sync --agent claude-code --agent opencode
 
 # Refresh OpenClaw workspace instructions and MCP config
-gentle-ai sync --agent openclaw
+selops sync --agent openclaw
 ```
 
 Sync is safe and idempotent — running it twice produces no changes the second time. When files change, the summary reports the changed file count and lists the changed file paths.
@@ -149,15 +149,15 @@ Check for and install new versions of `gentle-ai` itself. The pre-upgrade backup
 
 ```bash
 # Check if a newer version is available
-gentle-ai update
+selops update
 
 # Upgrade to the latest release (downloads new binary, replaces current)
-gentle-ai upgrade
+selops upgrade
 ```
 
-After upgrading, run `gentle-ai sync` to refresh all managed assets to the new version's content.
+After upgrading, run `selops sync` to refresh all managed assets to the new version's content.
 
-If GitHub rate-limits update checks, export `GITHUB_TOKEN` or `GH_TOKEN` before running `gentle-ai update`/`upgrade`.
+If GitHub rate-limits update checks, export `GITHUB_TOKEN` or `GH_TOKEN` before running `selops update`/`upgrade`.
 
 Set `GENTLE_AI_CONFIRM_UPDATE=1` to have `gentle-ai` prompt for confirmation (`y/N`) before applying a self-update. Default behavior (no env var) applies the update without an interactive prompt.
 
@@ -172,7 +172,7 @@ The TUI **Configure Models** screen can assign different models to SDD phases, `
 Read-only ecosystem health diagnostics — no changes made to your configuration:
 
 ```bash
-gentle-ai doctor
+selops doctor
 ```
 
 Checks performed:
@@ -189,7 +189,7 @@ Each check reports **pass**, **warn**, or **fail** with an optional remedy hint.
 ### version
 
 ```bash
-gentle-ai version
+selops version
 gentle-ai --version
 gentle-ai -v
 ```
@@ -228,18 +228,18 @@ gentle-ai -v
 
 ```bash
 # Create a "cheap" profile using a free model for all phases
-gentle-ai sync --profile cheap:openrouter/qwen/qwen3-30b-a3b:free
+selops sync --profile cheap:openrouter/qwen/qwen3-30b-a3b:free
 
 # Override the design phase to use a stronger model
-gentle-ai sync --profile-phase cheap:sdd-design:anthropic/claude-sonnet-4-20250514
+selops sync --profile-phase cheap:sdd-design:anthropic/claude-sonnet-4-20250514
 
 # Create multiple profiles in one command
-gentle-ai sync \
+selops sync \
   --profile cheap:openrouter/qwen/qwen3-30b-a3b:free \
   --profile premium:anthropic/claude-sonnet-4-20250514
 
 # Use compatibility mode with an external OpenCode profile manager
-gentle-ai sync --agent opencode --sdd-profile-strategy external-single-active
+selops sync --agent opencode --sdd-profile-strategy external-single-active
 ```
 
 See [OpenCode SDD Profiles](opencode-profiles.md) for the full guide.
@@ -260,17 +260,17 @@ See [OpenCode SDD Profiles](opencode-profiles.md) for the full guide.
 ```bash
 # First time: install everything
 brew install gentleman-programming/tap/gentle-ai
-gentle-ai install --agent claude-code,cursor --preset full-gentleman
+selops install --agent claude-code,cursor --preset full-gentleman
 
 # After a new release: upgrade + sync
 brew upgrade gentle-ai
-gentle-ai sync
+selops sync
 
 # Remove only managed SDD + persona config from one agent
 gentle-ai uninstall --agent claude-code --component sdd,persona
 
 # Adding a new agent later
-gentle-ai install --agent windsurf --preset full-gentleman
+selops install --agent windsurf --preset full-gentleman
 ```
 
 ---

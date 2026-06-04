@@ -94,7 +94,7 @@ This ensures:
 
 Do NOT skip this check. Do NOT ask the user — just run init silently if needed.
 
-Native Windsurf Workflow: `/sdd-new` is also available as a native Windsurf workflow installed by gentle-ai. It can be triggered from the Windsurf workflow panel.
+Native Windsurf Workflow: `/sdd-new` is also available as a native Windsurf workflow installed by selops. It can be triggered from the Windsurf workflow panel.
 
 ### Execution Mode
 

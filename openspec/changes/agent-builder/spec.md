@@ -248,7 +248,7 @@ The parser MUST validate the output contains required sections: Description, Tri
 
 ### Requirement: Registry Persistence
 
-The system MUST read and write a JSON registry at `~/.config/gentle-ai/custom-agents.json`. The registry MUST include a `version` field (integer). Each entry MUST record: name, title, description, created_at (RFC3339), generation_engine, sdd_integration (nullable), installed_agents.
+The system MUST read and write a JSON registry at `~/.config/selops-ai/custom-agents.json`. The registry MUST include a `version` field (integer). Each entry MUST record: name, title, description, created_at (RFC3339), generation_engine, sdd_integration (nullable), installed_agents.
 
 #### Scenario: Registry created on first install
 

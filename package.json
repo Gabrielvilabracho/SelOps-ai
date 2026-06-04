@@ -1,8 +1,8 @@
 {
-  "name": "gentleman-ai-installer",
+  "name": "selops-ai",
   "version": "1.0.0",
   "private": true,
-  "description": "Gentle-AI — ecosystem, frameworks, and workflows for AI coding agents.",
+  "description": "SelOps — AI operations CLI for coding agents.",
   "main": "index.js",
   "directories": {
     "doc": "docs"
@@ -12,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Gentleman-Programming/gentle-ai.git"
+    "url": "git+https://github.com/Gabrielvilabracho/selops-ai.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/Gentleman-Programming/gentle-ai/issues"
+    "url": "https://github.com/Gabrielvilabracho/selops-ai/issues"
   },
-  "homepage": "https://github.com/Gentleman-Programming/gentle-ai#readme"
+  "homepage": "https://github.com/Gabrielvilabracho/selops-ai#readme"
 }

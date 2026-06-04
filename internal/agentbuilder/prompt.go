@@ -8,7 +8,7 @@ import (
 	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 )
 
-const systemPromptBase = `You are an expert AI agent skill designer for the Gentleman AI ecosystem.
+const systemPromptBase = `You are an expert AI agent skill designer for the SelOps ecosystem.
 Your task is to generate a complete SKILL.md file for a custom sub-agent skill.
 
 The SKILL.md MUST include these exact sections in order:

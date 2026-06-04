@@ -59,6 +59,8 @@ func RenderWelcome(cursor int, version string, updateBanner string, updateResult
 	b.WriteString("\n\n")
 	b.WriteString(styles.SubtextStyle.Render(styles.Tagline(version)))
 	b.WriteString("\n")
+	b.WriteString(styles.SubtextStyle.Render("On shift. Risk gates armed. Let's keep prod boring."))
+	b.WriteString("\n")
 
 	if updateBanner != "" {
 		b.WriteString(styles.WarningStyle.Render(updateBanner))

@@ -1,6 +1,6 @@
-# PRD: Gentleman AI Installer
+# PRD: SelOps Installer
 
-> **One command. Any agent. Any OS. The Gentleman AI ecosystem — configured and ready.**
+> **One command. Any agent. Any OS. The SelOps ecosystem — configured and ready.**
 
 **Version**: 0.1.0-draft
 **Author**: Gentleman Programming
@@ -30,13 +30,13 @@ Most developers either:
 - Spend DAYS manually configuring one agent, then can't replicate it on another machine or tool
 - Never set up memory, MCP, or skills because the setup is fragmented across 5 different repos
 
-**This installer eliminates that gap entirely.** You pick your agent(s), you pick your config level, and the entire Gentleman AI ecosystem gets injected into your tools — ready to go. From zero to championship-level AI development in minutes.
+**This installer eliminates that gap entirely.** You pick your agent(s), you pick your config level, and the entire SelOps ecosystem gets injected into your tools — ready to go. From zero to championship-level AI development in minutes.
 
 ---
 
 ## 2. Vision
 
-**The Gentleman AI ecosystem — installable by anyone, on any agent, on any OS, in one command.**
+**The SelOps ecosystem — installable by anyone, on any agent, on any OS, in one command.**
 
 This is NOT an "AI agent installer." Most agents are already easy to install (`npm i -g @anthropic-ai/claude-code`, `brew install opencode`, etc.). This is an **ecosystem configurator**: it takes whatever AI agent(s) you use and supercharges them with the Gentleman stack:
 
@@ -412,7 +412,7 @@ curl -sL get.gentleman.ai/ai | sh
                 ▼
      ┌─────────────────────────────────┐
      │   TUI: Welcome                   │
-     │   "Gentleman AI Ecosystem"       │
+     │   "SelOps Ecosystem"       │
      │   Supercharge your AI agents.    │
      └──────────┬──────────────────────┘
                 │
@@ -1185,7 +1185,7 @@ Persona is selected separately on the Persona screen and applied independently o
 |--------|---------|----------|
 | curl (recommended) | `curl -sL get.gentleman.ai/ai \| sh` | P0 |
 | Homebrew | `brew install Gentleman-Programming/tap/gentle-ai` | P0 |
-| Go install | `go install github.com/Gentleman-Programming/gentle-ai/cmd/gentle-ai@latest` | P1 |
+| Go install | `go install github.com/Gabrielvilabracho/selops-ai/cmd/gentle-ai@latest` | P1 |
 | Direct binary | Download from GitHub Releases | P1 |
 | winget (Windows) | `winget install gentle-ai` | P2 |
 
@@ -1314,12 +1314,12 @@ The completion screen MUST show:
 
 ## 13. Relationship to Gentleman.Dots
 
-| Aspect | Gentleman.Dots | Gentleman AI Installer |
+| Aspect | Gentleman.Dots | SelOps Installer |
 |--------|---------------|----------------------|
 | Purpose | Dev environment (editors, shells, terminals) | AI development layer (agents, memory, skills) |
 | What it installs | Neovim, Fish/Zsh/Nushell, Tmux/Zellij, Ghostty/Kitty/etc. | Claude Code, OpenCode, Engram, SDD, MCP servers, skills |
 | Overlap | None — complementary tools | None — different layer |
-| Can use together | Yes — install Gentleman.Dots first for dev env, then Gentleman AI for AI layer | Same |
+| Can use together | Yes — install Gentleman.Dots first for dev env, then SelOps for AI layer | Same |
 | Shared patterns | Go + Bubbletea + Lipgloss, multi-OS detection, backup system | Same architecture, consistent UX |
 
 **Requirements:**

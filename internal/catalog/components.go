@@ -17,7 +17,7 @@ var mvpComponents = []Component{
 	{ID: model.ComponentGGA, Name: "GGA", Description: "Gentleman Guardian Angel — AI provider switcher"},
 	{ID: model.ComponentTheme, Name: "Theme", Description: "Gentleman Kanagawa theme overlay"},
 	{ID: model.ComponentClaudeTheme, Name: "Claude Gentleman Theme", Description: "Claude Code Gentleman custom theme"},
-	{ID: model.ComponentOpenCodeGentleLogo, Name: "OpenCode Gentle Logo", Description: "OpenCode home logo TUI plugin with Braille rose"},
+	{ID: model.ComponentOpenCodeGentleLogo, Name: "OpenCode Gentle Logo", Description: "OpenCode home logo TUI plugin with SelOps Operator badge"},
 	// SelOps operational layer components.
 	{ID: model.ComponentSDDOps, Name: "SDD Ops", Description: "SelOps operational SDD workflow layer"},
 	{ID: model.ComponentOperationalMCP, Name: "Operational MCP", Description: "SelOps operational MCP server configuration"},

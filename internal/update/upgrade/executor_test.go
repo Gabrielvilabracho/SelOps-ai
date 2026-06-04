@@ -644,7 +644,7 @@ func TestToolUpgradeResult_ErrorWrapping(t *testing.T) {
 // --- Upgrade Backup Hardening Tests ---
 
 // TestConfigPathsForBackup_CoversManagedAgentPaths verifies that upgrade
-// backups include Gentle AI-managed files for installed agents, without treating
+// backups include SelOps-managed files for installed agents, without treating
 // every file in an agent config directory as backup-owned.
 func TestConfigPathsForBackup_CoversManagedAgentPaths(t *testing.T) {
 	homeDir := t.TempDir()
@@ -1117,7 +1117,7 @@ func TestEnumerateFilesInDir_NilExcludesWalksEverything(t *testing.T) {
 
 // TestConfigPathsForBackup_ExcludesRuntimeDirs verifies that upgrade backup
 // target selection ignores runtime directories across agents. Upgrade backups
-// must stay limited to Gentle AI-managed files, not conversations or caches.
+// must stay limited to SelOps-managed files, not conversations or caches.
 func TestConfigPathsForBackup_ExcludesPiRuntimeFiles(t *testing.T) {
 	homeDir := t.TempDir()
 
