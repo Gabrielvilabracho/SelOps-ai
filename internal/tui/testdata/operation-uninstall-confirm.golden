@@ -1,0 +1,24 @@
+Confirm Uninstall
+
+Mode: Full Uninstall
+
+This will remove all gentle-ai managed configuration from all supported agents.
+
+Engram cleanup scope:
+  • Global
+  • Removes global Engram MCP/system prompt configuration
+
+⚠ Workspace Assets Warning:
+  Removing SDD or Skills will delete workspace-scoped files like:
+  • .windsurf/workflows/ (SDD workflows)
+  • .engram/ (persistent memory context)
+  • Skills directories
+
+  If you commit these deletions, ALL collaborators will lose this context!
+
+A backup snapshot will be created before any file is modified.
+
+▸ Uninstall
+  Cancel
+
+j/k: navigate • enter: select • esc: back
