@@ -60,11 +60,11 @@ func TestSkillsForPresetCustomReturnsNil(t *testing.T) {
 	}
 }
 
-func TestSkillsForPresetSelOpsOperationalReturnsExactlyElevenOpsSkills(t *testing.T) {
+func TestSkillsForPresetSelOpsOperationalReturnsExactlyTwelveOpsSkills(t *testing.T) {
 	skills := SkillsForPreset(model.PresetSelOpsOperational)
 
-	if len(skills) != 11 {
-		t.Fatalf("PresetSelOpsOperational should return exactly 11 skills, got %d: %v", len(skills), skills)
+	if len(skills) != 12 {
+		t.Fatalf("PresetSelOpsOperational should return exactly 12 skills, got %d: %v", len(skills), skills)
 	}
 
 	expected := map[model.SkillID]struct{}{
@@ -79,6 +79,7 @@ func TestSkillsForPresetSelOpsOperationalReturnsExactlyElevenOpsSkills(t *testin
 		model.SkillOpsModelValidation:             {},
 		model.SkillOpsFinOpsGovernance:            {},
 		model.SkillOpsTransparencyExplainability:  {},
+		model.SkillOpsModelLifecycle:              {},
 	}
 
 	for _, skill := range skills {

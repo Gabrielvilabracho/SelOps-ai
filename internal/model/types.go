@@ -94,6 +94,7 @@ const (
 	SkillOpsModelValidation            SkillID = "ops-model-validation"
 	SkillOpsFinOpsGovernance           SkillID = "ops-finops-governance"
 	SkillOpsTransparencyExplainability SkillID = "ops-transparency-explainability"
+	SkillOpsModelLifecycle             SkillID = "ops-model-lifecycle"
 	// SelOps OPS pipeline phase agent skill IDs.
 	// These are execution-role agents (not domain knowledge skills) that form
 	// the 5-phase operational pipeline: brief → structure → produce → review → deliver.

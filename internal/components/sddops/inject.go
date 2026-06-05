@@ -47,6 +47,7 @@ var sddOpsSkillIDs = []model.SkillID{
 	"ops-model-validation",
 	"ops-finops-governance",
 	"ops-transparency-explainability",
+	"ops-model-lifecycle",
 }
 
 // opsPipelineSkillIDs is the canonical list of SelOps OPS pipeline phase agent skill IDs.

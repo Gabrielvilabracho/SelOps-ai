@@ -34,6 +34,7 @@ var mvpSkills = []Skill{
 	{ID: model.SkillOpsModelValidation, Name: "ops-model-validation", Category: "operational", Priority: "p1"},
 	{ID: model.SkillOpsFinOpsGovernance, Name: "ops-finops-governance", Category: "operational", Priority: "p2"},
 	{ID: model.SkillOpsTransparencyExplainability, Name: "ops-transparency-explainability", Category: "operational", Priority: "p2"},
+	{ID: model.SkillOpsModelLifecycle, Name: "ops-model-lifecycle", Category: "operational", Priority: "p3"},
 	// SelOps OPS pipeline phase agents (execution roles, not domain knowledge)
 	{ID: model.SkillOpsBrief, Name: "ops-brief", Category: "pipeline", Priority: "p0"},
 	{ID: model.SkillOpsStructure, Name: "ops-structure", Category: "pipeline", Priority: "p0"},

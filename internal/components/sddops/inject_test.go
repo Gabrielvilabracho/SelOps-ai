@@ -65,6 +65,7 @@ func TestSddOpsSkillIDsMembership(t *testing.T) {
 		"ops-model-validation",
 		"ops-finops-governance",
 		"ops-transparency-explainability",
+		"ops-model-lifecycle",
 	}
 	if len(sddOpsSkillIDs) != len(want) {
 		t.Fatalf("sddOpsSkillIDs len = %d, want %d", len(sddOpsSkillIDs), len(want))
