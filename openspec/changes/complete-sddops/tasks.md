@@ -65,17 +65,17 @@ Chain strategy: pending
 ## PR3 — inject feature 3
 
 ### Infrastructure
-- [ ] 3.1 Prep JSON merge fixtures/helpers in `internal/components/sddops/inject_test.go` for existing-settings cases.
+	- [x] 3.1 Prep JSON merge fixtures/helpers in `internal/components/sddops/inject_test.go` for existing-settings cases.
 
 ### Implementation
-- [ ] 3.2 RED: add failing overlay tests in `internal/components/sddops/inject_test.go` for scenarios 15,16,17,18,19.
-- [ ] 3.3 GREEN: add private `mergeJSONFile` to `internal/components/sddops/inject.go`, returning merged bytes.
-- [ ] 3.4 GREEN: implement `injectOpsOpenCodeOverlay` in `internal/components/sddops/inject.go` with prompt inlining and semantic post-check.
-- [ ] 3.5 REFACTOR: collapse JSON/assert helpers in `internal/components/sddops/inject.go` and `inject_test.go` if needed.
+- [x] 3.2 RED: add failing overlay tests in `internal/components/sddops/inject_test.go` for scenarios 15,16,17,18,19.
+- [x] 3.3 GREEN: add private `mergeJSONFile` to `internal/components/sddops/inject.go`, returning merged bytes.
+- [x] 3.4 GREEN: implement `injectOpsOpenCodeOverlay` in `internal/components/sddops/inject.go` with prompt inlining and semantic post-check.
+- [x] 3.5 REFACTOR: collapse JSON/assert helpers in `internal/components/sddops/inject.go` and `inject_test.go` if needed.
 
 ### Testing
-- [ ] 3.6 Wire overlay into `internal/components/sddops/inject.go` and extend `Inject()` tests in `inject_test.go` for scenarios 3,4,16,19.
+- [x] 3.6 Wire overlay into `internal/components/sddops/inject.go` and extend `Inject()` tests in `inject_test.go` for scenarios 3,4,16,19.
 
 ### Definition of Done
-- [ ] PR3: `go test ./...`, `go vet ./...`, scenarios 15-19 covered.
-- [ ] PR3: idempotency and preserve-keys checks pass for overlay.
+- [x] PR3: `go test ./...`, `go vet ./...`, scenarios 15-19 covered.
+- [x] PR3: idempotency and preserve-keys checks pass for overlay.
