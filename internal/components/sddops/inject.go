@@ -36,6 +36,8 @@ type InjectOptions struct {
 // (which start with "sdd-") to avoid any overlap.
 // These skills encode WHAT the operator knows — principles, patterns, checklists.
 var sddOpsSkillIDs = []model.SkillID{
+	"ops-adversarial-security",
+	"ops-privacy-governance",
 	"ops-standard-documentation",
 	"ops-modular-architecture",
 	"ops-data-contracts",

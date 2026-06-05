@@ -83,6 +83,8 @@ const (
 	SkillCommentWriter   SkillID = "comment-writer"
 	SkillWorkUnitCommits SkillID = "work-unit-commits"
 	// SelOps operational skill IDs.
+	SkillOpsAdversarialSecurity   SkillID = "ops-adversarial-security"
+	SkillOpsPrivacyGovernance     SkillID = "ops-privacy-governance"
 	SkillOpsStandardDocumentation SkillID = "ops-standard-documentation"
 	SkillOpsModularArchitecture   SkillID = "ops-modular-architecture"
 	SkillOpsDataContracts         SkillID = "ops-data-contracts"

@@ -19,6 +19,8 @@ var foundationSkills = []model.SkillID{
 
 // opsSkills are the SelOps operational domain knowledge skills — included for PresetSelOpsOperational.
 var opsSkills = []model.SkillID{
+	model.SkillOpsAdversarialSecurity,
+	model.SkillOpsPrivacyGovernance,
 	model.SkillOpsStandardDocumentation,
 	model.SkillOpsModularArchitecture,
 	model.SkillOpsDataContracts,
