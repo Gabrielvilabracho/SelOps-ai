@@ -45,22 +45,22 @@ Chain strategy: pending
 ## PR2 — inject features 1+2
 
 ### Infrastructure
-- [ ] 2.1 Extend `internal/components/sddops/inject.go` `InjectOptions` with Claude/Kiro model-assignment maps and local resolver interfaces.
+- [x] 2.1 Extend `internal/components/sddops/inject.go` `InjectOptions` with Claude/Kiro model-assignment maps and local resolver interfaces.
 
 ### Implementation
-- [ ] 2.2 RED: add failing `injectOpsSubAgents` tests in `internal/components/sddops/inject_test.go` for scenarios 1,5,6,7,8,9.
-- [ ] 2.3 GREEN: implement `injectOpsSubAgents` in `internal/components/sddops/inject.go` using atomic writes and placeholder replacement.
-- [ ] 2.4 REFACTOR: trim shared sub-agent fixtures/helpers in `internal/components/sddops/inject_test.go` if duplication appears.
-- [ ] 2.5 RED: add failing `injectOpsSlashCommands` tests in `internal/components/sddops/inject_test.go` for scenarios 2,10,11,12,13,14.
-- [ ] 2.6 GREEN: implement `injectOpsSlashCommands` in `internal/components/sddops/inject.go` via `assets.OpsCommandsAssetDir`.
-- [ ] 2.7 REFACTOR: normalize command-copy assertions/helpers in `internal/components/sddops/inject.go` and `inject_test.go`.
+- [x] 2.2 RED: add failing `injectOpsSubAgents` tests in `internal/components/sddops/inject_test.go` for scenarios 1,5,6,7,8,9.
+- [x] 2.3 GREEN: implement `injectOpsSubAgents` in `internal/components/sddops/inject.go` using atomic writes and placeholder replacement.
+- [x] 2.4 REFACTOR: trim shared sub-agent fixtures/helpers in `internal/components/sddops/inject_test.go` if duplication appears.
+- [x] 2.5 RED: add failing `injectOpsSlashCommands` tests in `internal/components/sddops/inject_test.go` for scenarios 2,10,11,12,13,14.
+- [x] 2.6 GREEN: implement `injectOpsSlashCommands` in `internal/components/sddops/inject.go` via `assets.OpsCommandsAssetDir`.
+- [x] 2.7 REFACTOR: normalize command-copy assertions/helpers in `internal/components/sddops/inject.go` and `inject_test.go`.
 
 ### Testing
-- [ ] 2.8 Wire both helpers into `internal/components/sddops/inject.go` and add cross-cutting `Inject()` tests in `inject_test.go` for scenarios 3 and 4.
+- [x] 2.8 Wire both helpers into `internal/components/sddops/inject.go` and add cross-cutting `Inject()` tests in `inject_test.go` for scenarios 3 and 4.
 
 ### Definition of Done
-- [ ] PR2: RED→GREEN→REFACTOR order preserved for both functions.
-- [ ] PR2: `go test ./...`, `go vet ./...`, scenarios 1-14 covered.
+- [x] PR2: RED→GREEN→REFACTOR order preserved for both functions.
+- [x] PR2: `go test ./...`, `go vet ./...`, scenarios 1-14 covered.
 
 ## PR3 — inject feature 3
 

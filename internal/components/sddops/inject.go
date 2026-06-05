@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents"
 	"github.com/Gabrielvilabracho/selops-ai/internal/assets"
@@ -29,6 +30,51 @@ type InjectOptions struct {
 	// Capability is the model capability ("capable" or "small") used to
 	// extract the appropriate section from skill files.
 	Capability string
+
+	// ClaudeModelAssignments optionally maps OPS phase names (or "default")
+	// to ClaudeModelAlias values. Used to resolve {{CLAUDE_MODEL}} placeholders
+	// in Claude sub-agent files. Zero-value safe: nil maps fall back to sonnet.
+	ClaudeModelAssignments map[string]model.ClaudeModelAlias
+
+	// KiroModelAssignments optionally maps OPS phase names (or "default")
+	// to ClaudeModelAlias values. Used to resolve {{KIRO_MODEL}} placeholders
+	// in Kiro sub-agent files. Zero-value safe: nil falls back to ClaudeModelAssignments,
+	// then to sonnet.
+	KiroModelAssignments map[string]model.ClaudeModelAlias
+}
+
+// kiroModelResolver is an optional adapter capability. When implemented,
+// injectOpsSubAgents resolves ClaudeModelAlias values to native Kiro model IDs
+// and stamps them into the {{KIRO_MODEL}} sentinel in agent frontmatter.
+// Adapters that do not implement this interface are unaffected.
+type kiroModelResolver interface {
+	KiroModelID(alias model.ClaudeModelAlias) string
+}
+
+// claudeModelResolver is an optional adapter capability. When implemented,
+// injectOpsSubAgents stamps the resolved ClaudeModelAlias into the {{CLAUDE_MODEL}}
+// sentinel in agent frontmatter. Claude Code accepts alias strings directly, so
+// the resolver is effectively identity over alias.String().
+type claudeModelResolver interface {
+	ClaudeModelID(alias model.ClaudeModelAlias) string
+}
+
+// resolveClaudeModelAlias returns the alias to use for a given OPS phase,
+// falling back through assignments["phase"] → assignments["default"] → sonnet.
+func resolveClaudeModelAlias(assignments map[string]model.ClaudeModelAlias, phase string) model.ClaudeModelAlias {
+	merged := model.ClaudeModelPresetBalanced()
+	for key, alias := range assignments {
+		if alias.Valid() {
+			merged[key] = alias
+		}
+	}
+	if alias, ok := merged[phase]; ok && alias.Valid() {
+		return alias
+	}
+	if alias, ok := merged["default"]; ok && alias.Valid() {
+		return alias
+	}
+	return model.ClaudeModelSonnet
 }
 
 // sddOpsSkillIDs is the canonical list of SelOps operational DOMAIN KNOWLEDGE skill IDs.
@@ -90,6 +136,139 @@ func readFileOrEmpty(path string) (string, error) {
 		return "", fmt.Errorf("read file %q: %w", path, err)
 	}
 	return string(data), nil
+}
+
+// opsPhaseNames is the ordered list of the five OPS pipeline phase names,
+// used as the post-check critical phase set for sub-agent injection.
+var opsPhaseNames = []string{"ops-brief", "ops-structure", "ops-produce", "ops-review", "ops-deliver"}
+
+// injectOpsSubAgents copies ops-*.md (and ops-*.yaml for Kimi) from
+// adapter.EmbeddedSubAgentsDir() into adapter.SubAgentsDir(homeDir),
+// resolving {{CLAUDE_MODEL}} / {{KIRO_MODEL}} placeholders for adapters
+// that implement claudeModelResolver / kiroModelResolver.
+// Post-check: at least one of {ops-brief, ops-deliver} present as .md
+// or .yaml with Size() >= 10 bytes.
+func injectOpsSubAgents(homeDir string, adapter agents.Adapter, opts InjectOptions) (changed bool, files []string, err error) {
+	if !adapter.SupportsSubAgents() {
+		return false, nil, nil
+	}
+
+	agentsDir := adapter.SubAgentsDir(homeDir)
+	if agentsDir == "" {
+		return false, nil, nil
+	}
+	if mkErr := os.MkdirAll(agentsDir, 0o755); mkErr != nil {
+		return false, nil, fmt.Errorf("create ops agents dir: %w", mkErr)
+	}
+
+	embeddedDir := adapter.EmbeddedSubAgentsDir()
+	entries, rdErr := assets.FS.ReadDir(embeddedDir)
+	if rdErr != nil {
+		return false, nil, fmt.Errorf("read embedded ops agents dir %q: %w", embeddedDir, rdErr)
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		// Only copy ops-* files. The embedded dir may contain SDD/JD agents too.
+		if !strings.HasPrefix(entry.Name(), "ops-") {
+			continue
+		}
+		contentStr := assets.MustRead(embeddedDir + "/" + entry.Name())
+
+		// Derive phase name from filename (strip one extension).
+		phase := strings.TrimSuffix(strings.TrimSuffix(entry.Name(), ".yaml"), ".md")
+
+		// Resolve {{KIRO_MODEL}} for adapters that implement kiroModelResolver.
+		if kmr, ok := adapter.(kiroModelResolver); ok {
+			alias := model.ClaudeModelSonnet
+			if opts.KiroModelAssignments != nil {
+				if a, ok2 := opts.KiroModelAssignments[phase]; ok2 {
+					alias = a
+				} else if d, ok2 := opts.KiroModelAssignments["default"]; ok2 {
+					alias = d
+				}
+			} else if opts.ClaudeModelAssignments != nil {
+				alias = resolveClaudeModelAlias(opts.ClaudeModelAssignments, phase)
+			}
+			contentStr = strings.ReplaceAll(contentStr, "{{KIRO_MODEL}}", kmr.KiroModelID(alias))
+		}
+
+		// Resolve {{CLAUDE_MODEL}} for adapters that implement claudeModelResolver.
+		if cmr, ok := adapter.(claudeModelResolver); ok {
+			alias := resolveClaudeModelAlias(opts.ClaudeModelAssignments, phase)
+			contentStr = strings.ReplaceAll(contentStr, "{{CLAUDE_MODEL}}", cmr.ClaudeModelID(alias))
+		}
+
+		outPath := filepath.Join(agentsDir, entry.Name())
+		writeResult, wErr := filemerge.WriteFileAtomic(outPath, []byte(contentStr), 0o644)
+		if wErr != nil {
+			return false, nil, fmt.Errorf("write ops sub-agent %s: %w", entry.Name(), wErr)
+		}
+		if writeResult.Changed {
+			changed = true
+			files = append(files, outPath)
+		}
+	}
+
+	// Post-check: verify at least one critical phase file exists as .md or .yaml
+	// with Size() >= 10 bytes (matches pre-strip post-check pattern).
+	for _, phase := range []string{"ops-brief", "ops-deliver"} {
+		found := false
+		for _, ext := range []string{".md", ".yaml"} {
+			checkPath := filepath.Join(agentsDir, phase+ext)
+			if info, statErr := os.Stat(checkPath); statErr == nil && info.Size() >= 10 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false, nil, fmt.Errorf("post-check: ops sub-agent %q not written correctly (missing or truncated)", phase)
+		}
+	}
+
+	return changed, files, nil
+}
+
+// injectOpsSlashCommands copies every file from assets.OpsCommandsAssetDir(adapter.Agent())
+// into adapter.CommandsDir(homeDir). No size post-check (matches pre-strip behavior).
+func injectOpsSlashCommands(homeDir string, adapter agents.Adapter) (changed bool, files []string, err error) {
+	if !adapter.SupportsSlashCommands() {
+		return false, nil, nil
+	}
+
+	cmdsDir := adapter.CommandsDir(homeDir)
+	if cmdsDir == "" {
+		return false, nil, nil
+	}
+	if mkErr := os.MkdirAll(cmdsDir, 0o755); mkErr != nil {
+		return false, nil, fmt.Errorf("create ops commands dir: %w", mkErr)
+	}
+
+	embeddedDir := assets.OpsCommandsAssetDir(adapter.Agent())
+	entries, rdErr := assets.FS.ReadDir(embeddedDir)
+	if rdErr != nil {
+		return false, nil, fmt.Errorf("read embedded ops commands dir %q: %w", embeddedDir, rdErr)
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		contentStr := assets.MustRead(embeddedDir + "/" + entry.Name())
+		outPath := filepath.Join(cmdsDir, entry.Name())
+		writeResult, wErr := filemerge.WriteFileAtomic(outPath, []byte(contentStr), 0o644)
+		if wErr != nil {
+			return false, nil, fmt.Errorf("write ops command %s: %w", entry.Name(), wErr)
+		}
+		if writeResult.Changed {
+			changed = true
+			files = append(files, outPath)
+		}
+	}
+
+	return changed, files, nil
 }
 
 // Inject writes the operational SDD skill files for all provided adapters.
@@ -159,6 +338,28 @@ func Inject(targetDir string, adapter agents.Adapter, opts InjectOptions) (Injec
 		}
 		result.Files = append(result.Files, promptPath)
 	}
+
+	// Step 4: Inject OPS sub-agents into the adapter's native agents directory.
+	// Gate: adapter.SupportsSubAgents(). homeDir is the target root (user home).
+	subAgentChanged, subAgentFiles, subAgentErr := injectOpsSubAgents(targetDir, adapter, opts)
+	if subAgentErr != nil {
+		return InjectionResult{}, fmt.Errorf("inject ops sub-agents: %w", subAgentErr)
+	}
+	if subAgentChanged {
+		result.Changed = true
+	}
+	result.Files = append(result.Files, subAgentFiles...)
+
+	// Step 5: Inject OPS slash commands into the adapter's commands directory.
+	// Gate: adapter.SupportsSlashCommands().
+	cmdChanged, cmdFiles, cmdErr := injectOpsSlashCommands(targetDir, adapter)
+	if cmdErr != nil {
+		return InjectionResult{}, fmt.Errorf("inject ops slash commands: %w", cmdErr)
+	}
+	if cmdChanged {
+		result.Changed = true
+	}
+	result.Files = append(result.Files, cmdFiles...)
 
 	return InjectionResult{Changed: result.Changed, Files: result.Files}, nil
 }
