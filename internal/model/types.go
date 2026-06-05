@@ -83,14 +83,17 @@ const (
 	SkillCommentWriter   SkillID = "comment-writer"
 	SkillWorkUnitCommits SkillID = "work-unit-commits"
 	// SelOps operational skill IDs.
-	SkillOpsAdversarialSecurity   SkillID = "ops-adversarial-security"
-	SkillOpsPrivacyGovernance     SkillID = "ops-privacy-governance"
-	SkillOpsStandardDocumentation SkillID = "ops-standard-documentation"
-	SkillOpsModularArchitecture   SkillID = "ops-modular-architecture"
-	SkillOpsDataContracts         SkillID = "ops-data-contracts"
-	SkillOpsGovernance            SkillID = "ops-governance"
-	SkillOpsObservability         SkillID = "ops-observability"
-	SkillOpsGraduatedAutonomy     SkillID = "ops-graduated-autonomy"
+	SkillOpsAdversarialSecurity        SkillID = "ops-adversarial-security"
+	SkillOpsPrivacyGovernance          SkillID = "ops-privacy-governance"
+	SkillOpsStandardDocumentation      SkillID = "ops-standard-documentation"
+	SkillOpsModularArchitecture        SkillID = "ops-modular-architecture"
+	SkillOpsDataContracts              SkillID = "ops-data-contracts"
+	SkillOpsGovernance                 SkillID = "ops-governance"
+	SkillOpsObservability              SkillID = "ops-observability"
+	SkillOpsGraduatedAutonomy          SkillID = "ops-graduated-autonomy"
+	SkillOpsModelValidation            SkillID = "ops-model-validation"
+	SkillOpsFinOpsGovernance           SkillID = "ops-finops-governance"
+	SkillOpsTransparencyExplainability SkillID = "ops-transparency-explainability"
 	// SelOps OPS pipeline phase agent skill IDs.
 	// These are execution-role agents (not domain knowledge skills) that form
 	// the 5-phase operational pipeline: brief → structure → produce → review → deliver.

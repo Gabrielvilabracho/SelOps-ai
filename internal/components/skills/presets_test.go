@@ -60,22 +60,25 @@ func TestSkillsForPresetCustomReturnsNil(t *testing.T) {
 	}
 }
 
-func TestSkillsForPresetSelOpsOperationalReturnsExactlySixOpsSkills(t *testing.T) {
+func TestSkillsForPresetSelOpsOperationalReturnsExactlyElevenOpsSkills(t *testing.T) {
 	skills := SkillsForPreset(model.PresetSelOpsOperational)
 
-	if len(skills) != 8 {
-		t.Fatalf("PresetSelOpsOperational should return exactly 8 skills, got %d: %v", len(skills), skills)
+	if len(skills) != 11 {
+		t.Fatalf("PresetSelOpsOperational should return exactly 11 skills, got %d: %v", len(skills), skills)
 	}
 
 	expected := map[model.SkillID]struct{}{
-		model.SkillOpsAdversarialSecurity:   {},
-		model.SkillOpsPrivacyGovernance:     {},
-		model.SkillOpsStandardDocumentation: {},
-		model.SkillOpsModularArchitecture:   {},
-		model.SkillOpsDataContracts:         {},
-		model.SkillOpsGovernance:            {},
-		model.SkillOpsObservability:         {},
-		model.SkillOpsGraduatedAutonomy:     {},
+		model.SkillOpsAdversarialSecurity:        {},
+		model.SkillOpsPrivacyGovernance:           {},
+		model.SkillOpsStandardDocumentation:       {},
+		model.SkillOpsModularArchitecture:         {},
+		model.SkillOpsDataContracts:               {},
+		model.SkillOpsGovernance:                  {},
+		model.SkillOpsObservability:               {},
+		model.SkillOpsGraduatedAutonomy:           {},
+		model.SkillOpsModelValidation:             {},
+		model.SkillOpsFinOpsGovernance:            {},
+		model.SkillOpsTransparencyExplainability:  {},
 	}
 
 	for _, skill := range skills {

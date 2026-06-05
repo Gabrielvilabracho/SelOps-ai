@@ -27,6 +27,9 @@ var opsSkills = []model.SkillID{
 	model.SkillOpsGovernance,
 	model.SkillOpsObservability,
 	model.SkillOpsGraduatedAutonomy,
+	model.SkillOpsModelValidation,
+	model.SkillOpsFinOpsGovernance,
+	model.SkillOpsTransparencyExplainability,
 }
 
 // opsPipelineSkills are the SelOps OPS pipeline phase agents — execution roles that
