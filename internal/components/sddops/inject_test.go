@@ -868,7 +868,8 @@ func TestInjectOpsSlashCommands_NoCommandsForUnsupported(t *testing.T) {
 }
 
 // TestInjectOpsSlashCommands_Idempotent — Scenario 14
-// Second run of injectOpsSlashCommands reports changed=false; content unchanged.
+// Second run of injectOpsSlashCommands reports changed=false AND every command
+// file is byte-for-byte identical to the content written on the first run.
 func TestInjectOpsSlashCommands_Idempotent(t *testing.T) {
 	home := t.TempDir()
 	adapter := opencode.NewAdapter()
@@ -877,12 +878,37 @@ func TestInjectOpsSlashCommands_Idempotent(t *testing.T) {
 		t.Fatalf("injectOpsSlashCommands first run error = %v", err)
 	}
 
+	// Snapshot bytes of all five command files after first run.
+	cmdsDir := adapter.CommandsDir(home)
+	bytesBefore := make(map[string][]byte, len(opsPhases))
+	for _, phase := range opsPhases {
+		path := filepath.Join(cmdsDir, phase+".md")
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("ReadFile(%q) after first run error = %v", path, err)
+		}
+		bytesBefore[phase] = data
+	}
+
+	// Second run — must report changed=false.
 	changed2, _, err2 := injectOpsSlashCommands(home, adapter)
 	if err2 != nil {
 		t.Fatalf("injectOpsSlashCommands second run error = %v", err2)
 	}
 	if changed2 {
 		t.Error("injectOpsSlashCommands second run changed = true; want false (idempotent)")
+	}
+
+	// Byte-for-byte equality: command content must remain unchanged.
+	for _, phase := range opsPhases {
+		path := filepath.Join(cmdsDir, phase+".md")
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("ReadFile(%q) after second run error = %v", path, err)
+		}
+		if string(data) != string(bytesBefore[phase]) {
+			t.Errorf("injectOpsSlashCommands second run changed content for command %q; idempotency violated", phase)
+		}
 	}
 }
 
@@ -942,5 +968,185 @@ func TestInject_SecondRunReportsNoChanges(t *testing.T) {
 	}
 	if result2.Changed {
 		t.Error("Inject second run Changed = true; want false (idempotent)")
+	}
+}
+
+// ── resolveClaudeModelAlias unit tests ─────────────────────────────────────────
+
+// TestResolveClaudeModelAlias covers all four routing branches of the function:
+// (a) phase-specific override from the assignments map overrides the preset,
+// (b) "default" fallback is used when the phase is absent,
+// (c) an invalid/unknown alias in the map is silently filtered out (falls back to preset or default),
+// (d) nil assignments fall back to the balanced preset then sonnet.
+func TestResolveClaudeModelAlias(t *testing.T) {
+	tests := []struct {
+		name        string
+		assignments map[string]model.ClaudeModelAlias
+		phase       string
+		want        model.ClaudeModelAlias
+	}{
+		{
+			name: "phase-specific override from assignments map",
+			assignments: map[string]model.ClaudeModelAlias{
+				"ops-brief": model.ClaudeModelOpus,
+				"default":   model.ClaudeModelHaiku,
+			},
+			phase: "ops-brief",
+			want:  model.ClaudeModelOpus,
+		},
+		{
+			name: "default fallback when phase absent from assignments",
+			assignments: map[string]model.ClaudeModelAlias{
+				"default": model.ClaudeModelHaiku,
+			},
+			phase: "ops-deliver",
+			want:  model.ClaudeModelHaiku,
+		},
+		{
+			name: "invalid alias filtered out — falls back to preset default (sonnet)",
+			assignments: map[string]model.ClaudeModelAlias{
+				"ops-produce": "not-a-real-alias",
+			},
+			phase: "ops-produce",
+			// ClaudeModelPresetBalanced has no "ops-produce" entry, and "default" = sonnet.
+			want: model.ClaudeModelSonnet,
+		},
+		{
+			name:        "nil assignments — balanced preset default fallback is sonnet",
+			assignments: nil,
+			phase:       "ops-review",
+			// ClaudeModelPresetBalanced has no "ops-review" entry, "default" = sonnet.
+			want: model.ClaudeModelSonnet,
+		},
+		{
+			name: "sonnet fallback when assignments map is empty and phase unknown",
+			assignments: map[string]model.ClaudeModelAlias{},
+			phase:       "ops-structure",
+			// Empty assignments merged over balanced preset → preset default = sonnet.
+			want: model.ClaudeModelSonnet,
+		},
+		{
+			name: "preset phase entry used when assignments nil (sdd-propose=opus in balanced)",
+			assignments: nil,
+			phase:       "sdd-propose",
+			want:        model.ClaudeModelOpus,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			got := resolveClaudeModelAlias(tt.assignments, tt.phase)
+			if got != tt.want {
+				t.Errorf("resolveClaudeModelAlias(assignments, %q) = %q; want %q", tt.phase, got, tt.want)
+			}
+		})
+	}
+}
+
+// ── Scenario 6 model-routing assertions ────────────────────────────────────────
+
+// TestInjectOpsSubAgents_ModelRoutingFromAssignments — Scenario 6 (extended)
+// Verifies that ClaudeModelAssignments and KiroModelAssignments are correctly
+// routed into the written frontmatter model values, not just that placeholder
+// literals are removed.
+func TestInjectOpsSubAgents_ModelRoutingFromAssignments(t *testing.T) {
+	tests := []struct {
+		name        string
+		adapter     agents.Adapter
+		opts        InjectOptions
+		phase       string
+		wantInFile  string // expected resolved model string present in the written file
+		wantAbsent  string // placeholder that must NOT appear
+	}{
+		{
+			name:    "claude phase-specific assignment routed to file — scenario 6a",
+			adapter: claude.NewAdapter(),
+			opts: InjectOptions{
+				ClaudeModelAssignments: map[string]model.ClaudeModelAlias{
+					"ops-brief": model.ClaudeModelOpus,
+					"default":   model.ClaudeModelSonnet,
+				},
+			},
+			phase:      "ops-brief",
+			wantInFile: model.ClaudeModelOpus.String(), // "opus"
+			wantAbsent: "{{CLAUDE_MODEL}}",
+		},
+		{
+			name:    "claude default assignment used when no phase-specific entry — scenario 6b",
+			adapter: claude.NewAdapter(),
+			opts: InjectOptions{
+				ClaudeModelAssignments: map[string]model.ClaudeModelAlias{
+					"default": model.ClaudeModelHaiku,
+				},
+			},
+			phase:      "ops-deliver",
+			wantInFile: model.ClaudeModelHaiku.String(), // "haiku"
+			wantAbsent: "{{CLAUDE_MODEL}}",
+		},
+		{
+			name:    "kiro phase-specific assignment routed to file — scenario 6c",
+			adapter: kiro.NewAdapter(),
+			opts: InjectOptions{
+				KiroModelAssignments: map[string]model.ClaudeModelAlias{
+					"ops-review": model.ClaudeModelOpus,
+					"default":    model.ClaudeModelSonnet,
+				},
+			},
+			phase:      "ops-review",
+			wantInFile: "claude-opus",  // KiroModelID(opus) contains "claude-opus"
+			wantAbsent: "{{KIRO_MODEL}}",
+		},
+		{
+			name:    "kiro nil assignments fall back to sonnet — scenario 6d",
+			adapter: kiro.NewAdapter(),
+			opts:    InjectOptions{},
+			phase:   "ops-structure",
+			// KiroModelID(sonnet) for claude-sonnet-4.6 — contains "sonnet"
+			wantInFile: "sonnet",
+			wantAbsent: "{{KIRO_MODEL}}",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			home := t.TempDir()
+			_, _, err := injectOpsSubAgents(home, tt.adapter, tt.opts)
+			if err != nil {
+				t.Fatalf("injectOpsSubAgents(%s) error = %v", tt.name, err)
+			}
+
+			agentsDir := tt.adapter.SubAgentsDir(home)
+			entries, rdErr := os.ReadDir(agentsDir)
+			if rdErr != nil {
+				t.Fatalf("ReadDir(%q) error = %v", agentsDir, rdErr)
+			}
+
+			// Find the file for our target phase.
+			var targetContent string
+			for _, entry := range entries {
+				if strings.HasPrefix(entry.Name(), tt.phase) {
+					data, rErr := os.ReadFile(filepath.Join(agentsDir, entry.Name()))
+					if rErr != nil {
+						t.Fatalf("ReadFile(%q) error = %v", entry.Name(), rErr)
+					}
+					targetContent = string(data)
+					break
+				}
+			}
+			if targetContent == "" {
+				t.Fatalf("no file found for phase %q in %q", tt.phase, agentsDir)
+			}
+
+			// The placeholder must be gone.
+			if strings.Contains(targetContent, tt.wantAbsent) {
+				t.Errorf("file for phase %q still contains placeholder %q", tt.phase, tt.wantAbsent)
+			}
+			// The resolved model string must be present.
+			if !strings.Contains(targetContent, tt.wantInFile) {
+				t.Errorf("file for phase %q missing resolved model %q\ncontent:\n%s", tt.phase, tt.wantInFile, targetContent)
+			}
+		})
 	}
 }
