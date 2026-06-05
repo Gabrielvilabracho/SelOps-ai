@@ -10,7 +10,7 @@ Define the content, citation, categorization, and wiring requirements for aligni
 
 ### Requirement: Citation Discipline
 
-All standards-facing OPS skills MUST inherit a cross-cutting citation discipline. Any specific control, clause, article, tactic, or requirement identifier cited in skill content MUST either resolve to a published source or be marked inline as `[UNVERIFIED: <claim>]`. Each standards-facing skill MUST include a short `## References` section listing the standards, version/year, and cited identifiers. Fabricated identifiers MUST NOT appear as fact.
+All standards-facing OPS skills MUST inherit a cross-cutting citation discipline. Any specific control, clause, article, tactic, or requirement identifier cited in skill content MUST either resolve to a published source or be marked inline as `[UNVERIFIED: <claim>]`. Each standards-facing **domain** skill MUST include a short `## References` section listing the standards, version/year, and cited identifiers. Pipeline phase skills surface their standards through inline citations and their `Cross-References` section rather than a `## References` section (see House-Style Conformance). Fabricated identifiers MUST NOT appear as fact in any skill type.
 
 #### Scenario: Verified identifiers are reviewable
 - GIVEN a reviewer reads any expanded or new standards-facing OPS skill
@@ -32,12 +32,23 @@ All standards-facing OPS skills MUST inherit a cross-cutting citation discipline
 
 ### Requirement: House-Style Conformance
 
-Every new or expanded OPS skill MUST keep the existing five-section house style: `When to Use`, `Core Principles`, `Patterns`, `Checklist`, and `SelOps-Specific Context`. All instructions added by this change MUST produce verifiable review outcomes and MUST NOT introduce open-ended execution guidance.
+The OPS framework has TWO distinct skill structures, and each modified or new skill MUST conform to the structure native to its TYPE:
 
-#### Scenario: Expanded skills keep the house template
-- GIVEN a reviewer opens any modified OPS skill covered by this change
+- **Domain knowledge skills** (e.g. `ops-governance`, `ops-adversarial-security`, all 6 new skills, and the existing domain skills) MUST use the five-section domain house style: `When to Use`, `Core Principles`, `Patterns`, `Checklist`, and `SelOps-Specific Context`. Domain skills that cite standards MUST also include a `## References` section (per Citation Discipline).
+- **Pipeline phase skills** (`ops-brief`, `ops-structure`, `ops-produce`, `ops-review`, `ops-deliver`) MUST use the pipeline-phase structure: `Role in the Pipeline`, `When to Use`, `Procedure`, `Inputs / Outputs`, `Gates & Escalation`, and `Cross-References`. This structure is intentional and shared across all five phases; a pipeline phase MUST NOT be converted to the domain five-section style, as that would break consistency with its sibling phases. A pipeline phase is NOT required to add a `## References` section; standards it references are cited inline (with `[UNVERIFIED]` discipline) and surfaced through its `Cross-References` section.
+
+All instructions added by this change MUST produce verifiable review outcomes and MUST NOT introduce open-ended execution guidance, regardless of skill type.
+
+#### Scenario: Expanded domain skills keep the domain house template
+- GIVEN a reviewer opens any modified DOMAIN skill covered by this change
 - WHEN the structure is inspected
-- THEN the file contains the five required sections in the established house style
+- THEN the file contains the five required domain sections in the established house style
+
+#### Scenario: Modified pipeline phases keep the pipeline-phase structure
+- GIVEN a reviewer opens a modified PIPELINE PHASE skill covered by this change (e.g. `ops-produce`)
+- WHEN the structure is inspected
+- THEN the file retains the pipeline-phase structure (Role in the Pipeline / When to Use / Procedure / Inputs / Outputs / Gates & Escalation / Cross-References)
+- AND it is NOT converted to the domain five-section style
 
 #### Scenario: New skills use reviewable instructions
 - GIVEN a reviewer reads a newly created OPS skill
