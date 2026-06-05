@@ -16,6 +16,7 @@ Load this skill when designing or reviewing how an AI pipeline handles personal 
 - **LLMs are PII amplifiers, not PII isolators.** A language model trained on or prompted with personal data may reproduce, infer, or combine it in ways that create new privacy exposures. Treat the model's output as a potential PII surface, not just its input.
 - **Privacy by design is an architectural requirement.** Data protection must be embedded into the system from the start, not retrofitted (GDPR Art. 25). This means pseudonymisation by default, access controls scoped to the minimum, and data retention enforced at the pipeline level, not by manual cleanup.
 - **Data subject rights are operational requirements.** The right to access, erasure, rectification, portability, and objection (GDPR Art. 15-22) must be fulfillable in practice. If an AI system processes personal data and cannot respond to these rights within the statutory timeframe, the system is non-compliant — regardless of what the privacy notice says.
+- **Generative AI introduces privacy risks beyond traditional data processing.** The NIST AI 600-1 Generative AI Profile identifies data-privacy as a distinct GenAI risk: models can memorise and later reproduce personal data from training data, infer sensitive attributes that were never explicitly provided, and leak PII through outputs. These risks are not addressed by access controls alone — they require the output-screening and fine-tuning safeguards in the patterns below. Apply GDPR controls AND the GenAI-specific privacy safeguards from NIST AI 600-1.
 
 ## Patterns
 
@@ -79,3 +80,4 @@ Data subject rights requests arrive at inconvenient times. Build the capability 
 
 - GDPR (Regulation (EU) 2016/679) — Art. 5(1)(c) data minimisation, Art. 6 lawful basis, Art. 9 special categories, Art. 15-22 data subject rights, Art. 25 data protection by design and by default, Art. 35 DPIA
 - ISO/IEC 42001:2023 — AI management system standard; data governance controls in Annex A, section A.7 [UNVERIFIED: exact clause numbering — refer to published standard]
+- NIST AI 600-1 (2024) — Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile; the Data Privacy risk category (training-data memorisation, sensitive-attribute inference, PII leakage in outputs) [UNVERIFIED: specific action/subcategory identifiers — refer to the published profile for authoritative IDs]
