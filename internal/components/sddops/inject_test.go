@@ -1216,6 +1216,35 @@ func TestInjectOpsOpenCodeOverlay_RegistersOrchestratorAndAgents(t *testing.T) {
 			t.Errorf("opencode.json missing agent key %q after overlay; present: %v", k, keys)
 		}
 	}
+
+	// WARNING 1 fix: assert registration field VALUES, not just key existence.
+	var root map[string]any
+	if err := json.Unmarshal(data, &root); err != nil {
+		t.Fatalf("unmarshal error = %v", err)
+	}
+	agentMap := root["agent"].(map[string]any)
+
+	// ops-orchestrator must have mode="primary".
+	orch := agentMap["ops-orchestrator"].(map[string]any)
+	if v, _ := orch["mode"].(string); v != "primary" {
+		t.Errorf("ops-orchestrator mode = %q; want \"primary\"", v)
+	}
+
+	// Each of the 5 phase agents must have mode="subagent" and hidden=true.
+	phaseAgents := []string{"ops-brief", "ops-structure", "ops-produce", "ops-review", "ops-deliver"}
+	for _, name := range phaseAgents {
+		obj, ok := agentMap[name].(map[string]any)
+		if !ok {
+			t.Errorf("agent %q not an object or missing", name)
+			continue
+		}
+		if v, _ := obj["mode"].(string); v != "subagent" {
+			t.Errorf("agent %q mode = %q; want \"subagent\"", name, v)
+		}
+		if v, _ := obj["hidden"].(bool); !v {
+			t.Errorf("agent %q hidden = %v; want true", name, v)
+		}
+	}
 }
 
 // TestInjectOpsOpenCodeOverlay_PreservesExistingUserKeys — Scenario 16
@@ -1297,6 +1326,15 @@ func TestInjectOpsOpenCodeOverlay_PromptsInlinedNoAbsolutePaths(t *testing.T) {
 	prompt, ok := orch["prompt"].(string)
 	if !ok || len(prompt) < 10 {
 		t.Errorf("ops-orchestrator prompt is empty or missing; got %q", prompt)
+	}
+
+	// WARNING 3 fix: assert a known stable substring from the real orchestrator asset
+	// is present — proving the actual orchestrator.md content was inlined, not a stub.
+	// The orchestrator.md begins with "# SelOps — OPS Orchestrator Instructions".
+	const wantSubstring = "SelOps — OPS Orchestrator Instructions"
+	if !strings.Contains(prompt, wantSubstring) {
+		t.Errorf("ops-orchestrator prompt does not contain expected header substring %q;\nprompt prefix: %q",
+			wantSubstring, prompt[:min(80, len(prompt))])
 	}
 }
 
@@ -1439,5 +1477,76 @@ func TestInject_OpenCodeOverlayIdempotent(t *testing.T) {
 	}
 	if result2.Changed {
 		t.Error("Inject second run Changed = true; want false (idempotent)")
+	}
+}
+
+// TestInjectOpsOpenCodeOverlay_PreservesNestedAgentChildren — WARNING 2 fix
+// Seeds opencode.json with a user-owned child INSIDE the "agent" object.
+// After overlay injection, the user child must survive alongside the OPS agents
+// that the overlay writes into the same "agent" object.
+// This exercises the deep-merge path of mergeObjects on a key that both base
+// and overlay share at the top level ("agent"), verifying that user-defined
+// sibling keys inside that object are not clobbered by a naive top-level overwrite.
+func TestInjectOpsOpenCodeOverlay_PreservesNestedAgentChildren(t *testing.T) {
+	home := t.TempDir()
+	adapter := opencode.NewAdapter()
+
+	// Seed opencode.json with a user-owned agent child AND an unrelated top-level key.
+	settingsPath := adapter.SettingsPath(home)
+	if err := os.MkdirAll(filepath.Dir(settingsPath), 0o755); err != nil {
+		t.Fatalf("MkdirAll error = %v", err)
+	}
+	seedJSON := []byte(`{
+  "someOtherKey": 123,
+  "agent": {
+    "my-custom-agent": {
+      "mode": "primary",
+      "prompt": "user stuff"
+    }
+  }
+}`)
+	if err := os.WriteFile(settingsPath, seedJSON, 0o644); err != nil {
+		t.Fatalf("WriteFile seed error = %v", err)
+	}
+
+	// Run the overlay injection.
+	_, _, err := injectOpsOpenCodeOverlay(home, adapter)
+	if err != nil {
+		t.Fatalf("injectOpsOpenCodeOverlay error = %v", err)
+	}
+
+	// Read back and unmarshal.
+	data := mustReadSettingsJSON(t, adapter, home)
+	var root map[string]any
+	if err := json.Unmarshal(data, &root); err != nil {
+		t.Fatalf("unmarshal error = %v", err)
+	}
+
+	// (a) The user-owned top-level key must survive.
+	if v, ok := root["someOtherKey"]; !ok || v != float64(123) {
+		t.Errorf("root[\"someOtherKey\"] = %v (ok=%v); want 123", v, ok)
+	}
+
+	// (b) The user-owned child INSIDE the shared "agent" object must survive intact.
+	agentMap, ok := root["agent"].(map[string]any)
+	if !ok {
+		t.Fatalf("root[\"agent\"] not a map; got %T", root["agent"])
+	}
+	customAgent, ok := agentMap["my-custom-agent"].(map[string]any)
+	if !ok {
+		t.Fatalf("agent[\"my-custom-agent\"] not a map after merge; got %T — deep-merge failed (user nested key was dropped)", agentMap["my-custom-agent"])
+	}
+	if v, _ := customAgent["mode"].(string); v != "primary" {
+		t.Errorf("my-custom-agent.mode = %q; want \"primary\"", v)
+	}
+	if v, _ := customAgent["prompt"].(string); v != "user stuff" {
+		t.Errorf("my-custom-agent.prompt = %q; want \"user stuff\"", v)
+	}
+
+	// (c) The OPS agents were added alongside the user's custom agent.
+	for _, k := range []string{"ops-orchestrator", "ops-brief", "ops-structure", "ops-produce", "ops-review", "ops-deliver"} {
+		if _, ok := agentMap[k]; !ok {
+			t.Errorf("agent[%q] missing after merge; OPS agents must be added alongside user agents", k)
+		}
 	}
 }
