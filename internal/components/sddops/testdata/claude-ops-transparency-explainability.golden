@@ -11,7 +11,7 @@ Load this skill when deploying an AI system that interacts with end users and re
 
 ## Core Principles
 
-- **AI disclosure is a legal requirement in regulated contexts.** Under the EU AI Act [UNVERIFIED: specific article number in the adopted Regulation (EU) 2024/1689 — transparency obligations for certain AI systems appear in Art.50 of the adopted text; verify against the published Official Journal version], operators of AI systems must inform users when they are interacting with an AI — not as a courtesy, but as a compliance obligation. For high-risk AI systems, additional transparency requirements apply: users must be informed of the system's capabilities and limitations. Failing to disclose AI use when required is a regulatory violation, not a design preference.
+- **AI disclosure is a legal requirement in regulated contexts.** Under the EU AI Act (Regulation (EU) 2024/1689, Art.50 — transparency obligations for providers and deployers of certain AI systems), operators of AI systems must inform users when they are interacting with an AI — not as a courtesy, but as a compliance obligation. For high-risk AI systems, additional transparency requirements apply: users must be informed of the system's capabilities and limitations. Failing to disclose AI use when required is a regulatory violation, not a design preference.
 - **Explainability is context-dependent.** What counts as a sufficient explanation depends on the deployment context, the user's technical literacy, and the regulatory regime. A credit decision explanation must meet the GDPR Art.22 and sector-specific requirements. An AI-assisted recommendation in a consumer application requires a different level of detail. Define the explainability requirement before choosing an explainability technique — not the other way around.
 - **Automation bias is a measurable risk.** Automation bias is the tendency of human operators to accept AI-generated outputs uncritically, even when those outputs are wrong. It is not a theoretical concern — it is documented in healthcare, aviation, criminal justice, and financial services. A system that presents AI outputs without clear uncertainty signals, without override mechanisms, and without regular audits of how often humans override AI recommendations is creating automation bias systematically. Mitigating automation bias is a design requirement, not a user-training problem.
 - **Transparency documentation must be maintained.** A disclosure notice written at deployment and never updated does not satisfy ongoing transparency obligations. When the model changes, when the system's capabilities expand, or when the regulatory environment changes, the transparency documentation must be updated. Transparency docs are living artifacts, not one-time deliverables.
@@ -19,12 +19,12 @@ Load this skill when deploying an AI system that interacts with end users and re
 ## Patterns
 
 ### AI Disclosure Notice
-Every AI system that interacts with end users requires a disclosure notice. The notice must be: (1) visible before the user relies on any AI output — not buried in a terms of service document, (2) written in plain language appropriate for the intended user population, (3) specific about what the AI does and does not do (capabilities and limitations), (4) clear that the user is interacting with an AI, not a human. For high-risk AI systems under the EU AI Act [UNVERIFIED: exact article reference for high-risk system transparency requirements], the disclosure must also include information about the system's intended purpose, the operator responsible for the system, and how users can seek human review of AI decisions. Template elements: system name, brief description of what the AI does, what data it uses, what decisions or recommendations it makes or supports, known limitations, how to request human review or escalation, and contact for questions or concerns. The disclosure notice is reviewed at each model or capability update.
+Every AI system that interacts with end users requires a disclosure notice. The notice must be: (1) visible before the user relies on any AI output — not buried in a terms of service document, (2) written in plain language appropriate for the intended user population, (3) specific about what the AI does and does not do (capabilities and limitations), (4) clear that the user is interacting with an AI, not a human. For high-risk AI systems under the EU AI Act (Art.13 — transparency and provision of information to deployers), the disclosure must also include information about the system's intended purpose, the operator responsible for the system, and how users can seek human review of AI decisions. Template elements: system name, brief description of what the AI does, what data it uses, what decisions or recommendations it makes or supports, known limitations, how to request human review or escalation, and contact for questions or concerns. The disclosure notice is reviewed at each model or capability update.
 
 ### Decision Explanation Template
 When a user, client, or regulator requests an explanation of an AI decision or recommendation, use a structured template:
 1. **What the AI decided or recommended**: state the output plainly (e.g., "The system flagged this transaction as high-risk").
-2. **Key factors that influenced the output**: list the most influential inputs or signals. For interpretable models (logistic regression, decision trees), these are the feature contributions. For LLMs, these are the context signals and retrieval results used. For opaque models, use post-hoc explanation methods (SHAP, LIME [UNVERIFIED: specific tool names — use whichever is applicable to the model type]) and note that the explanation is approximate.
+2. **Key factors that influenced the output**: list the most influential inputs or signals. For interpretable models (logistic regression, decision trees), these are the feature contributions. For LLMs, these are the context signals and retrieval results used. For opaque models, use post-hoc explanation methods (e.g., SHAP or LIME, whichever is applicable to the model type) and note that the explanation is approximate.
 3. **Confidence or uncertainty**: state the model's confidence in the output and any relevant uncertainty estimate.
 4. **What the AI cannot tell you**: be explicit about what is outside the model's scope, what data was not used, and what assumptions underlie the output.
 5. **How to escalate**: tell the user how to request human review of the decision.
@@ -45,7 +45,7 @@ Conduct an explainability audit before go-live for any high-risk or regulated AI
 3. **Automation-bias controls**: verify that uncertainty signals, override mechanisms, and decision-support framing are implemented and functioning.
 4. **Override rate baseline**: record the baseline override rate at deployment for future comparison.
 5. **Documentation currency**: verify that the disclosure notice and transparency documentation reflect the current system capabilities and model version.
-NIST AI RMF MEASURE [UNVERIFIED: MEASURE 2.9 is cited in the literature as covering explainability and transparency evaluation — verify the exact subcategory number] recommends measuring explainability as part of AI risk management. ISO/IEC 42001:2023 Clause A.8.2 [UNVERIFIED: exact clause number] addresses user information and transparency obligations for AI systems. Both require that transparency be operationalized, not just documented.
+NIST AI RMF MEASURE 2.9 (explainable and interpretable AI systems) recommends measuring explainability as part of AI risk management. ISO/IEC 42001:2023 Clause A.8.2 [UNVERIFIED: confirm clause against purchased ISO standard] addresses user information and transparency obligations for AI systems. Both require that transparency be operationalized, not just documented.
 
 ## Checklist
 
@@ -68,7 +68,7 @@ NIST AI RMF MEASURE [UNVERIFIED: MEASURE 2.9 is cited in the literature as cover
 - [ ] For regulated deployments: transparency documentation available for regulatory review on request
 
 **For EU AI Act regulated deployments:**
-- [ ] AI disclosure notice satisfies applicable transparency obligations [UNVERIFIED: confirm applicable article(s) in Regulation (EU) 2024/1689 against the Official Journal version]
+- [ ] AI disclosure notice satisfies applicable transparency obligations (EU AI Act Art.50 for AI systems interacting with users; Art.13 for high-risk systems)
 - [ ] High-risk AI transparency requirements documented and implemented
 
 ## SelOps-Specific Context
@@ -81,7 +81,7 @@ Explainability is not a feature — it is a system property. It must be designed
 
 ## References
 
-- **EU AI Act — Regulation (EU) 2024/1689**: Transparency obligations for certain AI systems. [UNVERIFIED: Art.50 is cited as the transparency article in the adopted text — verify article numbering against the Official Journal publication before citing definitively.] High-risk AI system requirements include informing users about AI use, capabilities, and limitations.
-- **NIST AI RMF 1.0 (2023)** — MEASURE function. MEASURE 2.9 [UNVERIFIED: exact subcategory number] addresses explainability and interpretability evaluation as part of AI risk measurement. The GOVERN and MAP functions also address transparency obligations.
-- **ISO/IEC 42001:2023** — Clause A.8.2 [UNVERIFIED: exact clause number] covers user information and transparency obligations for AI system operators, including disclosure of AI use and explanation of AI decisions.
+- **EU AI Act — Regulation (EU) 2024/1689** (OJ L 2024/1689): Art.50 (transparency obligations for providers and deployers of certain AI systems — informing users they interact with an AI); Art.13 (transparency and provision of information to deployers of high-risk AI systems, including capabilities and limitations).
+- **NIST AI RMF 1.0 (2023)** — MEASURE function. MEASURE 2.9 (explainable and interpretable AI systems) addresses explainability and interpretability evaluation as part of AI risk measurement. The GOVERN and MAP functions also address transparency obligations.
+- **ISO/IEC 42001:2023** — Clause A.8.2 [UNVERIFIED: confirm clause against purchased ISO standard] covers user information and transparency obligations for AI system operators, including disclosure of AI use and explanation of AI decisions.
 - **GDPR — Regulation (EU) 2016/679**, Art.22: Rights related to automated individual decision-making, including the right to explanation. Applies where AI decisions produce legal or similarly significant effects on individuals.

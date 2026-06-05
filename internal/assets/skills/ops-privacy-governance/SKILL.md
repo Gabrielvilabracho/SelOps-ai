@@ -74,10 +74,10 @@ DPIAs frequently catch privacy risks that architects miss — unexpected PII fie
 
 Data subject rights requests arrive at inconvenient times. Build the capability to fulfil them before the system goes live. Discovering during a live erasure request that training data cannot be deleted because the model was fine-tuned on it — and fine-tuning is not reversible — is a serious incident. Assess fine-tuning privacy implications before any fine-tuning occurs.
 
-[UNVERIFIED: ISO/IEC 42001 Annex A section A.7 covers data governance and quality controls relevant to personal data in AI systems — specific clause numbering may vary from what is cited in public summaries. Refer to the published standard for authoritative clause IDs.]
+[UNVERIFIED: ISO/IEC 42001 Annex A section A.7 covers data governance and quality controls relevant to personal data in AI systems — confirm clause numbering against the purchased ISO standard for authoritative clause IDs.]
 
 ## References
 
 - GDPR (Regulation (EU) 2016/679) — Art. 5(1)(c) data minimisation, Art. 6 lawful basis, Art. 9 special categories, Art. 15-22 data subject rights, Art. 25 data protection by design and by default, Art. 35 DPIA
-- ISO/IEC 42001:2023 — AI management system standard; data governance controls in Annex A, section A.7 [UNVERIFIED: exact clause numbering — refer to published standard]
+- ISO/IEC 42001:2023 — AI management system standard; data governance controls in Annex A, section A.7 [UNVERIFIED: confirm clause against purchased ISO standard]
 - NIST AI 600-1 (2024) — Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile; the Data Privacy risk category (training-data memorisation, sensitive-attribute inference, PII leakage in outputs) [UNVERIFIED: specific action/subcategory identifiers — refer to the published profile for authoritative IDs]

@@ -83,5 +83,5 @@ Validation findings are a client asset and may be requested by the client's own 
 ## References
 
 - **SR 11-7 (2011)** — Federal Reserve / OCC Supervisory Guidance on Model Risk Management. Foundational source for Conceptual Soundness, Effective Challenge, Independent Validation, ongoing monitoring, and model inventory requirements in banking and financial services.
-- **NIST AI RMF 1.0 (2023)** — MEASURE function. MEASURE 2.x subcategories [UNVERIFIED: exact MEASURE 2.1, 2.3, 2.9 numbers] cover AI system testing, evaluation, verification, and monitoring, including ongoing monitoring protocols.
-- **ISO/IEC 42001:2023** — Clause A.6.2.4 [UNVERIFIED: exact clause number] addresses verification and validation of AI system components including requirements for structured testing and documentation of validation outcomes.
+- **NIST AI RMF 1.0 (2023)** — MEASURE function. MEASURE 2.1 (TEVV test sets, metrics, and tools documented), MEASURE 2.3 (performance demonstrated for deployment conditions), and MEASURE 2.9 (explainability and interpretability) cover AI system testing, evaluation, verification, and monitoring. MAP 1.1 covers context and intended-purpose documentation.
+- **ISO/IEC 42001:2023** — Clause A.6.2.4 [UNVERIFIED: confirm clause against purchased ISO standard] addresses verification and validation of AI system components including requirements for structured testing and documentation of validation outcomes.

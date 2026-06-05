@@ -49,13 +49,13 @@ For AI systems classified as high-risk under EU AI Act Annex III, Art.14.4 speci
 
 | Art.14.4 Mechanism | Suggest | Supervised | Autonomous |
 |---|---|---|---|
-| (a) [UNVERIFIED: understand capabilities/limitations] — documented in engagement record | Required | Required | Required |
-| (b) [UNVERIFIED: detect/avoid automation bias] — Scope Verification Protocol + operator training | Not required | Required | Required |
-| (c) [UNVERIFIED: interpret output correctly] — structured output logging + model card | Not required | Required | Required |
-| (d) [UNVERIFIED: decide not to use / disregard output] — overrule mechanism documented | Not required | Not required | Required |
-| (e) [UNVERIFIED: interrupt via stop procedure to safe state] — rollback procedure = stop mechanism | Not required | Not required | Required |
+| (a) properly understand the system's capacities and limitations and monitor its operation — documented in engagement record | Required | Required | Required |
+| (b) remain aware of automation bias (over-relying on output) — Scope Verification Protocol + operator training | Not required | Required | Required |
+| (c) correctly interpret the system's output — structured output logging + model card | Not required | Required | Required |
+| (d) decide not to use the system or to disregard, override or reverse its output — overrule mechanism documented | Not required | Not required | Required |
+| (e) intervene or interrupt the system through a 'stop' button or similar procedure to a safe state — rollback procedure = stop mechanism | Not required | Not required | Required |
 
-Sub-article letters (a)–(e) are marked [UNVERIFIED] because the exact letter-to-mechanism mapping has not been independently confirmed against the published regulation text. The mechanisms themselves (understand, avoid bias, interpret, override, interrupt) are real Art.14.4 requirements. For EU-based clients or systems classified as high-risk under the EU AI Act Annex III, confirm all applicable sub-articles are satisfied before setting Autonomous level.
+Sub-article letters (a)–(e) map directly to the supervisory mechanisms in EU AI Act Art.14.4 (verified against the published Regulation (EU) 2024/1689, OJ L 2024/1689). For EU-based clients or systems classified as high-risk under the EU AI Act Annex III, confirm all applicable sub-articles are satisfied before setting Autonomous level.
 
 ## Checklist
 
@@ -64,7 +64,7 @@ Sub-article letters (a)–(e) are marked [UNVERIFIED] because the exact letter-t
 - [ ] Scope verified: systems, environments, client engagement
 - [ ] Rollback procedure written (per-action for Supervised, full-scope for Autonomous)
 - [ ] Escalation triggers defined for this task (what unexpected condition would cause a stop)
-- [ ] For EU-regulated high-risk systems: Art.14.4(a)–(e) compliance mapped to current autonomy level [UNVERIFIED: sub-article letters]
+- [ ] For EU-regulated high-risk systems: Art.14.4(a)–(e) compliance mapped to current autonomy level
 - [ ] Foundational taxonomy (Sheridan/Parasuraman HITL/HOTL/HOOTL levels) acknowledged in engagement record if client requests standards traceability
 
 **During task execution (Supervised mode):**
@@ -99,4 +99,4 @@ The academic foundations matter for regulated engagements. When a financial or h
 
 - Parasuraman, R., Sheridan, T.B., & Wickens, C.D. (2000). A model for types and levels of human interaction with automation. *IEEE Transactions on Systems, Man, and Cybernetics — Part A*, 30(3), 286-297. Defines the 10-level human-automation interaction model underlying HITL/HOTL/HOOTL taxonomy.
 - Sheridan, T.B., & Verplank, W.L. (1978). Human and computer control of undersea teleoperators. MIT Man-Machine Systems Lab Technical Report. Original source of the levels of automation concept.
-- EU AI Act — Regulation (EU) 2024/1689, Art.14 (Human oversight), including Art.14.4(a)–(e) supervisory mechanism requirements for high-risk AI systems. Sub-article letter assignments marked [UNVERIFIED] — verify against published regulation text.
+- EU AI Act — Regulation (EU) 2024/1689 (OJ L 2024/1689), Art.14 (Human oversight), including Art.14.4(a)–(e) supervisory mechanism requirements for high-risk AI systems.

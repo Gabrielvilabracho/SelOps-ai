@@ -16,7 +16,7 @@ Load this skill when writing or reviewing any documentation for an AI system: ar
 - **ADRs capture decisions, not implementations.** An ADR answers: what was the decision, why was this option chosen, what alternatives were considered, and what are the consequences we accepted. ADRs are written at decision time, not reconstructed later.
 - **Client handoff documentation must be self-sufficient.** After SelOps hands off a system, the client must be able to operate it, debug common issues, and make routine changes without calling SelOps. If they cannot do that with the docs provided, the handoff is incomplete.
 - **Model cards are required for every deployed model.** A model card documents what the model is, what it was trained on, what it is good at, what it fails at, and what the known biases and limitations are. It is the foundational document for AI system governance.
-- **Model cards serve two audiences.** Internal governance audiences need technical detail: training data, evaluation benchmarks, known failure modes, and update policy (ISO 42001 A.8.2 [UNVERIFIED: exact clause number]). External or end-user audiences need plain-language disclosure: what the system does, what it cannot do, how to escalate, and when a human is in the loop (EU AI Act transparency requirements [UNVERIFIED: exact article in adopted Regulation (EU) 2024/1689]).
+- **Model cards serve two audiences.** Internal governance audiences need technical detail: training data, evaluation benchmarks, known failure modes, and update policy (ISO 42001 A.8.2 [UNVERIFIED: confirm clause against purchased ISO standard]). External or end-user audiences need plain-language disclosure: what the system does, what it cannot do, how to escalate, and when a human is in the loop (EU AI Act Art.50 transparency obligations, Regulation (EU) 2024/1689).
 
 ## Patterns
 
@@ -27,7 +27,7 @@ Every AI system has a top-level architecture document covering: (1) system purpo
 Each model card contains: model identifier (name, version, provider), intended use cases, training data summary (sources, date range, known gaps), evaluation results on benchmark datasets, known failure modes and edge cases, known biases with assessment methodology, and update/retirement policy. Model cards are stored with the system they support and versioned alongside the system.
 
 ### User-Facing Model Card
-For systems deployed to external users or clients, produce a second model card variant in plain language. Required fields: (1) what this system does in one sentence, (2) what it cannot do or where it is unreliable, (3) whether a human reviews its outputs and under what conditions, (4) how to report a problem or escalate, (5) when and how the system is updated, (6) how to opt out or request human review. This card is part of the client handoff package. Grounded in ISO 42001 A.8.2 (user information and transparency) [UNVERIFIED: exact clause number] and EU AI Act transparency provisions for high-risk and general-purpose AI systems (Regulation (EU) 2024/1689) [UNVERIFIED: exact article number in adopted text; Art.50 in near-final draft].
+For systems deployed to external users or clients, produce a second model card variant in plain language. Required fields: (1) what this system does in one sentence, (2) what it cannot do or where it is unreliable, (3) whether a human reviews its outputs and under what conditions, (4) how to report a problem or escalate, (5) when and how the system is updated, (6) how to opt out or request human review. This card is part of the client handoff package. Grounded in ISO 42001 A.8.2 (user information and transparency) [UNVERIFIED: confirm clause against purchased ISO standard] and EU AI Act Art.50 transparency provisions for AI systems interacting with users, plus Art.13 for high-risk systems (Regulation (EU) 2024/1689).
 
 ### Operational Runbook Structure
 Every runbook follows this structure: (1) purpose — what operational scenario this covers, (2) prerequisites — what access, tools, and context you need before starting, (3) step-by-step procedure — concrete commands with expected outputs, (4) decision points — what each possible output means and which step to go to next, (5) escalation path — when to stop and who to contact, (6) post-procedure checklist — what to verify when done. No open-ended steps.
@@ -92,7 +92,7 @@ Runbooks in AI systems must cover not just infrastructure failures but output qu
 
 ## References
 
-- ISO/IEC 42001:2023 — AI management system standard; A.8.2 addresses AI system user information and transparency [UNVERIFIED: exact clause number]
-- Regulation (EU) 2024/1689 (EU AI Act) — transparency obligations for high-risk and general-purpose AI systems [UNVERIFIED: exact article number in adopted text; Art.50 referenced in near-final draft]
+- ISO/IEC 42001:2023 — AI management system standard; A.8.2 addresses AI system user information and transparency [UNVERIFIED: confirm clause against purchased ISO standard]
+- Regulation (EU) 2024/1689 (EU AI Act, OJ L 2024/1689) — Art.50 (transparency obligations for providers and deployers of certain AI systems) and Art.13 (transparency to deployers of high-risk AI systems)
 - FDA AI/ML-Based SaMD Action Plan, "Predetermined Change Control Plan" (PCCP) guidance — real FDA concept for permitting scoped changes to AI/ML-based medical software
 - GDPR Art.35 — Data Protection Impact Assessment (DPIA) trigger conditions for large-scale processing, systematic monitoring, and automated decision-making

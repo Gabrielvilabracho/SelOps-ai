@@ -81,5 +81,5 @@ The FinOps Foundation framework provides practitioner guidance on cloud cost man
 ## References
 
 - **NIST AI 600-1 (2024)** — Artificial Intelligence Risk Management Framework: Generative AI Profile. Identifies environmental impact — energy use, carbon footprint, and resource consumption — as a risk dimension for generative AI systems that operators must track and manage. [UNVERIFIED: specific action/control ID within the document.]
-- **ISO/IEC 42001:2023** — Clause A.4 [UNVERIFIED: exact clause number] addresses resource planning and management for AI systems, including compute resource governance and cost-related risk controls.
+- **ISO/IEC 42001:2023** — Clause A.4 [UNVERIFIED: confirm clause against purchased ISO standard] addresses resource planning and management for AI systems, including compute resource governance and cost-related risk controls.
 - **FinOps Foundation** — FinOps Framework (https://www.finops.org/framework/). Practitioner framework for cloud and AI cost management: inform, optimize, operate. No fabricated control IDs — cite by framework name and principle.

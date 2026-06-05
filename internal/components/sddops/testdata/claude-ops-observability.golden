@@ -96,4 +96,4 @@ Each client engagement gets a documented observability baseline at handoff: curr
 - OWASP Top 10 for LLM Applications 2025 — LLM01:2025 Prompt Injection, LLM06:2025 Excessive Agency, LLM10:2025 Unbounded Consumption (https://genai.owasp.org/llm-top-10/). Security observability signals are mapped to these categories.
 - MITRE ATLAS — adversarial threat taxonomy for AI/ML systems (atlas.mitre.org). Specific technique IDs (e.g., AML.TA0013 Exfiltration) cited as [UNVERIFIED] where exact numbers are not confirmed against the published ATLAS matrix.
 - NIST AI 600-1 (2024) — Generative AI Profile. Cited for environmental impact tracking guidance and compute cost observability obligations. Specific subcategory action IDs marked [UNVERIFIED].
-- NIST AI RMF 1.0 (2023) — MEASURE function, including MEASURE 1.1 [UNVERIFIED: exact subcategory] on measurement methods for AI risk monitoring.
+- NIST AI RMF 1.0 (2023) — MEASURE function, including MEASURE 1.1 (approaches and metrics for measurement of AI risks are selected for implementation) on measurement methods for AI risk monitoring.

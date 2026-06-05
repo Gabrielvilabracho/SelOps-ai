@@ -16,7 +16,7 @@ Load this skill when designing a new AI system component, reviewing proposed mod
 - **Interfaces are model-agnostic.** The interface between your AI inference layer and the rest of the system must not expose model-specific details (provider names, model IDs, token counts) in its public contract. Caller code must be swappable between models without changes.
 - **Each module owns its data.** No module reads or writes directly to another module's data store. Cross-module data access goes through the owning module's API. No exceptions.
 - **Pipeline boundaries are explicit.** In data pipelines, the boundary between each stage is a defined data shape (see ops-data-contracts), not an implicit convention. A pipeline stage that receives a raw dict and returns a raw dict has no boundary.
-- **The model supply chain is an attack surface.** Every external model — whether called via API, loaded as weights, or downloaded as a fine-tune — is a third-party dependency with its own risk profile. Model supply chain attacks (OWASP LLM03:2025 Supply Chain) can introduce poisoned weights, backdoored adapters, or malicious plugins without triggering code review. The architecture must enforce provenance checks, version pinning, and isolation at every model ingestion point. (NIST GOVERN 6.1 [UNVERIFIED: exact subcategory], NIST SP 800-161 supply chain risk management.)
+- **The model supply chain is an attack surface.** Every external model — whether called via API, loaded as weights, or downloaded as a fine-tune — is a third-party dependency with its own risk profile. Model supply chain attacks (OWASP LLM03:2025 Supply Chain) can introduce poisoned weights, backdoored adapters, or malicious plugins without triggering code review. The architecture must enforce provenance checks, version pinning, and isolation at every model ingestion point. (NIST GOVERN 6.1, NIST SP 800-161 supply chain risk management.)
 
 ## Patterns
 
@@ -42,7 +42,7 @@ Dependencies always flow inward: `adapters → domain → inference`, never the 
 For every model used in production, maintain a per-model Software Bill of Materials (SBOM) entry that records: (1) model identifier — name, version, variant/adapter, (2) provider and source URL, (3) content checksum or digest, (4) license type and usage restrictions, (5) training data summary if known (source provenance, known exclusions), (6) known vulnerabilities or advisories at ingestion time, (7) risk assessment — intended use, sensitivity tier, and approval sign-off. The SBOM entry is created when the model is first added and updated on each version change. It is stored in source control alongside the model's adapter code. This addresses supply chain transparency requirements per OWASP LLM03:2025 (Supply Chain) and NIST SP 800-161.
 
 ### Supply Chain Security Controls
-Enforce these controls at every model ingestion boundary: (1) **version pinning** — lock each model to an exact version or digest; never use a floating "latest" reference in production, (2) **checksum verification** — validate model weights or API response signatures against the registered digest before use, (3) **update gating** — model updates require a documented review, behavioral baseline comparison, and explicit approval before promotion to production, (4) **provider fallback** — define a tested fallback provider for each critical model so a provider outage or supply chain event does not produce an uncontrolled failure. Grounded in OWASP LLM03:2025 (Supply Chain), NIST GOVERN 6.1 (third-party AI risk) [UNVERIFIED: exact subcategory], and NIST SP 800-161 (supply chain risk management).
+Enforce these controls at every model ingestion boundary: (1) **version pinning** — lock each model to an exact version or digest; never use a floating "latest" reference in production, (2) **checksum verification** — validate model weights or API response signatures against the registered digest before use, (3) **update gating** — model updates require a documented review, behavioral baseline comparison, and explicit approval before promotion to production, (4) **provider fallback** — define a tested fallback provider for each critical model so a provider outage or supply chain event does not produce an uncontrolled failure. Grounded in OWASP LLM03:2025 (Supply Chain), NIST GOVERN 6.1 (third-party AI risk), and NIST SP 800-161 (supply chain risk management).
 
 ## Checklist
 
@@ -85,5 +85,5 @@ Supply chain risk is the third and often underestimated failure mode. An AI syst
 ## References
 
 - OWASP LLM Top 10 2025 — LLM03:2025 Supply Chain: risks from third-party model components, adapters, and plugins
-- NIST GOVERN 6.1 — third-party AI governance and risk management [UNVERIFIED: exact subcategory number]
+- NIST AI RMF 1.0 (2023) — GOVERN 6.1 (policies addressing AI risks from third-party entities)
 - NIST SP 800-161 — Supply Chain Risk Management Practices for Federal Information Systems (applicable by analogy to AI supply chains)
