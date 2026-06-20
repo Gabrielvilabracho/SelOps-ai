@@ -12,8 +12,8 @@ import (
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents"
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents/claude"
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents/cursor"
-	"github.com/Gabrielvilabracho/selops-ai/internal/agents/kimi"
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents/kilocode"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents/kimi"
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents/kiro"
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents/opencode"
 	"github.com/Gabrielvilabracho/selops-ai/internal/model"
@@ -413,16 +413,16 @@ func TestOpsOrchestratorContentSelectionByAdapter(t *testing.T) {
 		absent   string
 	}{
 		{
-			name:     "opencode",
-			adapter:  opencode.NewAdapter(),
+			name:    "opencode",
+			adapter: opencode.NewAdapter(),
 			// OpenCode variant has model assignments section and coded preflight options.
 			required: "Model Assignments",
 			// Generic variant has section:model-capable markup; opencode does not.
 			absent: "<!-- section:model-capable -->",
 		},
 		{
-			name:     "claude",
-			adapter:  claude.NewAdapter(),
+			name:    "claude",
+			adapter: claude.NewAdapter(),
 			// Generic variant has section:model-capable markup.
 			required: "<!-- section:model-capable -->",
 			// OpenCode model assignments are in the opencode variant only.
@@ -506,9 +506,9 @@ var opsPhases = opsPhaseNames
 // Only capable adapters receive sub-agent files; OpenCode (SupportsSubAgents=false) does not.
 func TestInjectOpsSubAgents_CapabilityGate(t *testing.T) {
 	tests := []struct {
-		name          string
-		adapter       agents.Adapter
-		expectFiles   bool
+		name        string
+		adapter     agents.Adapter
+		expectFiles bool
 	}{
 		{name: "claude", adapter: claude.NewAdapter(), expectFiles: true},
 		{name: "opencode", adapter: opencode.NewAdapter(), expectFiles: false},
@@ -1021,14 +1021,14 @@ func TestResolveClaudeModelAlias(t *testing.T) {
 			want: model.ClaudeModelSonnet,
 		},
 		{
-			name: "sonnet fallback when assignments map is empty and phase unknown",
+			name:        "sonnet fallback when assignments map is empty and phase unknown",
 			assignments: map[string]model.ClaudeModelAlias{},
 			phase:       "ops-structure",
 			// Empty assignments merged over balanced preset → preset default = sonnet.
 			want: model.ClaudeModelSonnet,
 		},
 		{
-			name: "preset phase entry used when assignments nil (sdd-propose=opus in balanced)",
+			name:        "preset phase entry used when assignments nil (sdd-propose=opus in balanced)",
 			assignments: nil,
 			phase:       "sdd-propose",
 			want:        model.ClaudeModelOpus,
@@ -1054,12 +1054,12 @@ func TestResolveClaudeModelAlias(t *testing.T) {
 // literals are removed.
 func TestInjectOpsSubAgents_ModelRoutingFromAssignments(t *testing.T) {
 	tests := []struct {
-		name        string
-		adapter     agents.Adapter
-		opts        InjectOptions
-		phase       string
-		wantInFile  string // expected resolved model string present in the written file
-		wantAbsent  string // placeholder that must NOT appear
+		name       string
+		adapter    agents.Adapter
+		opts       InjectOptions
+		phase      string
+		wantInFile string // expected resolved model string present in the written file
+		wantAbsent string // placeholder that must NOT appear
 	}{
 		{
 			name:    "claude phase-specific assignment routed to file — scenario 6a",
@@ -1096,7 +1096,7 @@ func TestInjectOpsSubAgents_ModelRoutingFromAssignments(t *testing.T) {
 				},
 			},
 			phase:      "ops-review",
-			wantInFile: "claude-opus",  // KiroModelID(opus) contains "claude-opus"
+			wantInFile: "claude-opus", // KiroModelID(opus) contains "claude-opus"
 			wantAbsent: "{{KIRO_MODEL}}",
 		},
 		{
