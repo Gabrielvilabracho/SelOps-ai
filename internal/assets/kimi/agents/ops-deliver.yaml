@@ -1,0 +1,7 @@
+version: "1"
+agent:
+  name: ops-deliver
+  extend: default
+  system_prompt_path: ./ops-deliver.md
+  exclude_tools:
+    - "kimi_cli.tools.multiagent:Task"

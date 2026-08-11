@@ -279,8 +279,9 @@ func TestClaudeEmbeddedAssetLayout(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadDir(claude/agents) error = %v", err)
 	}
-	if len(agentEntries) != 13 {
-		t.Fatalf("claude agents count = %d, want 13", len(agentEntries))
+	// 13 original SDD+JD sub-agents + 5 OPS phase sub-agents added by complete-sddops PR1.
+	if len(agentEntries) != 18 {
+		t.Fatalf("claude agents count = %d, want 18", len(agentEntries))
 	}
 }
 
