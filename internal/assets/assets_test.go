@@ -693,11 +693,15 @@ func TestEmbeddedAssetCount(t *testing.T) {
 	// OPS fork (Phase 0e): 10 sdd-* skill directories removed.
 	// Phase 2a: 5 OPS pipeline phase agent skills added (ops-brief, ops-structure,
 	// ops-produce, ops-review, ops-deliver).
-	// We expect 23 skill directories:
-	// 10 foundation + 6 SelOps operational ops-* domain skills +
+	// ops-framework PR-1: 2 P0 domain skills added (ops-adversarial-security, ops-privacy-governance).
+	// ops-framework PR-3: 3 P1/P2 domain skills added (ops-model-validation,
+	// ops-finops-governance, ops-transparency-explainability).
+	// ops-framework PR-4: 1 P3 domain skill added (ops-model-lifecycle).
+	// We expect 29 skill directories:
+	// 10 foundation + 12 SelOps operational ops-* domain skills +
 	// 5 OPS pipeline phase agents + judgment-day + _shared.
-	if skillDirs != 23 {
-		t.Fatalf("expected 23 skill directories, got %d", skillDirs)
+	if skillDirs != 29 {
+		t.Fatalf("expected 29 skill directories, got %d", skillDirs)
 	}
 
 	// Verify each skill directory has a SKILL.md.

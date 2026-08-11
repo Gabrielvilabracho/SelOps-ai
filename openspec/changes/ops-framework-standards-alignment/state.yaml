@@ -1,0 +1,17 @@
+change: ops-framework-standards-alignment
+status: archived
+archived_at: "2026-06-05"
+pr_url: https://github.com/Gabrielvilabracho/SelOps-ai/pull/33
+integration_branch: feat/ops-framework-merge
+source_branches:
+  - feat/ops-framework-p0-skills       # PR-1: ops-adversarial-security, ops-privacy-governance
+  - feat/ops-framework-expand-existing # PR-2: expand 4 skills + ops-produce incident detection
+  - feat/ops-framework-p1-p2-skills    # PR-3: ops-model-validation, ops-finops, ops-transparency
+  - feat/ops-framework-final           # PR-4: ops-model-lifecycle + docs/modular/structure
+verify_status: PASS  # PR-4: PASS-WITH-WARNINGS (no CRITICAL)
+tests: green  # go test ./... — all packages pass
+notes: |
+  Zero fabricated citation IDs.
+  [UNVERIFIED] markers remain in skill files — a human must confirm against
+  published standards before production release (NIST subcategory numbers,
+  ISO 42001 Annex A clauses, EU AI Act articles).

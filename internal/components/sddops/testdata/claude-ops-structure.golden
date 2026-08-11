@@ -24,7 +24,8 @@ The router enters this phase after ops-brief produces a confirmed brief with no 
    - Autonomous level: one full-scope rollback procedure covering all steps, written before any step executes.
 5. Identify human approval gates — steps that require explicit operator confirmation before execution regardless of autonomy level.
 6. Map affected systems for each step: name the system, the type of interaction (read / write / configuration / deployment), and the expected impact radius.
-7. Define a post-step verification for each step: the observable condition that confirms the step succeeded.
+7. Flag contract-boundary changes: for any step that modifies a schema, module interface, or data contract shared across system boundaries, mark the step as a contract-boundary change in the execution plan. These steps require contract validation in their post-step verification (see ops-data-contracts).
+8. Define a post-step verification for each step: the observable condition that confirms the step succeeded. For contract-boundary steps, the verification must include the relevant contract test or schema validation.
 
 ## Inputs / Outputs
 
@@ -39,9 +40,10 @@ Halt and escalate to the operator if:
 - The affected system map reveals systems outside the approved engagement scope from the brief.
 - The number of irreversible steps exceeds what the registered autonomy level permits without additional approval.
 
-Do not hand the plan to ops-produce until every step has a post-step verification and every irreversible step has a documented rollback or explicit exception approval.
+Do not hand the plan to ops-produce until every step has a post-step verification, every irreversible step has a documented rollback or explicit exception approval, and every contract-boundary step is flagged with its required contract validation.
 
 ## Cross-References
 
 - ops-graduated-autonomy — rollback documentation rule, escalation trigger list, three-level model
 - ops-governance — change approval workflow, immutable audit log format
+- ops-data-contracts — contract validation requirements for boundary-crossing steps

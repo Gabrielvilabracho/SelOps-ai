@@ -54,12 +54,18 @@ func assertGolden(t *testing.T, name string, actual string) {
 // TestSddOpsSkillIDsMembership verifies the exact set of sddOpsSkillIDs (domain knowledge skills).
 func TestSddOpsSkillIDsMembership(t *testing.T) {
 	want := []model.SkillID{
+		"ops-adversarial-security",
+		"ops-privacy-governance",
 		"ops-standard-documentation",
 		"ops-modular-architecture",
 		"ops-data-contracts",
 		"ops-governance",
 		"ops-observability",
 		"ops-graduated-autonomy",
+		"ops-model-validation",
+		"ops-finops-governance",
+		"ops-transparency-explainability",
+		"ops-model-lifecycle",
 	}
 	if len(sddOpsSkillIDs) != len(want) {
 		t.Fatalf("sddOpsSkillIDs len = %d, want %d", len(sddOpsSkillIDs), len(want))

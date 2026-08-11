@@ -19,12 +19,18 @@ var foundationSkills = []model.SkillID{
 
 // opsSkills are the SelOps operational domain knowledge skills — included for PresetSelOpsOperational.
 var opsSkills = []model.SkillID{
+	model.SkillOpsAdversarialSecurity,
+	model.SkillOpsPrivacyGovernance,
 	model.SkillOpsStandardDocumentation,
 	model.SkillOpsModularArchitecture,
 	model.SkillOpsDataContracts,
 	model.SkillOpsGovernance,
 	model.SkillOpsObservability,
 	model.SkillOpsGraduatedAutonomy,
+	model.SkillOpsModelValidation,
+	model.SkillOpsFinOpsGovernance,
+	model.SkillOpsTransparencyExplainability,
+	model.SkillOpsModelLifecycle,
 }
 
 // opsPipelineSkills are the SelOps OPS pipeline phase agents — execution roles that

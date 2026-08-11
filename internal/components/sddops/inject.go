@@ -36,12 +36,18 @@ type InjectOptions struct {
 // (which start with "sdd-") to avoid any overlap.
 // These skills encode WHAT the operator knows — principles, patterns, checklists.
 var sddOpsSkillIDs = []model.SkillID{
+	"ops-adversarial-security",
+	"ops-privacy-governance",
 	"ops-standard-documentation",
 	"ops-modular-architecture",
 	"ops-data-contracts",
 	"ops-governance",
 	"ops-observability",
 	"ops-graduated-autonomy",
+	"ops-model-validation",
+	"ops-finops-governance",
+	"ops-transparency-explainability",
+	"ops-model-lifecycle",
 }
 
 // opsPipelineSkillIDs is the canonical list of SelOps OPS pipeline phase agent skill IDs.

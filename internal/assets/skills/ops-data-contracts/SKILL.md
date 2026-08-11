@@ -31,6 +31,15 @@ New fields: allowed, must be optional with a documented default. Removed fields:
 ### LLM Output Contract
 When a system parses LLM responses, define the expected output schema explicitly (JSON schema, Pydantic model, or equivalent). Add a structured output validation step before the response is used downstream. Log validation failures as schema violations, not as generic errors.
 
+### PII in Contract Boundaries (GDPR Art.5 / Art.25)
+When a data contract carries or may carry personally identifiable information (names, emails, IDs, financial data, health data), apply data protection by design at the contract definition stage — not as a post-processing filter:
+- Mark PII fields explicitly in the schema with a `pii: true` annotation (or equivalent).
+- Apply field-level masking or tokenisation at the producer side before writing to the contract payload.
+- Document the legal basis for processing this PII in the contract's data lineage document.
+- LLM output contracts are especially susceptible to inadvertent PII reproduction: if training data or retrieved context includes PII, the model may reproduce it in output. Add a PII scan step before the LLM output contract is passed to downstream consumers.
+
+For detailed privacy controls and GDPR Art.5(1)(c) data minimisation and Art.25 data protection by design requirements, see `ops-privacy-governance`.
+
 ### Producer-Consumer Alignment Check
 Before any schema change ships: (1) identify all consumers of the schema, (2) confirm each consumer can handle the new version, (3) confirm fallback behavior for consumers that receive an unexpected version. Document this analysis in the change's decision log.
 
@@ -44,6 +53,7 @@ Every producer must have a contract test that validates its output against the a
 - [ ] Determined the version identifier format (semantic, date-based, or sequential)
 - [ ] Confirmed counterpart teams have reviewed and signed off on the schema
 - [ ] Schema written in a machine-readable format (JSON Schema, Protobuf, OpenAPI, Pydantic)
+- [ ] PII fields identified and annotated (`pii: true`); legal basis for processing documented if applicable
 
 **Before shipping a schema change:**
 - [ ] Change classified: additive (safe) or breaking (requires migration plan)
@@ -66,3 +76,7 @@ At SelOps, data contracts govern three distinct boundaries: (1) the interface be
 Changes to a prompt template that alter the output structure are breaking changes to the LLM output contract. Treat them as such. Version the prompt template alongside the schema it produces.
 
 When a client's system changes its input format, that is a contract change from the client side. Validate it explicitly, do not silently adapt.
+
+## References
+
+- GDPR — Regulation (EU) 2016/679, Art.5(1)(c) (data minimisation principle) and Art.25 (data protection by design and by default). Applied to PII field annotation and producer-side masking requirements at contract boundaries.
