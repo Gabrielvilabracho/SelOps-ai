@@ -4,6 +4,7 @@
 package sddops
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -271,6 +272,110 @@ func injectOpsSlashCommands(homeDir string, adapter agents.Adapter) (changed boo
 	return changed, files, nil
 }
 
+// mergeJSONFile reads the JSON file at path (treating not-exist as nil/empty),
+// deep-merges overlay into it via filemerge.MergeJSONObjects (overlay keys win
+// on leaf collision; existing sibling keys are preserved), and writes the result
+// atomically. Returns both the WriteResult and the merged bytes so the caller
+// can post-check in-memory without re-reading from disk.
+// Private to sddops — mirrors the convention of six other packages that each
+// hold their own copy (engram, mcp, persona, permissions, theme, old sdd).
+func mergeJSONFile(path string, overlay []byte) (filemerge.WriteResult, []byte, error) {
+	base, err := os.ReadFile(path)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return filemerge.WriteResult{}, nil, fmt.Errorf("read json file %q: %w", path, err)
+		}
+		base = nil // missing file → bootstrap from overlay only
+	}
+
+	merged, err := filemerge.MergeJSONObjects(base, overlay)
+	if err != nil {
+		return filemerge.WriteResult{}, nil, fmt.Errorf("merge json objects: %w", err)
+	}
+
+	wr, err := filemerge.WriteFileAtomic(path, merged, 0o644)
+	if err != nil {
+		return filemerge.WriteResult{}, nil, fmt.Errorf("write merged json %q: %w", path, err)
+	}
+
+	return wr, merged, nil
+}
+
+// injectOpsOpenCodeOverlay merges internal/assets/opencode/ops-overlay.json into
+// the adapter's settings file (opencode.json) for OpenCode and Kilocode adapters.
+// Before merging, it inlines the ops-orchestrator prompt from
+// opencode/ops-orchestrator.md, replacing the {{OPS_ORCHESTRATOR_PROMPT}} sentinel
+// with the JSON-escaped markdown content so the result is valid JSON with no
+// absolute path references.
+//
+// Semantic post-check: verifies that the merged in-memory JSON contains both
+// root["agent"]["ops-orchestrator"] and root["agent"]["ops-brief"] keys.
+// No byte-size threshold is used (per spec § Requirement 1 + Decision: semantic post-check).
+//
+// Gate: only OpenCode and Kilocode adapters receive this overlay.
+func injectOpsOpenCodeOverlay(homeDir string, adapter agents.Adapter) (changed bool, files []string, err error) {
+	agentID := adapter.Agent()
+	if agentID != model.AgentOpenCode && agentID != model.AgentKilocode {
+		return false, nil, nil
+	}
+
+	settingsPath := adapter.SettingsPath(homeDir)
+	if settingsPath == "" {
+		return false, nil, nil
+	}
+	if mkErr := os.MkdirAll(filepath.Dir(settingsPath), 0o755); mkErr != nil {
+		return false, nil, fmt.Errorf("create overlay settings dir: %w", mkErr)
+	}
+
+	// Read the overlay asset and inline the orchestrator prompt.
+	overlayBytes := []byte(assets.MustRead("opencode/ops-overlay.json"))
+	orchMD := assets.MustRead("opencode/ops-orchestrator.md")
+
+	// JSON-escape the raw markdown so the substitution produces valid JSON.
+	// json.Marshal on a string produces a quoted, properly escaped JSON string literal.
+	// We strip the outer quotes because the sentinel {{OPS_ORCHESTRATOR_PROMPT}}
+	// already sits inside a JSON string value in the overlay template.
+	escapedMD, encErr := json.Marshal(orchMD)
+	if encErr != nil {
+		return false, nil, fmt.Errorf("json-escape orchestrator prompt: %w", encErr)
+	}
+	// escapedMD is e.g.  "\"line1\\nline2\""  — strip the outer double-quotes.
+	innerBytes := escapedMD[1 : len(escapedMD)-1]
+	overlayBytes = []byte(strings.ReplaceAll(
+		string(overlayBytes),
+		"{{OPS_ORCHESTRATOR_PROMPT}}",
+		string(innerBytes),
+	))
+
+	// Deep-merge into the settings file (create if absent).
+	wr, merged, mergeErr := mergeJSONFile(settingsPath, overlayBytes)
+	if mergeErr != nil {
+		return false, nil, fmt.Errorf("merge ops overlay: %w", mergeErr)
+	}
+
+	// Semantic post-check: assert ops-orchestrator AND ops-brief present in merged JSON.
+	// Use in-memory bytes (Windows/WSL2 rename-visibility safety).
+	var root map[string]any
+	if unmarshalErr := json.Unmarshal(merged, &root); unmarshalErr != nil {
+		return false, nil, fmt.Errorf("post-check: unmarshal merged overlay: %w", unmarshalErr)
+	}
+	agentRaw, hasAgent := root["agent"]
+	if !hasAgent {
+		return false, nil, fmt.Errorf("post-check: merged opencode.json missing top-level \"agent\" key")
+	}
+	agentMap, ok := agentRaw.(map[string]any)
+	if !ok {
+		return false, nil, fmt.Errorf("post-check: merged opencode.json \"agent\" is not an object")
+	}
+	for _, requiredKey := range []string{"ops-orchestrator", "ops-brief"} {
+		if _, exists := agentMap[requiredKey]; !exists {
+			return false, nil, fmt.Errorf("post-check: merged opencode.json missing agent key %q", requiredKey)
+		}
+	}
+
+	return wr.Changed, []string{settingsPath}, nil
+}
+
 // Inject writes the operational SDD skill files for all provided adapters.
 // It injects both domain knowledge skills (sddOpsSkillIDs) and pipeline phase
 // agents (opsPipelineSkillIDs). It calls skills.InjectWithCapability, which
@@ -360,6 +465,17 @@ func Inject(targetDir string, adapter agents.Adapter, opts InjectOptions) (Injec
 		result.Changed = true
 	}
 	result.Files = append(result.Files, cmdFiles...)
+
+	// Step 6: Merge OPS OpenCode overlay into the adapter's settings file.
+	// Gate: adapter.Agent() == OpenCode || Kilocode.
+	overlayChanged, overlayFiles, overlayErr := injectOpsOpenCodeOverlay(targetDir, adapter)
+	if overlayErr != nil {
+		return InjectionResult{}, fmt.Errorf("inject ops opencode overlay: %w", overlayErr)
+	}
+	if overlayChanged {
+		result.Changed = true
+	}
+	result.Files = append(result.Files, overlayFiles...)
 
 	return InjectionResult{Changed: result.Changed, Files: result.Files}, nil
 }

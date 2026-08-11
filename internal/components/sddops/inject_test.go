@@ -1,6 +1,8 @@
 package sddops
 
 import (
+	"bytes"
+	"encoding/json"
 	"flag"
 	"os"
 	"path/filepath"
@@ -10,8 +12,8 @@ import (
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents"
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents/claude"
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents/cursor"
-	"github.com/Gabrielvilabracho/selops-ai/internal/agents/kimi"
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents/kilocode"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents/kimi"
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents/kiro"
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents/opencode"
 	"github.com/Gabrielvilabracho/selops-ai/internal/model"
@@ -411,16 +413,16 @@ func TestOpsOrchestratorContentSelectionByAdapter(t *testing.T) {
 		absent   string
 	}{
 		{
-			name:     "opencode",
-			adapter:  opencode.NewAdapter(),
+			name:    "opencode",
+			adapter: opencode.NewAdapter(),
 			// OpenCode variant has model assignments section and coded preflight options.
 			required: "Model Assignments",
 			// Generic variant has section:model-capable markup; opencode does not.
 			absent: "<!-- section:model-capable -->",
 		},
 		{
-			name:     "claude",
-			adapter:  claude.NewAdapter(),
+			name:    "claude",
+			adapter: claude.NewAdapter(),
 			// Generic variant has section:model-capable markup.
 			required: "<!-- section:model-capable -->",
 			// OpenCode model assignments are in the opencode variant only.
@@ -504,9 +506,9 @@ var opsPhases = opsPhaseNames
 // Only capable adapters receive sub-agent files; OpenCode (SupportsSubAgents=false) does not.
 func TestInjectOpsSubAgents_CapabilityGate(t *testing.T) {
 	tests := []struct {
-		name          string
-		adapter       agents.Adapter
-		expectFiles   bool
+		name        string
+		adapter     agents.Adapter
+		expectFiles bool
 	}{
 		{name: "claude", adapter: claude.NewAdapter(), expectFiles: true},
 		{name: "opencode", adapter: opencode.NewAdapter(), expectFiles: false},
@@ -1019,14 +1021,14 @@ func TestResolveClaudeModelAlias(t *testing.T) {
 			want: model.ClaudeModelSonnet,
 		},
 		{
-			name: "sonnet fallback when assignments map is empty and phase unknown",
+			name:        "sonnet fallback when assignments map is empty and phase unknown",
 			assignments: map[string]model.ClaudeModelAlias{},
 			phase:       "ops-structure",
 			// Empty assignments merged over balanced preset → preset default = sonnet.
 			want: model.ClaudeModelSonnet,
 		},
 		{
-			name: "preset phase entry used when assignments nil (sdd-propose=opus in balanced)",
+			name:        "preset phase entry used when assignments nil (sdd-propose=opus in balanced)",
 			assignments: nil,
 			phase:       "sdd-propose",
 			want:        model.ClaudeModelOpus,
@@ -1052,12 +1054,12 @@ func TestResolveClaudeModelAlias(t *testing.T) {
 // literals are removed.
 func TestInjectOpsSubAgents_ModelRoutingFromAssignments(t *testing.T) {
 	tests := []struct {
-		name        string
-		adapter     agents.Adapter
-		opts        InjectOptions
-		phase       string
-		wantInFile  string // expected resolved model string present in the written file
-		wantAbsent  string // placeholder that must NOT appear
+		name       string
+		adapter    agents.Adapter
+		opts       InjectOptions
+		phase      string
+		wantInFile string // expected resolved model string present in the written file
+		wantAbsent string // placeholder that must NOT appear
 	}{
 		{
 			name:    "claude phase-specific assignment routed to file — scenario 6a",
@@ -1094,7 +1096,7 @@ func TestInjectOpsSubAgents_ModelRoutingFromAssignments(t *testing.T) {
 				},
 			},
 			phase:      "ops-review",
-			wantInFile: "claude-opus",  // KiroModelID(opus) contains "claude-opus"
+			wantInFile: "claude-opus", // KiroModelID(opus) contains "claude-opus"
 			wantAbsent: "{{KIRO_MODEL}}",
 		},
 		{
@@ -1148,5 +1150,403 @@ func TestInjectOpsSubAgents_ModelRoutingFromAssignments(t *testing.T) {
 				t.Errorf("file for phase %q missing resolved model %q\ncontent:\n%s", tt.phase, tt.wantInFile, targetContent)
 			}
 		})
+	}
+}
+
+// ── injectOpsOpenCodeOverlay tests (scenarios 15, 16, 17, 18, 19) ──────────────
+
+// overlayAgentKeys extracts the set of agent keys present under root["agent"]
+// in a JSON blob. Returns nil on unmarshal failure.
+func overlayAgentKeys(t *testing.T, data []byte) map[string]struct{} {
+	t.Helper()
+	var root map[string]any
+	if err := json.Unmarshal(data, &root); err != nil {
+		t.Fatalf("overlayAgentKeys: unmarshal error = %v\ndata:\n%s", err, string(data))
+	}
+	agentRaw, ok := root["agent"]
+	if !ok {
+		return map[string]struct{}{}
+	}
+	agentMap, ok := agentRaw.(map[string]any)
+	if !ok {
+		return map[string]struct{}{}
+	}
+	keys := make(map[string]struct{}, len(agentMap))
+	for k := range agentMap {
+		keys[k] = struct{}{}
+	}
+	return keys
+}
+
+// mustReadSettingsJSON reads the settings file written by injectOpsOpenCodeOverlay.
+func mustReadSettingsJSON(t *testing.T, adapter agents.Adapter, homeDir string) []byte {
+	t.Helper()
+	path := adapter.SettingsPath(homeDir)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("ReadFile(%q) error = %v", path, err)
+	}
+	return data
+}
+
+// TestInjectOpsOpenCodeOverlay_RegistersOrchestratorAndAgents — Scenario 15
+// After overlay injection, opencode.json must contain all 6 agent keys:
+// ops-orchestrator, ops-brief, ops-structure, ops-produce, ops-review, ops-deliver.
+func TestInjectOpsOpenCodeOverlay_RegistersOrchestratorAndAgents(t *testing.T) {
+	home := t.TempDir()
+	adapter := opencode.NewAdapter()
+
+	changed, files, err := injectOpsOpenCodeOverlay(home, adapter)
+	if err != nil {
+		t.Fatalf("injectOpsOpenCodeOverlay(opencode) error = %v", err)
+	}
+	if !changed {
+		t.Error("injectOpsOpenCodeOverlay changed = false; want true (new install)")
+	}
+	if len(files) == 0 {
+		t.Error("injectOpsOpenCodeOverlay files empty; want settings path")
+	}
+
+	data := mustReadSettingsJSON(t, adapter, home)
+	keys := overlayAgentKeys(t, data)
+
+	wantKeys := []string{"ops-orchestrator", "ops-brief", "ops-structure", "ops-produce", "ops-review", "ops-deliver"}
+	for _, k := range wantKeys {
+		if _, ok := keys[k]; !ok {
+			t.Errorf("opencode.json missing agent key %q after overlay; present: %v", k, keys)
+		}
+	}
+
+	// WARNING 1 fix: assert registration field VALUES, not just key existence.
+	var root map[string]any
+	if err := json.Unmarshal(data, &root); err != nil {
+		t.Fatalf("unmarshal error = %v", err)
+	}
+	agentMap := root["agent"].(map[string]any)
+
+	// ops-orchestrator must have mode="primary".
+	orch := agentMap["ops-orchestrator"].(map[string]any)
+	if v, _ := orch["mode"].(string); v != "primary" {
+		t.Errorf("ops-orchestrator mode = %q; want \"primary\"", v)
+	}
+
+	// Each of the 5 phase agents must have mode="subagent" and hidden=true.
+	phaseAgents := []string{"ops-brief", "ops-structure", "ops-produce", "ops-review", "ops-deliver"}
+	for _, name := range phaseAgents {
+		obj, ok := agentMap[name].(map[string]any)
+		if !ok {
+			t.Errorf("agent %q not an object or missing", name)
+			continue
+		}
+		if v, _ := obj["mode"].(string); v != "subagent" {
+			t.Errorf("agent %q mode = %q; want \"subagent\"", name, v)
+		}
+		if v, _ := obj["hidden"].(bool); !v {
+			t.Errorf("agent %q hidden = %v; want true", name, v)
+		}
+	}
+}
+
+// TestInjectOpsOpenCodeOverlay_PreservesExistingUserKeys — Scenario 16
+// Unrelated pre-existing user keys in opencode.json must survive the overlay merge.
+func TestInjectOpsOpenCodeOverlay_PreservesExistingUserKeys(t *testing.T) {
+	home := t.TempDir()
+	adapter := opencode.NewAdapter()
+
+	// Seed opencode.json with unrelated user key.
+	settingsPath := adapter.SettingsPath(home)
+	if err := os.MkdirAll(filepath.Dir(settingsPath), 0o755); err != nil {
+		t.Fatalf("MkdirAll error = %v", err)
+	}
+	seedJSON := []byte(`{"foo":"bar","myTeam":{"theme":"dark"}}`)
+	if err := os.WriteFile(settingsPath, seedJSON, 0o644); err != nil {
+		t.Fatalf("WriteFile seed error = %v", err)
+	}
+
+	_, _, err := injectOpsOpenCodeOverlay(home, adapter)
+	if err != nil {
+		t.Fatalf("injectOpsOpenCodeOverlay error = %v", err)
+	}
+
+	data := mustReadSettingsJSON(t, adapter, home)
+	var root map[string]any
+	if err := json.Unmarshal(data, &root); err != nil {
+		t.Fatalf("unmarshal error = %v", err)
+	}
+
+	// Pre-existing top-level key must survive.
+	if v, ok := root["foo"]; !ok || v != "bar" {
+		t.Errorf("expected root[\"foo\"] = \"bar\"; got %v (ok=%v)", v, ok)
+	}
+	// Pre-existing nested key must survive.
+	myTeam, ok := root["myTeam"].(map[string]any)
+	if !ok {
+		t.Fatalf("root[\"myTeam\"] not a map; got %T", root["myTeam"])
+	}
+	if v, ok2 := myTeam["theme"]; !ok2 || v != "dark" {
+		t.Errorf("expected myTeam[\"theme\"] = \"dark\"; got %v (ok=%v)", v, ok2)
+	}
+	// Agent keys from overlay must also be present.
+	keys := overlayAgentKeys(t, data)
+	if _, ok := keys["ops-orchestrator"]; !ok {
+		t.Error("ops-orchestrator key missing after merge")
+	}
+}
+
+// TestInjectOpsOpenCodeOverlay_PromptsInlinedNoAbsolutePaths — Scenario 17
+// Merged opencode.json must have inline prompts and no absolute path references.
+func TestInjectOpsOpenCodeOverlay_PromptsInlinedNoAbsolutePaths(t *testing.T) {
+	home := t.TempDir()
+	adapter := opencode.NewAdapter()
+
+	_, _, err := injectOpsOpenCodeOverlay(home, adapter)
+	if err != nil {
+		t.Fatalf("injectOpsOpenCodeOverlay error = %v", err)
+	}
+
+	data := mustReadSettingsJSON(t, adapter, home)
+
+	// No sentinel must remain.
+	if bytes.Contains(data, []byte("{{OPS_ORCHESTRATOR_PROMPT}}")) {
+		t.Error("opencode.json still contains {{OPS_ORCHESTRATOR_PROMPT}} sentinel — prompt not inlined")
+	}
+	// No absolute path patterns (home dir or /Users/).
+	for _, abs := range []string{"/Users/", "$HOME", "/root/"} {
+		if bytes.Contains(data, []byte(abs)) {
+			t.Errorf("opencode.json contains absolute path %q — prompts must be inline", abs)
+		}
+	}
+	// ops-orchestrator prompt field must be a non-empty string.
+	var root map[string]any
+	if err := json.Unmarshal(data, &root); err != nil {
+		t.Fatalf("unmarshal error = %v", err)
+	}
+	agentMap := root["agent"].(map[string]any)
+	orch := agentMap["ops-orchestrator"].(map[string]any)
+	prompt, ok := orch["prompt"].(string)
+	if !ok || len(prompt) < 10 {
+		t.Errorf("ops-orchestrator prompt is empty or missing; got %q", prompt)
+	}
+
+	// WARNING 3 fix: assert a known stable substring from the real orchestrator asset
+	// is present — proving the actual orchestrator.md content was inlined, not a stub.
+	// The orchestrator.md begins with "# SelOps — OPS Orchestrator Instructions".
+	const wantSubstring = "SelOps — OPS Orchestrator Instructions"
+	if !strings.Contains(prompt, wantSubstring) {
+		t.Errorf("ops-orchestrator prompt does not contain expected header substring %q;\nprompt prefix: %q",
+			wantSubstring, prompt[:min(80, len(prompt))])
+	}
+}
+
+// TestInjectOpsOpenCodeOverlay_NonOpenCodeSkipped — Scenario 18
+// Non-OpenCode adapters (e.g. Claude) must not receive the overlay.
+func TestInjectOpsOpenCodeOverlay_NonOpenCodeSkipped(t *testing.T) {
+	home := t.TempDir()
+	adapter := claude.NewAdapter()
+
+	changed, files, err := injectOpsOpenCodeOverlay(home, adapter)
+	if err != nil {
+		t.Fatalf("injectOpsOpenCodeOverlay(claude) error = %v", err)
+	}
+	if changed {
+		t.Error("injectOpsOpenCodeOverlay(claude) changed = true; want false (non-overlay adapter)")
+	}
+	if len(files) != 0 {
+		t.Errorf("injectOpsOpenCodeOverlay(claude) files = %v; want empty", files)
+	}
+
+	// Claude's settings file must not exist (no write attempted).
+	settingsPath := adapter.SettingsPath(home)
+	if _, statErr := os.Stat(settingsPath); statErr == nil {
+		t.Errorf("injectOpsOpenCodeOverlay(claude) wrote %q; want no write for non-overlay adapter", settingsPath)
+	}
+}
+
+// TestInjectOpsOpenCodeOverlay_Idempotent — Scenario 19
+// Second run must report changed=false and produce byte-identical opencode.json.
+func TestInjectOpsOpenCodeOverlay_Idempotent(t *testing.T) {
+	home := t.TempDir()
+	adapter := opencode.NewAdapter()
+
+	// First run.
+	if _, _, err := injectOpsOpenCodeOverlay(home, adapter); err != nil {
+		t.Fatalf("injectOpsOpenCodeOverlay first run error = %v", err)
+	}
+
+	// Snapshot bytes after first run.
+	bytesBefore := mustReadSettingsJSON(t, adapter, home)
+
+	// Second run — must report changed=false.
+	changed2, _, err2 := injectOpsOpenCodeOverlay(home, adapter)
+	if err2 != nil {
+		t.Fatalf("injectOpsOpenCodeOverlay second run error = %v", err2)
+	}
+	if changed2 {
+		t.Error("injectOpsOpenCodeOverlay second run changed = true; want false (idempotent)")
+	}
+
+	// Byte-identical.
+	bytesAfter := mustReadSettingsJSON(t, adapter, home)
+	if !bytes.Equal(bytesBefore, bytesAfter) {
+		t.Errorf("injectOpsOpenCodeOverlay second run produced different bytes\nbefore: %s\nafter:  %s",
+			string(bytesBefore), string(bytesAfter))
+	}
+}
+
+// ── Cross-cutting Inject() overlay tests (scenarios 3, 4, 16, 19) ──────────────
+
+// TestInject_OpenCodeOverlayAtomicAndPostChecked — Scenario 3 (overlay extension)
+// Inject for OpenCode writes the overlay and passes semantic post-check.
+func TestInject_OpenCodeOverlayAtomicAndPostChecked(t *testing.T) {
+	home := t.TempDir()
+	adapter := opencode.NewAdapter()
+
+	result, err := Inject(home, adapter, InjectOptions{})
+	if err != nil {
+		t.Fatalf("Inject(opencode) error = %v", err)
+	}
+	if !result.Changed {
+		t.Fatal("Inject(opencode) changed = false; want true on first install")
+	}
+
+	// Settings file must exist and contain ops-orchestrator + ops-brief keys.
+	data := mustReadSettingsJSON(t, adapter, home)
+	keys := overlayAgentKeys(t, data)
+	for _, k := range []string{"ops-orchestrator", "ops-brief"} {
+		if _, ok := keys[k]; !ok {
+			t.Errorf("Inject(opencode): opencode.json missing agent key %q after overlay", k)
+		}
+	}
+
+	// Settings path must appear in result.Files.
+	settingsPath := adapter.SettingsPath(home)
+	found := false
+	for _, f := range result.Files {
+		if f == settingsPath {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("Inject(opencode) result.Files missing settings path %q; got %v", settingsPath, result.Files)
+	}
+}
+
+// TestInject_OpenCodeOverlayPreservesUserKeys — Scenario 16 (via Inject)
+// Inject merges overlay without clobbering pre-existing user keys.
+func TestInject_OpenCodeOverlayPreservesUserKeys(t *testing.T) {
+	home := t.TempDir()
+	adapter := opencode.NewAdapter()
+
+	// Pre-seed opencode.json with a user key.
+	settingsPath := adapter.SettingsPath(home)
+	if err := os.MkdirAll(filepath.Dir(settingsPath), 0o755); err != nil {
+		t.Fatalf("MkdirAll error = %v", err)
+	}
+	if err := os.WriteFile(settingsPath, []byte(`{"userKey":"preserved"}`), 0o644); err != nil {
+		t.Fatalf("WriteFile error = %v", err)
+	}
+
+	if _, err := Inject(home, adapter, InjectOptions{}); err != nil {
+		t.Fatalf("Inject(opencode) error = %v", err)
+	}
+
+	data := mustReadSettingsJSON(t, adapter, home)
+	var root map[string]any
+	if err := json.Unmarshal(data, &root); err != nil {
+		t.Fatalf("unmarshal error = %v", err)
+	}
+	if v, ok := root["userKey"]; !ok || v != "preserved" {
+		t.Errorf("Inject clobbered userKey; got root[\"userKey\"] = %v (ok=%v)", v, ok)
+	}
+}
+
+// TestInject_OpenCodeOverlayIdempotent — Scenario 19 (via Inject)
+// Second Inject call for OpenCode reports Changed=false.
+func TestInject_OpenCodeOverlayIdempotent(t *testing.T) {
+	home := t.TempDir()
+	adapter := opencode.NewAdapter()
+
+	if _, err := Inject(home, adapter, InjectOptions{}); err != nil {
+		t.Fatalf("Inject first run error = %v", err)
+	}
+
+	result2, err2 := Inject(home, adapter, InjectOptions{})
+	if err2 != nil {
+		t.Fatalf("Inject second run error = %v", err2)
+	}
+	if result2.Changed {
+		t.Error("Inject second run Changed = true; want false (idempotent)")
+	}
+}
+
+// TestInjectOpsOpenCodeOverlay_PreservesNestedAgentChildren — WARNING 2 fix
+// Seeds opencode.json with a user-owned child INSIDE the "agent" object.
+// After overlay injection, the user child must survive alongside the OPS agents
+// that the overlay writes into the same "agent" object.
+// This exercises the deep-merge path of mergeObjects on a key that both base
+// and overlay share at the top level ("agent"), verifying that user-defined
+// sibling keys inside that object are not clobbered by a naive top-level overwrite.
+func TestInjectOpsOpenCodeOverlay_PreservesNestedAgentChildren(t *testing.T) {
+	home := t.TempDir()
+	adapter := opencode.NewAdapter()
+
+	// Seed opencode.json with a user-owned agent child AND an unrelated top-level key.
+	settingsPath := adapter.SettingsPath(home)
+	if err := os.MkdirAll(filepath.Dir(settingsPath), 0o755); err != nil {
+		t.Fatalf("MkdirAll error = %v", err)
+	}
+	seedJSON := []byte(`{
+  "someOtherKey": 123,
+  "agent": {
+    "my-custom-agent": {
+      "mode": "primary",
+      "prompt": "user stuff"
+    }
+  }
+}`)
+	if err := os.WriteFile(settingsPath, seedJSON, 0o644); err != nil {
+		t.Fatalf("WriteFile seed error = %v", err)
+	}
+
+	// Run the overlay injection.
+	_, _, err := injectOpsOpenCodeOverlay(home, adapter)
+	if err != nil {
+		t.Fatalf("injectOpsOpenCodeOverlay error = %v", err)
+	}
+
+	// Read back and unmarshal.
+	data := mustReadSettingsJSON(t, adapter, home)
+	var root map[string]any
+	if err := json.Unmarshal(data, &root); err != nil {
+		t.Fatalf("unmarshal error = %v", err)
+	}
+
+	// (a) The user-owned top-level key must survive.
+	if v, ok := root["someOtherKey"]; !ok || v != float64(123) {
+		t.Errorf("root[\"someOtherKey\"] = %v (ok=%v); want 123", v, ok)
+	}
+
+	// (b) The user-owned child INSIDE the shared "agent" object must survive intact.
+	agentMap, ok := root["agent"].(map[string]any)
+	if !ok {
+		t.Fatalf("root[\"agent\"] not a map; got %T", root["agent"])
+	}
+	customAgent, ok := agentMap["my-custom-agent"].(map[string]any)
+	if !ok {
+		t.Fatalf("agent[\"my-custom-agent\"] not a map after merge; got %T — deep-merge failed (user nested key was dropped)", agentMap["my-custom-agent"])
+	}
+	if v, _ := customAgent["mode"].(string); v != "primary" {
+		t.Errorf("my-custom-agent.mode = %q; want \"primary\"", v)
+	}
+	if v, _ := customAgent["prompt"].(string); v != "user stuff" {
+		t.Errorf("my-custom-agent.prompt = %q; want \"user stuff\"", v)
+	}
+
+	// (c) The OPS agents were added alongside the user's custom agent.
+	for _, k := range []string{"ops-orchestrator", "ops-brief", "ops-structure", "ops-produce", "ops-review", "ops-deliver"} {
+		if _, ok := agentMap[k]; !ok {
+			t.Errorf("agent[%q] missing after merge; OPS agents must be added alongside user agents", k)
+		}
 	}
 }
