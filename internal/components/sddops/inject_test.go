@@ -9,6 +9,10 @@ import (
 
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents"
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents/claude"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents/cursor"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents/kimi"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents/kilocode"
+	"github.com/Gabrielvilabracho/selops-ai/internal/agents/kiro"
 	"github.com/Gabrielvilabracho/selops-ai/internal/agents/opencode"
 	"github.com/Gabrielvilabracho/selops-ai/internal/model"
 )
@@ -488,4 +492,661 @@ func TestOpsOrchestratorSectionIsIdempotent(t *testing.T) {
 		t.Error("Inject() second call changed the system prompt; want idempotent result")
 	}
 	_ = result2 // Changed may be false or true for individual files; content idempotency is the invariant.
+}
+
+// opsPhases reuses the production opsPhaseNames slice (same package) to keep
+// the two in sync automatically — no separate copy maintained in tests.
+var opsPhases = opsPhaseNames
+
+// ── injectOpsSubAgents tests (scenarios 1, 5, 6, 7, 8, 9) ─────────────────────
+
+// TestInjectOpsSubAgents_CapabilityGate — Scenario 1
+// Only capable adapters receive sub-agent files; OpenCode (SupportsSubAgents=false) does not.
+func TestInjectOpsSubAgents_CapabilityGate(t *testing.T) {
+	tests := []struct {
+		name          string
+		adapter       agents.Adapter
+		expectFiles   bool
+	}{
+		{name: "claude", adapter: claude.NewAdapter(), expectFiles: true},
+		{name: "opencode", adapter: opencode.NewAdapter(), expectFiles: false},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			home := t.TempDir()
+			changed, files, err := injectOpsSubAgents(home, tc.adapter, InjectOptions{})
+			if err != nil {
+				t.Fatalf("injectOpsSubAgents(%s) error = %v", tc.name, err)
+			}
+			if tc.expectFiles {
+				if !changed {
+					t.Errorf("injectOpsSubAgents(%s) changed = false; want true (new files)", tc.name)
+				}
+				if len(files) == 0 {
+					t.Errorf("injectOpsSubAgents(%s) files is empty; want sub-agent files", tc.name)
+				}
+			} else {
+				if changed {
+					t.Errorf("injectOpsSubAgents(%s) changed = true; want false (no sub-agent support)", tc.name)
+				}
+				if len(files) != 0 {
+					t.Errorf("injectOpsSubAgents(%s) files = %v; want empty", tc.name, files)
+				}
+			}
+		})
+	}
+}
+
+// TestInjectOpsSubAgents_ClaudeFiveFiles — Scenario 5
+// Claude receives exactly five OPS sub-agent .md files, each >= 10 bytes.
+func TestInjectOpsSubAgents_ClaudeFiveFiles(t *testing.T) {
+	home := t.TempDir()
+	adapter := claude.NewAdapter()
+
+	changed, files, err := injectOpsSubAgents(home, adapter, InjectOptions{})
+	if err != nil {
+		t.Fatalf("injectOpsSubAgents(claude) error = %v", err)
+	}
+	if !changed {
+		t.Fatal("injectOpsSubAgents(claude) changed = false; want true")
+	}
+
+	agentsDir := adapter.SubAgentsDir(home)
+	for _, phase := range opsPhases {
+		path := filepath.Join(agentsDir, phase+".md")
+		info, statErr := os.Stat(path)
+		if statErr != nil {
+			t.Errorf("claude sub-agent %q not found: %v", phase, statErr)
+			continue
+		}
+		if info.Size() < 10 {
+			t.Errorf("claude sub-agent %q is %d bytes; want >= 10", phase, info.Size())
+		}
+	}
+	// Exactly 5 files written.
+	if len(files) != len(opsPhases) {
+		t.Errorf("injectOpsSubAgents(claude) wrote %d files; want %d", len(files), len(opsPhases))
+	}
+}
+
+// TestInjectOpsSubAgents_PlaceholderResolved — Scenario 6
+// Written files must NOT contain {{CLAUDE_MODEL}} or {{KIRO_MODEL}} literals.
+func TestInjectOpsSubAgents_PlaceholderResolved(t *testing.T) {
+	tests := []struct {
+		name        string
+		adapter     agents.Adapter
+		placeholder string
+	}{
+		{name: "claude", adapter: claude.NewAdapter(), placeholder: "{{CLAUDE_MODEL}}"},
+		{name: "kiro", adapter: kiro.NewAdapter(), placeholder: "{{KIRO_MODEL}}"},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			home := t.TempDir()
+			_, _, err := injectOpsSubAgents(home, tc.adapter, InjectOptions{})
+			if err != nil {
+				t.Fatalf("injectOpsSubAgents(%s) error = %v", tc.name, err)
+			}
+
+			agentsDir := tc.adapter.SubAgentsDir(home)
+			entries, readErr := os.ReadDir(agentsDir)
+			if readErr != nil {
+				t.Fatalf("ReadDir(%q) error = %v", agentsDir, readErr)
+			}
+			for _, entry := range entries {
+				content, rErr := os.ReadFile(filepath.Join(agentsDir, entry.Name()))
+				if rErr != nil {
+					t.Fatalf("ReadFile(%q) error = %v", entry.Name(), rErr)
+				}
+				if strings.Contains(string(content), tc.placeholder) {
+					t.Errorf("%s sub-agent %q still contains %q; placeholder not resolved", tc.name, entry.Name(), tc.placeholder)
+				}
+			}
+		})
+	}
+}
+
+// TestInjectOpsSubAgents_KimiDualFormat — Scenario 7
+// Kimi gets both .md and .yaml files for every OPS phase.
+func TestInjectOpsSubAgents_KimiDualFormat(t *testing.T) {
+	home := t.TempDir()
+	kimiAdapter := kimi.NewAdapter()
+
+	_, _, err := injectOpsSubAgents(home, kimiAdapter, InjectOptions{})
+	if err != nil {
+		t.Fatalf("injectOpsSubAgents(kimi) error = %v", err)
+	}
+
+	agentsDir := kimiAdapter.SubAgentsDir(home)
+	for _, phase := range opsPhases {
+		for _, ext := range []string{".md", ".yaml"} {
+			path := filepath.Join(agentsDir, phase+ext)
+			if _, statErr := os.Stat(path); statErr != nil {
+				t.Errorf("kimi sub-agent %q not found: %v", phase+ext, statErr)
+			}
+		}
+	}
+}
+
+// TestInjectOpsSubAgents_OpenCodeNoFiles — Scenario 8
+// OpenCode and Kilocode have SupportsSubAgents=false → no native sub-agent files.
+func TestInjectOpsSubAgents_OpenCodeNoFiles(t *testing.T) {
+	tests := []struct {
+		name    string
+		adapter agents.Adapter
+	}{
+		{name: "opencode", adapter: opencode.NewAdapter()},
+		{name: "kilocode", adapter: kilocode.NewAdapter()},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			home := t.TempDir()
+			changed, files, err := injectOpsSubAgents(home, tc.adapter, InjectOptions{})
+			if err != nil {
+				t.Fatalf("injectOpsSubAgents(%s) error = %v", tc.name, err)
+			}
+			if changed {
+				t.Errorf("injectOpsSubAgents(%s) changed = true; want false", tc.name)
+			}
+			if len(files) != 0 {
+				t.Errorf("injectOpsSubAgents(%s) files = %v; want empty", tc.name, files)
+			}
+		})
+	}
+}
+
+// TestInjectOpsSubAgents_Idempotent — Scenario 9
+// Running injectOpsSubAgents a second time reports changed=false and files unchanged.
+func TestInjectOpsSubAgents_Idempotent(t *testing.T) {
+	home := t.TempDir()
+	adapter := claude.NewAdapter()
+
+	if _, _, err := injectOpsSubAgents(home, adapter, InjectOptions{}); err != nil {
+		t.Fatalf("injectOpsSubAgents first run error = %v", err)
+	}
+
+	// Capture content after first run.
+	agentsDir := adapter.SubAgentsDir(home)
+	contentsBefore := map[string]string{}
+	for _, phase := range opsPhases {
+		path := filepath.Join(agentsDir, phase+".md")
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("ReadFile(%q) error = %v", path, err)
+		}
+		contentsBefore[phase] = string(data)
+	}
+
+	// Second run — must report changed=false.
+	changed2, _, err2 := injectOpsSubAgents(home, adapter, InjectOptions{})
+	if err2 != nil {
+		t.Fatalf("injectOpsSubAgents second run error = %v", err2)
+	}
+	if changed2 {
+		t.Error("injectOpsSubAgents second run changed = true; want false (idempotent)")
+	}
+
+	// Content must be byte-identical.
+	for _, phase := range opsPhases {
+		path := filepath.Join(agentsDir, phase+".md")
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("ReadFile(%q) error = %v", path, err)
+		}
+		if string(data) != contentsBefore[phase] {
+			t.Errorf("injectOpsSubAgents second run changed content for %q", phase)
+		}
+	}
+}
+
+// ── injectOpsSlashCommands tests (scenarios 2, 10, 11, 12, 13, 14) ─────────────
+
+// TestInjectOpsSlashCommands_CapabilityGate — Scenario 2
+// Only capable adapters receive command files; Kimi (SupportsSlashCommands=false) does not.
+func TestInjectOpsSlashCommands_CapabilityGate(t *testing.T) {
+	tests := []struct {
+		name        string
+		adapter     agents.Adapter
+		expectFiles bool
+	}{
+		{name: "claude", adapter: claude.NewAdapter(), expectFiles: true},
+		{name: "kimi", adapter: kimi.NewAdapter(), expectFiles: false},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			home := t.TempDir()
+			changed, files, err := injectOpsSlashCommands(home, tc.adapter)
+			if err != nil {
+				t.Fatalf("injectOpsSlashCommands(%s) error = %v", tc.name, err)
+			}
+			if tc.expectFiles {
+				if !changed {
+					t.Errorf("injectOpsSlashCommands(%s) changed = false; want true", tc.name)
+				}
+				if len(files) == 0 {
+					t.Errorf("injectOpsSlashCommands(%s) files empty; want command files", tc.name)
+				}
+			} else {
+				if changed {
+					t.Errorf("injectOpsSlashCommands(%s) changed = true; want false", tc.name)
+				}
+				if len(files) != 0 {
+					t.Errorf("injectOpsSlashCommands(%s) files = %v; want empty", tc.name, files)
+				}
+			}
+		})
+	}
+}
+
+// TestInjectOpsSlashCommands_ClaudeFiveCommands — Scenario 10
+// Claude receives exactly five OPS command files.
+func TestInjectOpsSlashCommands_ClaudeFiveCommands(t *testing.T) {
+	home := t.TempDir()
+	adapter := claude.NewAdapter()
+
+	changed, files, err := injectOpsSlashCommands(home, adapter)
+	if err != nil {
+		t.Fatalf("injectOpsSlashCommands(claude) error = %v", err)
+	}
+	if !changed {
+		t.Fatal("injectOpsSlashCommands(claude) changed = false; want true")
+	}
+
+	cmdsDir := adapter.CommandsDir(home)
+	for _, phase := range opsPhases {
+		path := filepath.Join(cmdsDir, phase+".md")
+		if _, statErr := os.Stat(path); statErr != nil {
+			t.Errorf("claude command %q not found: %v", phase, statErr)
+		}
+	}
+	if len(files) != len(opsPhases) {
+		t.Errorf("injectOpsSlashCommands(claude) wrote %d files; want %d", len(files), len(opsPhases))
+	}
+}
+
+// TestInjectOpsSlashCommands_ClaudeNativeFrontmatter — Scenario 11
+// Claude command files have description but NOT agent: or subtask: fields.
+func TestInjectOpsSlashCommands_ClaudeNativeFrontmatter(t *testing.T) {
+	home := t.TempDir()
+	adapter := claude.NewAdapter()
+
+	if _, _, err := injectOpsSlashCommands(home, adapter); err != nil {
+		t.Fatalf("injectOpsSlashCommands(claude) error = %v", err)
+	}
+
+	cmdsDir := adapter.CommandsDir(home)
+	for _, phase := range opsPhases {
+		path := filepath.Join(cmdsDir, phase+".md")
+		content, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("ReadFile(%q) error = %v", path, err)
+		}
+		text := string(content)
+		if !strings.Contains(text, "description") {
+			t.Errorf("claude command %q missing 'description' in frontmatter", phase)
+		}
+		if strings.Contains(text, "agent: ops-orchestrator") {
+			t.Errorf("claude command %q contains 'agent: ops-orchestrator'; want Claude-native frontmatter only", phase)
+		}
+	}
+}
+
+// TestInjectOpsSlashCommands_OpenCodeOrchestratorFrontmatter — Scenario 12
+// OpenCode and Kilocode commands have agent: ops-orchestrator and subtask: true.
+func TestInjectOpsSlashCommands_OpenCodeOrchestratorFrontmatter(t *testing.T) {
+	tests := []struct {
+		name    string
+		adapter agents.Adapter
+	}{
+		{name: "opencode", adapter: opencode.NewAdapter()},
+		{name: "kilocode", adapter: kilocode.NewAdapter()},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			home := t.TempDir()
+			if _, _, err := injectOpsSlashCommands(home, tc.adapter); err != nil {
+				t.Fatalf("injectOpsSlashCommands(%s) error = %v", tc.name, err)
+			}
+
+			cmdsDir := tc.adapter.CommandsDir(home)
+			for _, phase := range opsPhases {
+				path := filepath.Join(cmdsDir, phase+".md")
+				content, err := os.ReadFile(path)
+				if err != nil {
+					t.Fatalf("ReadFile(%q) error = %v", path, err)
+				}
+				text := string(content)
+				if !strings.Contains(text, "agent: ops-orchestrator") {
+					t.Errorf("%s command %q missing 'agent: ops-orchestrator'", tc.name, phase)
+				}
+				if !strings.Contains(text, "subtask: true") {
+					t.Errorf("%s command %q missing 'subtask: true'", tc.name, phase)
+				}
+			}
+		})
+	}
+}
+
+// TestInjectOpsSlashCommands_NoCommandsForUnsupported — Scenario 13
+// Cursor, Kimi, and Kiro do not receive OPS command files.
+func TestInjectOpsSlashCommands_NoCommandsForUnsupported(t *testing.T) {
+	tests := []struct {
+		name    string
+		adapter agents.Adapter
+	}{
+		{name: "cursor", adapter: cursor.NewAdapter()},
+		{name: "kimi", adapter: kimi.NewAdapter()},
+		{name: "kiro", adapter: kiro.NewAdapter()},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			home := t.TempDir()
+			changed, files, err := injectOpsSlashCommands(home, tc.adapter)
+			if err != nil {
+				t.Fatalf("injectOpsSlashCommands(%s) error = %v", tc.name, err)
+			}
+			if changed {
+				t.Errorf("injectOpsSlashCommands(%s) changed = true; want false", tc.name)
+			}
+			if len(files) != 0 {
+				t.Errorf("injectOpsSlashCommands(%s) files = %v; want empty", tc.name, files)
+			}
+		})
+	}
+}
+
+// TestInjectOpsSlashCommands_Idempotent — Scenario 14
+// Second run of injectOpsSlashCommands reports changed=false AND every command
+// file is byte-for-byte identical to the content written on the first run.
+func TestInjectOpsSlashCommands_Idempotent(t *testing.T) {
+	home := t.TempDir()
+	adapter := opencode.NewAdapter()
+
+	if _, _, err := injectOpsSlashCommands(home, adapter); err != nil {
+		t.Fatalf("injectOpsSlashCommands first run error = %v", err)
+	}
+
+	// Snapshot bytes of all five command files after first run.
+	cmdsDir := adapter.CommandsDir(home)
+	bytesBefore := make(map[string][]byte, len(opsPhases))
+	for _, phase := range opsPhases {
+		path := filepath.Join(cmdsDir, phase+".md")
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("ReadFile(%q) after first run error = %v", path, err)
+		}
+		bytesBefore[phase] = data
+	}
+
+	// Second run — must report changed=false.
+	changed2, _, err2 := injectOpsSlashCommands(home, adapter)
+	if err2 != nil {
+		t.Fatalf("injectOpsSlashCommands second run error = %v", err2)
+	}
+	if changed2 {
+		t.Error("injectOpsSlashCommands second run changed = true; want false (idempotent)")
+	}
+
+	// Byte-for-byte equality: command content must remain unchanged.
+	for _, phase := range opsPhases {
+		path := filepath.Join(cmdsDir, phase+".md")
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("ReadFile(%q) after second run error = %v", path, err)
+		}
+		if string(data) != string(bytesBefore[phase]) {
+			t.Errorf("injectOpsSlashCommands second run changed content for command %q; idempotency violated", phase)
+		}
+	}
+}
+
+// ── Cross-cutting Inject() tests (scenarios 3, 4) ──────────────────────────────
+
+// TestInject_SubAgentsAndCommandsAtomicAndPostChecked — Scenario 3
+// For a capable adapter (claude), Inject writes sub-agents atomically and passes post-check.
+func TestInject_SubAgentsAndCommandsAtomicAndPostChecked(t *testing.T) {
+	home := t.TempDir()
+	adapter := claude.NewAdapter()
+
+	result, err := Inject(home, adapter, InjectOptions{})
+	if err != nil {
+		t.Fatalf("Inject(claude) error = %v", err)
+	}
+	if !result.Changed {
+		t.Fatal("Inject(claude) changed = false; want true on first install")
+	}
+
+	// Sub-agents installed.
+	agentsDir := adapter.SubAgentsDir(home)
+	for _, phase := range opsPhases {
+		path := filepath.Join(agentsDir, phase+".md")
+		info, statErr := os.Stat(path)
+		if statErr != nil {
+			t.Errorf("claude sub-agent %q not found after Inject: %v", phase, statErr)
+			continue
+		}
+		if info.Size() < 10 {
+			t.Errorf("claude sub-agent %q is %d bytes; want >= 10", phase, info.Size())
+		}
+	}
+
+	// Slash commands installed.
+	cmdsDir := adapter.CommandsDir(home)
+	for _, phase := range opsPhases {
+		path := filepath.Join(cmdsDir, phase+".md")
+		if _, statErr := os.Stat(path); statErr != nil {
+			t.Errorf("claude command %q not found after Inject: %v", phase, statErr)
+		}
+	}
+}
+
+// TestInject_SecondRunReportsNoChanges — Scenario 4
+// Second identical Inject call reports Changed=false.
+func TestInject_SecondRunReportsNoChanges(t *testing.T) {
+	home := t.TempDir()
+	adapter := claude.NewAdapter()
+
+	if _, err := Inject(home, adapter, InjectOptions{}); err != nil {
+		t.Fatalf("Inject first run error = %v", err)
+	}
+
+	result2, err2 := Inject(home, adapter, InjectOptions{})
+	if err2 != nil {
+		t.Fatalf("Inject second run error = %v", err2)
+	}
+	if result2.Changed {
+		t.Error("Inject second run Changed = true; want false (idempotent)")
+	}
+}
+
+// ── resolveClaudeModelAlias unit tests ─────────────────────────────────────────
+
+// TestResolveClaudeModelAlias covers all four routing branches of the function:
+// (a) phase-specific override from the assignments map overrides the preset,
+// (b) "default" fallback is used when the phase is absent,
+// (c) an invalid/unknown alias in the map is silently filtered out (falls back to preset or default),
+// (d) nil assignments fall back to the balanced preset then sonnet.
+func TestResolveClaudeModelAlias(t *testing.T) {
+	tests := []struct {
+		name        string
+		assignments map[string]model.ClaudeModelAlias
+		phase       string
+		want        model.ClaudeModelAlias
+	}{
+		{
+			name: "phase-specific override from assignments map",
+			assignments: map[string]model.ClaudeModelAlias{
+				"ops-brief": model.ClaudeModelOpus,
+				"default":   model.ClaudeModelHaiku,
+			},
+			phase: "ops-brief",
+			want:  model.ClaudeModelOpus,
+		},
+		{
+			name: "default fallback when phase absent from assignments",
+			assignments: map[string]model.ClaudeModelAlias{
+				"default": model.ClaudeModelHaiku,
+			},
+			phase: "ops-deliver",
+			want:  model.ClaudeModelHaiku,
+		},
+		{
+			name: "invalid alias filtered out — falls back to preset default (sonnet)",
+			assignments: map[string]model.ClaudeModelAlias{
+				"ops-produce": "not-a-real-alias",
+			},
+			phase: "ops-produce",
+			// ClaudeModelPresetBalanced has no "ops-produce" entry, and "default" = sonnet.
+			want: model.ClaudeModelSonnet,
+		},
+		{
+			name:        "nil assignments — balanced preset default fallback is sonnet",
+			assignments: nil,
+			phase:       "ops-review",
+			// ClaudeModelPresetBalanced has no "ops-review" entry, "default" = sonnet.
+			want: model.ClaudeModelSonnet,
+		},
+		{
+			name: "sonnet fallback when assignments map is empty and phase unknown",
+			assignments: map[string]model.ClaudeModelAlias{},
+			phase:       "ops-structure",
+			// Empty assignments merged over balanced preset → preset default = sonnet.
+			want: model.ClaudeModelSonnet,
+		},
+		{
+			name: "preset phase entry used when assignments nil (sdd-propose=opus in balanced)",
+			assignments: nil,
+			phase:       "sdd-propose",
+			want:        model.ClaudeModelOpus,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			got := resolveClaudeModelAlias(tt.assignments, tt.phase)
+			if got != tt.want {
+				t.Errorf("resolveClaudeModelAlias(assignments, %q) = %q; want %q", tt.phase, got, tt.want)
+			}
+		})
+	}
+}
+
+// ── Scenario 6 model-routing assertions ────────────────────────────────────────
+
+// TestInjectOpsSubAgents_ModelRoutingFromAssignments — Scenario 6 (extended)
+// Verifies that ClaudeModelAssignments and KiroModelAssignments are correctly
+// routed into the written frontmatter model values, not just that placeholder
+// literals are removed.
+func TestInjectOpsSubAgents_ModelRoutingFromAssignments(t *testing.T) {
+	tests := []struct {
+		name        string
+		adapter     agents.Adapter
+		opts        InjectOptions
+		phase       string
+		wantInFile  string // expected resolved model string present in the written file
+		wantAbsent  string // placeholder that must NOT appear
+	}{
+		{
+			name:    "claude phase-specific assignment routed to file — scenario 6a",
+			adapter: claude.NewAdapter(),
+			opts: InjectOptions{
+				ClaudeModelAssignments: map[string]model.ClaudeModelAlias{
+					"ops-brief": model.ClaudeModelOpus,
+					"default":   model.ClaudeModelSonnet,
+				},
+			},
+			phase:      "ops-brief",
+			wantInFile: model.ClaudeModelOpus.String(), // "opus"
+			wantAbsent: "{{CLAUDE_MODEL}}",
+		},
+		{
+			name:    "claude default assignment used when no phase-specific entry — scenario 6b",
+			adapter: claude.NewAdapter(),
+			opts: InjectOptions{
+				ClaudeModelAssignments: map[string]model.ClaudeModelAlias{
+					"default": model.ClaudeModelHaiku,
+				},
+			},
+			phase:      "ops-deliver",
+			wantInFile: model.ClaudeModelHaiku.String(), // "haiku"
+			wantAbsent: "{{CLAUDE_MODEL}}",
+		},
+		{
+			name:    "kiro phase-specific assignment routed to file — scenario 6c",
+			adapter: kiro.NewAdapter(),
+			opts: InjectOptions{
+				KiroModelAssignments: map[string]model.ClaudeModelAlias{
+					"ops-review": model.ClaudeModelOpus,
+					"default":    model.ClaudeModelSonnet,
+				},
+			},
+			phase:      "ops-review",
+			wantInFile: "claude-opus",  // KiroModelID(opus) contains "claude-opus"
+			wantAbsent: "{{KIRO_MODEL}}",
+		},
+		{
+			name:    "kiro nil assignments fall back to sonnet — scenario 6d",
+			adapter: kiro.NewAdapter(),
+			opts:    InjectOptions{},
+			phase:   "ops-structure",
+			// KiroModelID(sonnet) for claude-sonnet-4.6 — contains "sonnet"
+			wantInFile: "sonnet",
+			wantAbsent: "{{KIRO_MODEL}}",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			home := t.TempDir()
+			_, _, err := injectOpsSubAgents(home, tt.adapter, tt.opts)
+			if err != nil {
+				t.Fatalf("injectOpsSubAgents(%s) error = %v", tt.name, err)
+			}
+
+			agentsDir := tt.adapter.SubAgentsDir(home)
+			entries, rdErr := os.ReadDir(agentsDir)
+			if rdErr != nil {
+				t.Fatalf("ReadDir(%q) error = %v", agentsDir, rdErr)
+			}
+
+			// Find the file for our target phase.
+			var targetContent string
+			for _, entry := range entries {
+				if strings.HasPrefix(entry.Name(), tt.phase) {
+					data, rErr := os.ReadFile(filepath.Join(agentsDir, entry.Name()))
+					if rErr != nil {
+						t.Fatalf("ReadFile(%q) error = %v", entry.Name(), rErr)
+					}
+					targetContent = string(data)
+					break
+				}
+			}
+			if targetContent == "" {
+				t.Fatalf("no file found for phase %q in %q", tt.phase, agentsDir)
+			}
+
+			// The placeholder must be gone.
+			if strings.Contains(targetContent, tt.wantAbsent) {
+				t.Errorf("file for phase %q still contains placeholder %q", tt.phase, tt.wantAbsent)
+			}
+			// The resolved model string must be present.
+			if !strings.Contains(targetContent, tt.wantInFile) {
+				t.Errorf("file for phase %q missing resolved model %q\ncontent:\n%s", tt.phase, tt.wantInFile, targetContent)
+			}
+		})
+	}
 }
